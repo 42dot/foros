@@ -46,8 +46,10 @@ install(
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  find_package(ament_cmake_cpplint REQUIRED)
+  ament_cpplint(FILTERS "-build/header_guard")
+  find_package(ament_cmake_cppcheck REQUIRED)
+  ament_cppcheck()
   add_subdirectory(test)
 endif()
 
