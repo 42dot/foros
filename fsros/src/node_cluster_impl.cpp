@@ -18,6 +18,8 @@
 
 #include <rclcpp/node_interfaces/node_base.hpp>
 
+#include <string>
+
 namespace akit {
 namespace failsafe {
 namespace fsros {

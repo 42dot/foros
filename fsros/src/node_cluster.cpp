@@ -16,6 +16,9 @@
 
 #include "akit/failsafe/fsros/node_cluster.hpp"
 
+#include <memory>
+#include <string>
+
 #include "node_cluster_impl.hpp"
 
 namespace akit {

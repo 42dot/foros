@@ -17,8 +17,10 @@
 #ifndef AKIT_FAILSAFE_FSROS_NODE_CLUSTER_HPP_
 #define AKIT_FAILSAFE_FSROS_NODE_CLUSTER_HPP_
 
-#include <memory>
 #include <rclcpp/node_options.hpp>
+
+#include <memory>
+#include <string>
 
 #include "akit/failsafe/fsros/common.hpp"
 
