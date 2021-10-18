@@ -14,31 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_NODE_CLUSTER_HPP_
-#define AKIT_FAILSAFE_NODE_CLUSTER_HPP_
+#include "node_cluster.hpp"
 
-#include <memory>
-#include <rclcpp/node_options.hpp>
-
-#include "common.hpp"
+#include "node_cluster_impl.hpp"
 
 namespace akit {
 namespace failsafe {
 
-class NodeCluster {
- public:
-  EXPORT_API
-  explicit NodeCluster(
-      const std::string &node_name, const std::string &node_namespace = "",
-      const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
-
- private:
-  class NodeClusterImpl;
-
-  std::unique_ptr<NodeClusterImpl> impl_;
-};
+NodeCluster::NodeCluster(const std::string &node_name,
+                         const std::string &node_namespace,
+                         const rclcpp::NodeOptions &options)
+    : impl_(std::make_unique<NodeClusterImpl>(node_name, node_namespace,
+                                              options)) {}
 
 }  // namespace failsafe
 }  // namespace akit
-
-#endif  // AKIT_FAILSAFE_NODE_CLUSTER_HPP_
