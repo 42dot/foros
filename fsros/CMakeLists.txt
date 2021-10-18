@@ -34,6 +34,11 @@ ament_export_targets(${PROJECT_NAME})
 ament_export_dependencies(rclcpp)
 
 install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+install(
   TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

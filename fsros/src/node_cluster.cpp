@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "node_cluster.hpp"
+#include "akit/fsros/node_cluster.hpp"
 
 #include "node_cluster_impl.hpp"
 

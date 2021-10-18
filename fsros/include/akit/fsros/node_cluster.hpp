@@ -20,7 +20,7 @@
 #include <memory>
 #include <rclcpp/node_options.hpp>
 
-#include "common.hpp"
+#include "akit/fsros/common.hpp"
 
 namespace akit {
 namespace failsafe {
