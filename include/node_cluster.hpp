@@ -25,6 +25,8 @@
 namespace akit {
 namespace failsafe {
 
+class NodeClusterImpl;
+
 class NodeCluster {
  public:
   EXPORT_API
@@ -33,8 +35,6 @@ class NodeCluster {
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
  private:
-  class NodeClusterImpl;
-
   std::unique_ptr<NodeClusterImpl> impl_;
 };
 
