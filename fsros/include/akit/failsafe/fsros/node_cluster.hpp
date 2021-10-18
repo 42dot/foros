@@ -14,22 +14,33 @@
  * limitations under the License.
  */
 
-#include "node_cluster_impl.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_NODE_CLUSTER_HPP_
+#define AKIT_FAILSAFE_FSROS_NODE_CLUSTER_HPP_
 
-#include <rclcpp/node_interfaces/node_base.hpp>
+#include <memory>
+#include <rclcpp/node_options.hpp>
+
+#include "akit/failsafe/fsros/common.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-NodeClusterImpl::NodeClusterImpl(const std::string &node_name,
-                                 const std::string &node_namespace,
-                                 const rclcpp::NodeOptions &options)
-    : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, node_namespace, options.context(),
-          *(options.get_rcl_node_options()), options.use_intra_process_comms(),
-          options.enable_topic_statistics())) {}
+class NodeClusterImpl;
+
+class NodeCluster {
+ public:
+  EXPORT_API
+  explicit NodeCluster(
+      const std::string &node_name, const std::string &node_namespace = "",
+      const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
+
+ private:
+  std::unique_ptr<NodeClusterImpl> impl_;
+};
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
+
+#endif  // AKIT_FAILSAFE_FSROS_NODE_CLUSTER_HPP_

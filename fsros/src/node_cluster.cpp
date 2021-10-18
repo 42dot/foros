@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#include "akit/fsros/node_cluster.hpp"
+#include "akit/failsafe/fsros/node_cluster.hpp"
 
 #include "node_cluster_impl.hpp"
 
 namespace akit {
 namespace failsafe {
+namespace fsros {
 
 NodeCluster::NodeCluster(const std::string &node_name,
                          const std::string &node_namespace,
@@ -27,5 +28,6 @@ NodeCluster::NodeCluster(const std::string &node_name,
     : impl_(std::make_unique<NodeClusterImpl>(node_name, node_namespace,
                                               options)) {}
 
+}  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_NODE_CLUSTER_IMPL_HPP_
-#define AKIT_FAILSAFE_NODE_CLUSTER_IMPL_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_NODE_CLUSTER_IMPL_HPP_
+#define AKIT_FAILSAFE_FSROS_NODE_CLUSTER_IMPL_HPP_
 
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
@@ -23,6 +23,7 @@
 
 namespace akit {
 namespace failsafe {
+namespace fsros {
 
 class NodeClusterImpl {
  public:
@@ -34,7 +35,8 @@ class NodeClusterImpl {
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
 };
 
+}  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_NODE_CLUSTER_IMPL_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_NODE_CLUSTER_IMPL_HPP_

@@ -14,31 +14,10 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_NODE_CLUSTER_HPP_
-#define AKIT_FAILSAFE_NODE_CLUSTER_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_COMMON_HPP_
+#define AKIT_FAILSAFE_FSROS_COMMON_HPP_
 
-#include <memory>
-#include <rclcpp/node_options.hpp>
+// Support Linux and GCC version 4.0 or later
+#define EXPORT_API __attribute__((visibility("default")))
 
-#include "akit/fsros/common.hpp"
-
-namespace akit {
-namespace failsafe {
-
-class NodeClusterImpl;
-
-class NodeCluster {
- public:
-  EXPORT_API
-  explicit NodeCluster(
-      const std::string &node_name, const std::string &node_namespace = "",
-      const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
-
- private:
-  std::unique_ptr<NodeClusterImpl> impl_;
-};
-
-}  // namespace failsafe
-}  // namespace akit
-
-#endif  // AKIT_FAILSAFE_NODE_CLUSTER_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_COMMON_HPP_
