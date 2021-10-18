@@ -28,6 +28,8 @@ NodeCluster::NodeCluster(const std::string &node_name,
     : impl_(std::make_unique<NodeClusterImpl>(node_name, node_namespace,
                                               options)) {}
 
+NodeCluster::~NodeCluster() {}
+
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

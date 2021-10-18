@@ -35,6 +35,8 @@ class NodeCluster {
       const std::string &node_name, const std::string &node_namespace = "",
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
+  ~NodeCluster();
+
  private:
   std::unique_ptr<NodeClusterImpl> impl_;
 };
