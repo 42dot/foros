@@ -31,7 +31,7 @@ class TestNodeCluster : public ::testing::Test {
 /*
    Testing node constor
  */
-TEST_F(TestNodeCluster, constructor) {
+TEST_F(TestNodeCluster, TestConstructor) {
   {
     auto node_cluster =
         std::make_shared<akit::failsafe::fsros::NodeCluster>("test_node");
