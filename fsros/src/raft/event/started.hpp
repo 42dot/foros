@@ -14,26 +14,17 @@
  * limitations under the License.
  */
 
-#include "node_cluster_impl.hpp"
-
-#include <rclcpp/node_interfaces/node_base.hpp>
-
-#include <memory>
-#include <string>
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_STARTED_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_STARTED_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-NodeClusterImpl::NodeClusterImpl(const std::string &node_name,
-                                 const std::string &node_namespace,
-                                 const rclcpp::NodeOptions &options)
-    : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, node_namespace, options.context(),
-          *(options.get_rcl_node_options()), options.use_intra_process_comms(),
-          options.enable_topic_statistics())),
-      raft_fsm_(std::make_unique<RaftStateMachine>()) {}
+class Started {};
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
+
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_STARTED_HPP_

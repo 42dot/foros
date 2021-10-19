@@ -14,26 +14,30 @@
  * limitations under the License.
  */
 
-#include "node_cluster_impl.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_RAFT_STATE_MACHINE_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_RAFT_STATE_MACHINE_HPP_
 
-#include <rclcpp/node_interfaces/node_base.hpp>
-
-#include <memory>
-#include <string>
+#include "raft/state/candidate.hpp"
+#include "raft/state/follower.hpp"
+#include "raft/state/leader.hpp"
+#include "raft/state/standby.hpp"
+#include "raft/state_machine.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-NodeClusterImpl::NodeClusterImpl(const std::string &node_name,
-                                 const std::string &node_namespace,
-                                 const rclcpp::NodeOptions &options)
-    : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, node_namespace, options.context(),
-          *(options.get_rcl_node_options()), options.use_intra_process_comms(),
-          options.enable_topic_statistics())),
-      raft_fsm_(std::make_unique<RaftStateMachine>()) {}
+enum RaftState {
+  kStandBy,
+  kFollower,
+  kCandidate,
+  kLeader,
+};
+
+using RaftStateMachine = StateMachine<Standby, Follower, Candidate, Leader>;
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
+
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_RAFT_STATE_MACHINE_HPP_

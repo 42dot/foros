@@ -12,9 +12,15 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 
+include_directories(src)
+
 set(${PROJECT_NAME}_SRCS
   src/node_cluster.cpp
   src/node_cluster_impl.cpp
+  src/raft/state/candidate.cpp
+  src/raft/state/follower.cpp
+  src/raft/state/leader.cpp
+  src/raft/state/standby.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SRCS})
@@ -47,7 +53,7 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_cmake_cpplint REQUIRED)
-  ament_cpplint(FILTERS "-build/header_guard")
+  ament_cpplint(FILTERS "-build/header_guard,-build/include_order")
   find_package(ament_cmake_cppcheck REQUIRED)
   ament_cppcheck()
   add_subdirectory(test)

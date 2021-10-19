@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-#include "node_cluster_impl.hpp"
-
-#include <rclcpp/node_interfaces/node_base.hpp>
-
-#include <memory>
-#include <string>
+#include "raft/state/leader.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-NodeClusterImpl::NodeClusterImpl(const std::string &node_name,
-                                 const std::string &node_namespace,
-                                 const rclcpp::NodeOptions &options)
-    : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, node_namespace, options.context(),
-          *(options.get_rcl_node_options()), options.use_intra_process_comms(),
-          options.enable_topic_statistics())),
-      raft_fsm_(std::make_unique<RaftStateMachine>()) {}
+StateTransitionStay Leader::handle(const Started &) { return {}; }
+
+StateTransitionTo<Standby> Leader::handle(const Terminated &) { return {}; }
+
+StateTransitionStay Leader::handle(const Timedout &) { return {}; }
+
+StateTransitionStay Leader::handle(const VoteReceived &) { return {}; }
+
+StateTransitionStay Leader::handle(const Elected &) { return {}; }
+
+StateTransitionTo<Follower> Leader::handle(const LeaderDiscovered &) {
+  return {};
+}
+
+void Leader::entry() {}
+
+void Leader::exit() {}
 
 }  // namespace fsros
 }  // namespace failsafe
