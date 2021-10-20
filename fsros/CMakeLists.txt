@@ -54,8 +54,16 @@ install(
 if(BUILD_TESTING)
   find_package(ament_cmake_cpplint REQUIRED)
   ament_cpplint(FILTERS "-build/header_guard,-build/include_order")
+
   find_package(ament_cmake_cppcheck REQUIRED)
   ament_cppcheck()
+
+  find_package(ament_cmake_lint_cmake REQUIRED)
+  ament_lint_cmake()
+
+  find_package(ament_cmake_xmllint REQUIRED)
+  ament_xmllint()
+
   add_subdirectory(test)
 endif()
 
