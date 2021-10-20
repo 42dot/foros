@@ -1,0 +1,10 @@
+uint64 term              # leader's term
+uint32 leader_id         # so followers can redirect clients
+uint64 prev_data_index   # index of data entry immediately preceeding new ones
+uint64 prev_data_term    # term of prev_data_index
+byte[] data              # data entry to store
+uint64 leader_commit     # leader's commitIndex
+---
+uint64 term              # current term, for leader to update itself
+bool success             # true if follower contained entry matching
+                         # prev_data_index and prev_data_term

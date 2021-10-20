@@ -1,0 +1,7 @@
+uint64 term              # candidate's term
+uint32 candidate_id       # candidate requesting vote
+uint64 last_data_index   # index of candidate's last data entry
+uint64 loat_data_term    # term of candidate's last data entry
+---
+uint64 term              # current term, for candidate to update itself
+bool vote_granted        # true means candidate received vote
