@@ -29,9 +29,9 @@ class StateMachine {
  public:
   template <typename State>
   void TransitionTo() {
-    std::visit([](auto state) { state->Entry(); }, current_state_);
-    current_state_ = &std::get<State>(states_);
     std::visit([](auto state) { state->Exit(); }, current_state_);
+    current_state_ = &std::get<State>(states_);
+    std::visit([](auto state) { state->Entry(); }, current_state_);
   }
 
   template <typename Event>
