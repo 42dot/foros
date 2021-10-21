@@ -29,7 +29,7 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class NodeClusterImpl {
+class NodeClusterImpl final {
  public:
   explicit NodeClusterImpl(
       const std::string &node_name, const std::string &node_namespace = "",

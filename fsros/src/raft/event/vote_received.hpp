@@ -21,7 +21,7 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class VoteReceived {};
+class VoteReceived final {};
 
 }  // namespace fsros
 }  // namespace failsafe

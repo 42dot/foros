@@ -34,7 +34,7 @@ class Follower;
 class Leader;
 class Standby;
 
-class Candidate : public State {
+class Candidate final : public State {
  public:
   StateTransitionStay handle(const Started &event);
   StateTransitionTo<Standby> handle(const Terminated &event);

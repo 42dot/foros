@@ -32,7 +32,7 @@ namespace fsros {
 
 class Follower;
 
-class Standby : public State {
+class Standby final : public State {
  public:
   StateTransitionTo<Follower> handle(const Started &event);
   StateTransitionStay handle(const Terminated &event);

@@ -21,7 +21,7 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class Terminated {};
+class Terminated final {};
 
 }  // namespace fsros
 }  // namespace failsafe

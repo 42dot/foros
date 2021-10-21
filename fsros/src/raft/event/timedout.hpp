@@ -21,7 +21,7 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class Timedout {};
+class Timedout final {};
 
 }  // namespace fsros
 }  // namespace failsafe

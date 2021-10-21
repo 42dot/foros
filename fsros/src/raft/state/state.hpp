@@ -25,6 +25,7 @@ namespace failsafe {
 namespace fsros {
 class State {
  public:
+  virtual ~State() {}
   virtual void entry() = 0;
   virtual void exit() = 0;
 };
