@@ -28,20 +28,20 @@ template <typename... States>
 class StateMachine {
  public:
   template <typename State>
-  void transitionTo() {
-    std::visit([](auto state) { state->entry(); }, current_state_);
+  void TransitionTo() {
+    std::visit([](auto state) { state->Entry(); }, current_state_);
     current_state_ = &std::get<State>(states_);
-    std::visit([](auto state) { state->exit(); }, current_state_);
+    std::visit([](auto state) { state->Exit(); }, current_state_);
   }
 
   template <typename Event>
-  void handle(const Event &event) {
+  void Handle(const Event &event) {
     std::visit(
-        [this, &event](auto state) { state->handle(event).changeState(*this); },
+        [this, &event](auto state) { state->Handle(event).ChangeState(*this); },
         current_state_);
   }
 
-  int getCurrentStateIndex() { return current_state_.index(); }
+  int GetCurrentStateIndex() { return current_state_.index(); }
 
  private:
   std::tuple<States...> states_;

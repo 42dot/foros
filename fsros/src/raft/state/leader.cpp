@@ -20,23 +20,23 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-StateTransitionStay Leader::handle(const Started &) { return {}; }
+StateTransitionStay Leader::Handle(const Started &) { return {}; }
 
-StateTransitionTo<Standby> Leader::handle(const Terminated &) { return {}; }
+StateTransitionTo<Standby> Leader::Handle(const Terminated &) { return {}; }
 
-StateTransitionStay Leader::handle(const Timedout &) { return {}; }
+StateTransitionStay Leader::Handle(const Timedout &) { return {}; }
 
-StateTransitionStay Leader::handle(const VoteReceived &) { return {}; }
+StateTransitionStay Leader::Handle(const VoteReceived &) { return {}; }
 
-StateTransitionStay Leader::handle(const Elected &) { return {}; }
+StateTransitionStay Leader::Handle(const Elected &) { return {}; }
 
-StateTransitionTo<Follower> Leader::handle(const LeaderDiscovered &) {
+StateTransitionTo<Follower> Leader::Handle(const LeaderDiscovered &) {
   return {};
 }
 
-void Leader::entry() {}
+void Leader::Entry() {}
 
-void Leader::exit() {}
+void Leader::Exit() {}
 
 }  // namespace fsros
 }  // namespace failsafe

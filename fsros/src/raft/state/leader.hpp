@@ -35,15 +35,15 @@ class Standby;
 
 class Leader final : public State {
  public:
-  StateTransitionStay handle(const Started &event);
-  StateTransitionTo<Standby> handle(const Terminated &event);
-  StateTransitionStay handle(const Timedout &event);
-  StateTransitionStay handle(const VoteReceived &event);
-  StateTransitionStay handle(const Elected &event);
-  StateTransitionTo<Follower> handle(const LeaderDiscovered &event);
+  StateTransitionStay Handle(const Started &event);
+  StateTransitionTo<Standby> Handle(const Terminated &event);
+  StateTransitionStay Handle(const Timedout &event);
+  StateTransitionStay Handle(const VoteReceived &event);
+  StateTransitionStay Handle(const Elected &event);
+  StateTransitionTo<Follower> Handle(const LeaderDiscovered &event);
 
-  void entry() override;
-  void exit() override;
+  void Entry() override;
+  void Exit() override;
 };
 
 }  // namespace fsros

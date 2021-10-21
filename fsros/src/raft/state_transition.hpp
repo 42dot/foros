@@ -25,15 +25,15 @@ template <typename State>
 class StateTransitionTo {
  public:
   template <typename Machine>
-  void changeState(Machine &machine) {
-    machine.template transitionTo<State>();
+  void ChangeState(Machine &machine) {
+    machine.template TransitionTo<State>();
   }
 };
 
 class StateTransitionStay {
  public:
   template <typename Machine>
-  void changeState(Machine &) {}
+  void ChangeState(Machine &) {}
 };
 
 }  // namespace fsros
