@@ -21,6 +21,7 @@ set(${PROJECT_NAME}_SRCS
   src/raft/state/follower.cpp
   src/raft/state/leader.cpp
   src/raft/state/standby.cpp
+  src/raft/raft_state_machine.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SRCS})

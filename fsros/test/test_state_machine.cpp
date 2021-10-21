@@ -43,264 +43,248 @@ class TestNodeCluster : public ::testing::Test {
 
 // Test in standby state
 TEST_F(TestNodeCluster, TestStandbyStateInit) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestStandbyStateStartedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }
 
 TEST_F(TestNodeCluster, TestStandbyStateTerminatedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 
-  raft_fsm_->Handle(fsros::Terminated());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kTerminated);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestStandbyStateTimedoutEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestStandbyStateVoteReceivedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 
-  raft_fsm_->Handle(fsros::VoteReceived());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kVoteReceived);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestStandbyStateElectedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestStandbyStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 
-  raft_fsm_->Handle(fsros::LeaderDiscovered());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kLeaderDiscovered);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 // Test in follower state
 TEST_F(TestNodeCluster, TestFollowerStateStartedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }
 
 TEST_F(TestNodeCluster, TestFollowerStateTerminatedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 
-  raft_fsm_->Handle(fsros::Terminated());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kTerminated);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestFollowerStateTimedoutEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 }
 
 TEST_F(TestNodeCluster, TestFollowerStateVoteReceivedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 
-  raft_fsm_->Handle(fsros::VoteReceived());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kVoteReceived);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }
 
 TEST_F(TestNodeCluster, TestFollowerStateElectedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }
 
 TEST_F(TestNodeCluster, TestFollowerStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 
-  raft_fsm_->Handle(fsros::LeaderDiscovered());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kLeaderDiscovered);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }
 
 // Test in candidate state
 TEST_F(TestNodeCluster, TestCandidateStateStartedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 }
 
 TEST_F(TestNodeCluster, TestCandidateStateTerminatedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 
-  raft_fsm_->Handle(fsros::Terminated());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kTerminated);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestCandidateStateTimedoutEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 }
 
 TEST_F(TestNodeCluster, TestCandidateStateVoteReceivedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 
-  raft_fsm_->Handle(fsros::VoteReceived());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kVoteReceived);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 }
 
 TEST_F(TestNodeCluster, TestCandidateStateElectedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 }
 
 TEST_F(TestNodeCluster, TestCandidateStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
 
-  raft_fsm_->Handle(fsros::LeaderDiscovered());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kLeaderDiscovered);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }
 
 // Test in leader state
 TEST_F(TestNodeCluster, TestLeaderStateStartedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 }
 
 TEST_F(TestNodeCluster, TestLeaderStateTerminatedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 
-  raft_fsm_->Handle(fsros::Terminated());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kTerminated);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
 }
 
 TEST_F(TestNodeCluster, TestLeaderStateTimedoutEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 }
 
 TEST_F(TestNodeCluster, TestLeaderStateVoteReceivedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 
-  raft_fsm_->Handle(fsros::VoteReceived());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  raft_fsm_->Emit(fsros::RaftEvent::kVoteReceived);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 }
 
 TEST_F(TestNodeCluster, TestLeaderStateElectedEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 }
 
 TEST_F(TestNodeCluster, TestLeaderStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kStandBy);
-  raft_fsm_->Handle(fsros::Started());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
-  raft_fsm_->Handle(fsros::Timedout());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() ==
-              fsros::RaftState::kCandidate);
-  raft_fsm_->Handle(fsros::Elected());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kLeader);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kStandBy);
+  raft_fsm_->Emit(fsros::RaftEvent::kStarted);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kTimedout);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kCandidate);
+  raft_fsm_->Emit(fsros::RaftEvent::kElected);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kLeader);
 
-  raft_fsm_->Handle(fsros::LeaderDiscovered());
-  EXPECT_TRUE(raft_fsm_->GetCurrentStateIndex() == fsros::RaftState::kFollower);
+  raft_fsm_->Emit(fsros::RaftEvent::kLeaderDiscovered);
+  EXPECT_TRUE(raft_fsm_->GetCurrentState() == fsros::RaftState::kFollower);
 }

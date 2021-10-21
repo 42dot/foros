@@ -34,14 +34,15 @@ class StateMachine {
     std::visit([](auto state) { state->Entry(); }, current_state_);
   }
 
+ protected:
+  int GetCurrentStateIndex() { return current_state_.index(); }
+
   template <typename Event>
   void Handle(const Event &event) {
     std::visit(
         [this, &event](auto state) { state->Handle(event).ChangeState(*this); },
         current_state_);
   }
-
-  int GetCurrentStateIndex() { return current_state_.index(); }
 
  private:
   std::tuple<States...> states_;

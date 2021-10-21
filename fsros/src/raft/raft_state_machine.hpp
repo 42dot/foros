@@ -17,6 +17,12 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_RAFT_STATE_MACHINE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_RAFT_STATE_MACHINE_HPP_
 
+#include "raft/event/elected.hpp"
+#include "raft/event/leadaer_discovered.hpp"
+#include "raft/event/started.hpp"
+#include "raft/event/terminated.hpp"
+#include "raft/event/timedout.hpp"
+#include "raft/event/vote_received.hpp"
 #include "raft/state/candidate.hpp"
 #include "raft/state/follower.hpp"
 #include "raft/state/leader.hpp"
@@ -27,14 +33,37 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-enum RaftState {
+enum class RaftState {
   kStandBy,
   kFollower,
   kCandidate,
   kLeader,
+  kUnknown,
 };
 
-using RaftStateMachine = StateMachine<Standby, Follower, Candidate, Leader>;
+enum class RaftEvent {
+  kStarted,
+  kTimedout,
+  kVoteReceived,
+  kLeaderDiscovered,
+  kElected,
+  kTerminated,
+  kUnknown,
+};
+
+class RaftStateMachine : StateMachine<Standby, Follower, Candidate, Leader> {
+ public:
+  RaftState GetCurrentState();
+  void Emit(RaftEvent event);
+
+ private:
+  Started started_event_;
+  Timedout timedout_event_;
+  VoteReceived vote_received_event_;
+  LeaderDiscovered leader_discovered_event_;
+  Elected elected_event_;
+  Terminated terminated_event_;
+};
 
 }  // namespace fsros
 }  // namespace failsafe
