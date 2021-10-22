@@ -17,29 +17,19 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_STANDBY_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_STANDBY_HPP_
 
-#include "raft/event/elected.hpp"
-#include "raft/event/leadaer_discovered.hpp"
-#include "raft/event/started.hpp"
-#include "raft/event/terminated.hpp"
-#include "raft/event/timedout.hpp"
-#include "raft/event/vote_received.hpp"
+#include "raft/event/event.hpp"
 #include "raft/state/state.hpp"
-#include "raft/state_transition.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class Follower;
-
 class Standby final : public State {
  public:
-  StateTransitionTo<Follower> Handle(const Started &event);
-  StateTransitionStay Handle(const Terminated &event);
-  StateTransitionStay Handle(const Timedout &event);
-  StateTransitionStay Handle(const VoteReceived &event);
-  StateTransitionStay Handle(const Elected &event);
-  StateTransitionStay Handle(const LeaderDiscovered &event);
+  Standby()
+      : State(StateType::kStandBy, {{Event::kStarted, StateType::kFollower}}) {}
+
+  void OnStarted() override;
 
   void Entry() override;
   void Exit() override;

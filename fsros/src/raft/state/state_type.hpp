@@ -14,30 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_TRANSITION_HPP_
-#define AKIT_FAILSAFE_FSROS_RAFT_STATE_TRANSITION_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_TYPE_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_STATE_TYPE_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-template <typename State>
-class StateTransitionTo {
- public:
-  template <typename Machine>
-  void ChangeState(Machine &machine) {
-    machine.template TransitionTo<State>();
-  }
-};
-
-class StateTransitionStay {
- public:
-  template <typename Machine>
-  void ChangeState(Machine &) {}
+enum class StateType {
+  kStandBy,
+  kFollower,
+  kCandidate,
+  kLeader,
+  kUnknown,
 };
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_RAFT_STATE_TRANSITION_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_STATE_TYPE_HPP_

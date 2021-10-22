@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_TERMINATED_HPP_
-#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_TERMINATED_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_EVENT_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_EVENT_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class Terminated final {};
+enum class Event {
+  kStarted,
+  kTimedout,
+  kVoteReceived,
+  kLeaderDiscovered,
+  kElected,
+  kTerminated,
+  kUnknown,
+};
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_TERMINATED_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_EVENT_HPP_

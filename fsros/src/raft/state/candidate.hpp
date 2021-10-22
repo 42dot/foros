@@ -17,31 +17,26 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_CANDIDATE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_CANDIDATE_HPP_
 
-#include "raft/event/elected.hpp"
-#include "raft/event/leadaer_discovered.hpp"
-#include "raft/event/started.hpp"
-#include "raft/event/terminated.hpp"
-#include "raft/event/timedout.hpp"
-#include "raft/event/vote_received.hpp"
+#include "raft/event/event.hpp"
 #include "raft/state/state.hpp"
-#include "raft/state_transition.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class Follower;
-class Leader;
-class Standby;
-
 class Candidate final : public State {
  public:
-  StateTransitionStay Handle(const Started &event);
-  StateTransitionTo<Standby> Handle(const Terminated &event);
-  StateTransitionTo<Candidate> Handle(const Timedout &event);
-  StateTransitionStay Handle(const VoteReceived &event);
-  StateTransitionTo<Leader> Handle(const Elected &event);
-  StateTransitionTo<Follower> Handle(const LeaderDiscovered &event);
+  Candidate()
+      : State(StateType::kCandidate,
+              {{Event::kTerminated, StateType::kStandBy},
+               {Event::kTimedout, StateType::kCandidate},
+               {Event::kElected, StateType::kLeader},
+               {Event::kLeaderDiscovered, StateType::kFollower}}) {}
+
+  void OnTimedout() override;
+  void OnLeaderDiscovered() override;
+  void OnElected() override;
+  void OnTerminated() override;
 
   void Entry() override;
   void Exit() override;

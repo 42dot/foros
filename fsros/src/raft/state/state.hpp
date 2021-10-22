@@ -17,18 +17,40 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_HPP_
 
+#include <functional>
+#include <map>
 #include <memory>
 #include <string>
+
+#include "raft/event/event.hpp"
+#include "raft/state/state_type.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+
 class State {
  public:
+  State();
+  State(StateType type, std::map<Event, StateType> transition_map);
   virtual ~State() {}
 
-  virtual void Entry() = 0;
-  virtual void Exit() = 0;
+  StateType GetType();
+  StateType Handle(const Event &event);
+
+  virtual void OnStarted();
+  virtual void OnTimedout();
+  virtual void OnLeaderDiscovered();
+  virtual void OnVoteReceived();
+  virtual void OnElected();
+  virtual void OnTerminated();
+
+  virtual void Entry();
+  virtual void Exit();
+
+ private:
+  StateType type_;
+  std::map<Event, StateType> transition_map_;
 };
 
 }  // namespace fsros

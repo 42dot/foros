@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 
-#include "raft/raft_state_machine.hpp"
+#include "raft/state_machine.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -37,7 +37,7 @@ class NodeClusterImpl final {
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  std::unique_ptr<RaftStateMachine> raft_fsm_;
+  std::unique_ptr<StateMachine> raft_fsm_;
 };
 
 }  // namespace fsros

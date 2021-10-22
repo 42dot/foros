@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_LEADER_DISCOVERED_HPP_
-#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_LEADER_DISCOVERED_HPP_
+#include "raft/state_machine.hpp"
+
+#include <iostream>
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class LeaderDiscovered final {};
+void StateMachine::Handle(const Event &event) {
+  auto next_state = states_[current_state_].Handle(event);
+  if (states_.count(next_state) < 1) {
+    std::cerr << "Invalid next state (" << static_cast<int>(next_state)
+              << std::endl;
+    return;
+  }
+
+  states_[current_state_].Exit();
+  current_state_ = next_state;
+  states_[current_state_].Entry();
+}
+
+StateType StateMachine::GetCurrentState() { return current_state_; }
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
-
-#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_LEADER_DISCOVERED_HPP_

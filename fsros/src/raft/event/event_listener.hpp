@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_TIMEDOUT_HPP_
-#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_TIMEDOUT_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class Timedout final {};
+class EventLister {
+  virtual void OnStarted();
+  virtual void OnTimedout();
+  virtual void OnVoteReceived();
+  virtual void OnLeaderDiscovered();
+  virtual void OnElected();
+  virtual void OnTerminated();
+};
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_TIMEDOUT_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_

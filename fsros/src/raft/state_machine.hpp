@@ -17,36 +17,34 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_MACHINE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_MACHINE_HPP_
 
-#include <tuple>
-#include <variant>
+#include <map>
+
+#include "raft/event/event.hpp"
+#include "raft/state/candidate.hpp"
+#include "raft/state/follower.hpp"
+#include "raft/state/leader.hpp"
+#include "raft/state/standby.hpp"
+#include "raft/state/state.hpp"
+#include "raft/state/state_type.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-template <typename... States>
 class StateMachine {
  public:
-  template <typename State>
-  void TransitionTo() {
-    std::visit([](auto state) { state->Exit(); }, current_state_);
-    current_state_ = &std::get<State>(states_);
-    std::visit([](auto state) { state->Entry(); }, current_state_);
-  }
-
- protected:
-  int GetCurrentStateIndex() { return current_state_.index(); }
-
-  template <typename Event>
-  void Handle(const Event &event) {
-    std::visit(
-        [this, &event](auto state) { state->Handle(event).ChangeState(*this); },
-        current_state_);
-  }
+  void Handle(const Event &event);
+  StateType GetCurrentState();
 
  private:
-  std::tuple<States...> states_;
-  std::variant<States *...> current_state_{&std::get<0>(states_)};
+  std::map<StateType, State> states_ = {
+      {StateType::kStandBy, Standby()},
+      {StateType::kFollower, Follower()},
+      {StateType::kCandidate, Candidate()},
+      {StateType::kLeader, Leader()},
+  };
+
+  StateType current_state_ = StateType::kStandBy;
 };
 
 }  // namespace fsros
