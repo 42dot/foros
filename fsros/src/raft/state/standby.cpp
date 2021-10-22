@@ -16,11 +16,23 @@
 
 #include "raft/state/standby.hpp"
 
+#include <iostream>
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
 void Standby::OnStarted() {}
+
+void Standby::OnTimedout() {}
+
+void Standby::OnVoteReceived() {}
+
+void Standby::OnLeaderDiscovered() {}
+
+void Standby::OnElected() {}
+
+void Standby::OnTerminated() {}
 
 void Standby::Entry() {}
 

@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_FOLLOWER_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_FOLLOWER_HPP_
 
+#include <memory>
+
 #include "raft/event/event.hpp"
 #include "raft/state/state.hpp"
 
@@ -26,14 +28,17 @@ namespace fsros {
 
 class Follower final : public State {
  public:
-  Follower()
-      : State(StateType::kFollower,
+  explicit Follower(std::shared_ptr<EventObserver> observer)
+      : State(StateType::kFollower, observer,
               {{Event::kTerminated, StateType::kStandBy},
                {Event::kTimedout, StateType::kCandidate}}) {}
 
+  void OnStarted() override;
   void OnTimedout() override;
+  void OnVoteReceived() override;
+  void OnLeaderDiscovered() override;
+  void OnElected() override;
   void OnTerminated() override;
-
   void Entry() override;
   void Exit() override;
 };

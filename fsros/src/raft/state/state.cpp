@@ -18,29 +18,21 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
+
+#include "raft/event/event_observer.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-State::State() : type_(StateType::kUnknown) {}
-
-State::State(StateType type, std::map<Event, StateType> transition_map)
-    : type_(type), transition_map_(transition_map) {}
+State::State(StateType type, std::shared_ptr<EventObserver> observer,
+             std::map<Event, StateType> transition_map)
+    : type_(type), event_observer_(observer), transition_map_(transition_map) {}
 
 StateType State::GetType() { return type_; }
 
-void State::OnStarted() {}
-
-void State::OnTimedout() {}
-
-void State::OnLeaderDiscovered() {}
-
-void State::OnVoteReceived() {}
-
-void State::OnElected() {}
-
-void State::OnTerminated() {}
+void State::Emit(const Event &event) { event_observer_->Emit(event); }
 
 StateType State::Handle(const Event &event) {
   switch (event) {
@@ -78,10 +70,6 @@ StateType State::Handle(const Event &event) {
 
   return transition_map_[event];
 }
-
-void State::Entry() {}
-
-void State::Exit() {}
 
 }  // namespace fsros
 }  // namespace failsafe

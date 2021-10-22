@@ -20,9 +20,17 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
+void Leader::OnStarted() {}
+
 void Leader::OnTimedout() {}
 
+void Leader::OnVoteReceived() {}
+
 void Leader::OnLeaderDiscovered() {}
+
+void Leader::OnElected() {}
+
+void Leader::OnTerminated() {}
 
 void Leader::Entry() {}
 

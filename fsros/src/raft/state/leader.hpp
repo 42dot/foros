@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_LEADER_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_LEADER_HPP_
 
+#include <memory>
+
 #include "raft/event/event.hpp"
 #include "raft/state/state.hpp"
 
@@ -26,13 +28,17 @@ namespace fsros {
 
 class Leader final : public State {
  public:
-  Leader()
-      : State(StateType::kLeader,
+  explicit Leader(std::shared_ptr<EventObserver> observer)
+      : State(StateType::kLeader, observer,
               {{Event::kTerminated, StateType::kStandBy},
                {Event::kLeaderDiscovered, StateType::kFollower}}) {}
 
+  void OnStarted() override;
   void OnTimedout() override;
+  void OnVoteReceived() override;
   void OnLeaderDiscovered() override;
+  void OnElected() override;
+  void OnTerminated() override;
 
   void Entry() override;
   void Exit() override;

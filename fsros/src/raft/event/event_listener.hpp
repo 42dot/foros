@@ -17,17 +17,15 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
 
+#include "raft/event/event.hpp"
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class EventLister {
-  virtual void OnStarted();
-  virtual void OnTimedout();
-  virtual void OnVoteReceived();
-  virtual void OnLeaderDiscovered();
-  virtual void OnElected();
-  virtual void OnTerminated();
+class EventListener {
+ public:
+  virtual void OnEventReceived(const Event &event) = 0;
 };
 
 }  // namespace fsros

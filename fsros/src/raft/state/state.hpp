@@ -23,6 +23,7 @@
 #include <string>
 
 #include "raft/event/event.hpp"
+#include "raft/event/event_observer.hpp"
 #include "raft/state/state_type.hpp"
 
 namespace akit {
@@ -31,25 +32,27 @@ namespace fsros {
 
 class State {
  public:
-  State();
-  State(StateType type, std::map<Event, StateType> transition_map);
+  State(StateType type, std::shared_ptr<EventObserver> observer,
+        std::map<Event, StateType> transition_map);
   virtual ~State() {}
 
   StateType GetType();
   StateType Handle(const Event &event);
+  void Emit(const Event &event);
 
-  virtual void OnStarted();
-  virtual void OnTimedout();
-  virtual void OnLeaderDiscovered();
-  virtual void OnVoteReceived();
-  virtual void OnElected();
-  virtual void OnTerminated();
+  virtual void OnStarted() = 0;
+  virtual void OnTimedout() = 0;
+  virtual void OnVoteReceived() = 0;
+  virtual void OnLeaderDiscovered() = 0;
+  virtual void OnElected() = 0;
+  virtual void OnTerminated() = 0;
 
-  virtual void Entry();
-  virtual void Exit();
+  virtual void Entry() = 0;
+  virtual void Exit() = 0;
 
  private:
   StateType type_;
+  std::shared_ptr<EventObserver> event_observer_;
   std::map<Event, StateType> transition_map_;
 };
 

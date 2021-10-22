@@ -18,12 +18,11 @@
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_MACHINE_HPP_
 
 #include <map>
+#include <memory>
 
 #include "raft/event/event.hpp"
-#include "raft/state/candidate.hpp"
-#include "raft/state/follower.hpp"
-#include "raft/state/leader.hpp"
-#include "raft/state/standby.hpp"
+#include "raft/event/event_listener.hpp"
+#include "raft/event/event_observer.hpp"
 #include "raft/state/state.hpp"
 #include "raft/state/state_type.hpp"
 
@@ -31,19 +30,16 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class StateMachine {
+class StateMachine : public EventListener {
  public:
-  void Handle(const Event &event);
+  StateMachine();
+
   StateType GetCurrentState();
+  void Handle(const Event &event);
+  void OnEventReceived(const Event &event) override;
 
  private:
-  std::map<StateType, State> states_ = {
-      {StateType::kStandBy, Standby()},
-      {StateType::kFollower, Follower()},
-      {StateType::kCandidate, Candidate()},
-      {StateType::kLeader, Leader()},
-  };
-
+  std::map<StateType, std::shared_ptr<State>> states_ = {};
   StateType current_state_ = StateType::kStandBy;
 };
 

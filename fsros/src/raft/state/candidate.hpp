@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_CANDIDATE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_CANDIDATE_HPP_
 
+#include <memory>
+
 #include "raft/event/event.hpp"
 #include "raft/state/state.hpp"
 
@@ -26,14 +28,16 @@ namespace fsros {
 
 class Candidate final : public State {
  public:
-  Candidate()
-      : State(StateType::kCandidate,
+  explicit Candidate(std::shared_ptr<EventObserver> observer)
+      : State(StateType::kCandidate, observer,
               {{Event::kTerminated, StateType::kStandBy},
                {Event::kTimedout, StateType::kCandidate},
                {Event::kElected, StateType::kLeader},
                {Event::kLeaderDiscovered, StateType::kFollower}}) {}
 
+  void OnStarted() override;
   void OnTimedout() override;
+  void OnVoteReceived() override;
   void OnLeaderDiscovered() override;
   void OnElected() override;
   void OnTerminated() override;

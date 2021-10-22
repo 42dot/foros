@@ -17,6 +17,9 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_STANDBY_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_STANDBY_HPP_
 
+#include <iostream>
+#include <memory>
+
 #include "raft/event/event.hpp"
 #include "raft/state/state.hpp"
 
@@ -26,10 +29,16 @@ namespace fsros {
 
 class Standby final : public State {
  public:
-  Standby()
-      : State(StateType::kStandBy, {{Event::kStarted, StateType::kFollower}}) {}
+  explicit Standby(std::shared_ptr<EventObserver> observer)
+      : State(StateType::kStandBy, observer,
+              {{Event::kStarted, StateType::kFollower}}) {}
 
   void OnStarted() override;
+  void OnTimedout() override;
+  void OnVoteReceived() override;
+  void OnLeaderDiscovered() override;
+  void OnElected() override;
+  void OnTerminated() override;
 
   void Entry() override;
   void Exit() override;

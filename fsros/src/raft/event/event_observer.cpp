@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-#include "raft/state/follower.hpp"
+#include "raft/event/event_observer.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-void Follower::OnStarted() {}
+EventObserver::EventObserver(EventListener *listener) : listener_(listener) {}
 
-void Follower::OnTimedout() {}
-
-void Follower::OnVoteReceived() {}
-
-void Follower::OnLeaderDiscovered() {}
-
-void Follower::OnElected() {}
-
-void Follower::OnTerminated() {}
-
-void Follower::Entry() {}
-
-void Follower::Exit() {}
+void EventObserver::Emit(const Event event) {
+  listener_->OnEventReceived(event);
+}
 
 }  // namespace fsros
 }  // namespace failsafe

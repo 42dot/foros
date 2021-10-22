@@ -17,6 +17,7 @@ include_directories(src)
 set(${PROJECT_NAME}_SRCS
   src/node_cluster.cpp
   src/node_cluster_impl.cpp
+  src/raft/event/event_observer.cpp
   src/raft/state/candidate.cpp
   src/raft/state/follower.cpp
   src/raft/state/leader.cpp
