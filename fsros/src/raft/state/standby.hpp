@@ -31,7 +31,7 @@ namespace raft {
 class Standby final : public State {
  public:
   Standby()
-      : State(StateType::kStandBy, {{Event::kStarted, StateType::kFollower}}) {}
+      : State(StateType::kStandby, {{Event::kStarted, StateType::kFollower}}) {}
 
   void OnStarted() override;
   void OnTimedout() override;

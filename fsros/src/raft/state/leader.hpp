@@ -31,7 +31,7 @@ class Leader final : public State {
  public:
   Leader()
       : State(StateType::kLeader,
-              {{Event::kTerminated, StateType::kStandBy},
+              {{Event::kTerminated, StateType::kStandby},
                {Event::kLeaderDiscovered, StateType::kFollower}}) {}
 
   void OnStarted() override;

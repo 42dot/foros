@@ -31,7 +31,7 @@ class Follower final : public State {
  public:
   Follower()
       : State(StateType::kFollower,
-              {{Event::kTerminated, StateType::kStandBy},
+              {{Event::kTerminated, StateType::kStandby},
                {Event::kTimedout, StateType::kCandidate}}) {}
 
   void OnStarted() override;

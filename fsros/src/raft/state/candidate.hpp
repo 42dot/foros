@@ -31,7 +31,7 @@ class Candidate final : public State {
  public:
   Candidate()
       : State(StateType::kCandidate,
-              {{Event::kTerminated, StateType::kStandBy},
+              {{Event::kTerminated, StateType::kStandby},
                {Event::kTimedout, StateType::kCandidate},
                {Event::kElected, StateType::kLeader},
                {Event::kLeaderDiscovered, StateType::kFollower}}) {}

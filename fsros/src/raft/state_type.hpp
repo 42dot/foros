@@ -23,7 +23,7 @@ namespace fsros {
 namespace raft {
 
 enum class StateType {
-  kStandBy,
+  kStandby,
   kFollower,
   kCandidate,
   kLeader,

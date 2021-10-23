@@ -16,8 +16,6 @@
 
 #include "raft/state/standby.hpp"
 
-#include <iostream>
-
 namespace akit {
 namespace failsafe {
 namespace fsros {

@@ -41,8 +41,8 @@ class StateMachine : public common::StateMachine<State, StateType, Event> {
  public:
   StateMachine()
       : common::StateMachine<State, StateType, Event>(
-            StateType::kStandBy,
-            {{StateType::kStandBy, std::make_shared<Standby>()},
+            StateType::kStandby,
+            {{StateType::kStandby, std::make_shared<Standby>()},
              {StateType::kFollower, std::make_shared<Follower>()},
              {StateType::kCandidate, std::make_shared<Candidate>()},
              {StateType::kLeader, std::make_shared<Leader>()}}) {}
