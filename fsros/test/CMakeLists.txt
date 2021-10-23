@@ -6,6 +6,11 @@ ament_add_gtest(
 target_link_libraries(test_node_cluster ${PROJECT_NAME})
 
 ament_add_gtest(
-  test_state_machine
-  test_state_machine.cpp)
-target_link_libraries(test_state_machine ${PROJECT_NAME})
+  test_raft_state_machine
+  test_raft_state_machine.cpp)
+target_link_libraries(test_raft_state_machine ${PROJECT_NAME})
+
+ament_add_gtest(
+  test_lifecycle
+  test_lifecycle.cpp)
+target_link_libraries(test_lifecycle ${PROJECT_NAME})

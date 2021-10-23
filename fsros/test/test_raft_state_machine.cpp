@@ -24,7 +24,7 @@
 
 namespace raft = akit::failsafe::fsros::raft;
 
-class TestNodeCluster : public ::testing::Test {
+class TestRaftStateMachine : public ::testing::Test {
  protected:
   static void SetUpTestCase() {}
 
@@ -38,46 +38,46 @@ class TestNodeCluster : public ::testing::Test {
 };
 
 // Test in standby state
-TEST_F(TestNodeCluster, TestStandbyStateInit) {
+TEST_F(TestRaftStateMachine, TestStandbyStateInit) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestStandbyStateStartedEvent) {
+TEST_F(TestRaftStateMachine, TestStandbyStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
 }
 
-TEST_F(TestNodeCluster, TestStandbyStateTerminatedEvent) {
+TEST_F(TestRaftStateMachine, TestStandbyStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 
   state_machine_->Handle(raft::Event::kTerminated);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestStandbyStateTimedoutEvent) {
+TEST_F(TestRaftStateMachine, TestStandbyStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 
   state_machine_->Handle(raft::Event::kTimedout);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestStandbyStateVoteReceivedEvent) {
+TEST_F(TestRaftStateMachine, TestStandbyStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 
   state_machine_->Handle(raft::Event::kVoteReceived);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestStandbyStateElectedEvent) {
+TEST_F(TestRaftStateMachine, TestStandbyStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 
   state_machine_->Handle(raft::Event::kElected);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestStandbyStateLeaderDiscoveredEvent) {
+TEST_F(TestRaftStateMachine, TestStandbyStateLeaderDiscoveredEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 
   state_machine_->Handle(raft::Event::kLeaderDiscovered);
@@ -85,7 +85,7 @@ TEST_F(TestNodeCluster, TestStandbyStateLeaderDiscoveredEvent) {
 }
 
 // Test in follower state
-TEST_F(TestNodeCluster, TestFollowerStateStartedEvent) {
+TEST_F(TestRaftStateMachine, TestFollowerStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -94,7 +94,7 @@ TEST_F(TestNodeCluster, TestFollowerStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
 }
 
-TEST_F(TestNodeCluster, TestFollowerStateTerminatedEvent) {
+TEST_F(TestRaftStateMachine, TestFollowerStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -103,7 +103,7 @@ TEST_F(TestNodeCluster, TestFollowerStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestFollowerStateTimedoutEvent) {
+TEST_F(TestRaftStateMachine, TestFollowerStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -112,7 +112,7 @@ TEST_F(TestNodeCluster, TestFollowerStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kCandidate);
 }
 
-TEST_F(TestNodeCluster, TestFollowerStateVoteReceivedEvent) {
+TEST_F(TestRaftStateMachine, TestFollowerStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -121,7 +121,7 @@ TEST_F(TestNodeCluster, TestFollowerStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
 }
 
-TEST_F(TestNodeCluster, TestFollowerStateElectedEvent) {
+TEST_F(TestRaftStateMachine, TestFollowerStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -130,7 +130,7 @@ TEST_F(TestNodeCluster, TestFollowerStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
 }
 
-TEST_F(TestNodeCluster, TestFollowerStateLeaderDiscoveredEvent) {
+TEST_F(TestRaftStateMachine, TestFollowerStateLeaderDiscoveredEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -140,7 +140,7 @@ TEST_F(TestNodeCluster, TestFollowerStateLeaderDiscoveredEvent) {
 }
 
 // Test in candidate state
-TEST_F(TestNodeCluster, TestCandidateStateStartedEvent) {
+TEST_F(TestRaftStateMachine, TestCandidateStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -151,7 +151,7 @@ TEST_F(TestNodeCluster, TestCandidateStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kCandidate);
 }
 
-TEST_F(TestNodeCluster, TestCandidateStateTerminatedEvent) {
+TEST_F(TestRaftStateMachine, TestCandidateStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -162,7 +162,7 @@ TEST_F(TestNodeCluster, TestCandidateStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestCandidateStateTimedoutEvent) {
+TEST_F(TestRaftStateMachine, TestCandidateStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -173,7 +173,7 @@ TEST_F(TestNodeCluster, TestCandidateStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kCandidate);
 }
 
-TEST_F(TestNodeCluster, TestCandidateStateVoteReceivedEvent) {
+TEST_F(TestRaftStateMachine, TestCandidateStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -184,7 +184,7 @@ TEST_F(TestNodeCluster, TestCandidateStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kCandidate);
 }
 
-TEST_F(TestNodeCluster, TestCandidateStateElectedEvent) {
+TEST_F(TestRaftStateMachine, TestCandidateStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -195,7 +195,7 @@ TEST_F(TestNodeCluster, TestCandidateStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kLeader);
 }
 
-TEST_F(TestNodeCluster, TestCandidateStateLeaderDiscoveredEvent) {
+TEST_F(TestRaftStateMachine, TestCandidateStateLeaderDiscoveredEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -207,7 +207,7 @@ TEST_F(TestNodeCluster, TestCandidateStateLeaderDiscoveredEvent) {
 }
 
 // Test in leader state
-TEST_F(TestNodeCluster, TestLeaderStateStartedEvent) {
+TEST_F(TestRaftStateMachine, TestLeaderStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -220,7 +220,7 @@ TEST_F(TestNodeCluster, TestLeaderStateStartedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kLeader);
 }
 
-TEST_F(TestNodeCluster, TestLeaderStateTerminatedEvent) {
+TEST_F(TestRaftStateMachine, TestLeaderStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -233,7 +233,7 @@ TEST_F(TestNodeCluster, TestLeaderStateTerminatedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
 }
 
-TEST_F(TestNodeCluster, TestLeaderStateTimedoutEvent) {
+TEST_F(TestRaftStateMachine, TestLeaderStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -246,7 +246,7 @@ TEST_F(TestNodeCluster, TestLeaderStateTimedoutEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kLeader);
 }
 
-TEST_F(TestNodeCluster, TestLeaderStateVoteReceivedEvent) {
+TEST_F(TestRaftStateMachine, TestLeaderStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -259,7 +259,7 @@ TEST_F(TestNodeCluster, TestLeaderStateVoteReceivedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kLeader);
 }
 
-TEST_F(TestNodeCluster, TestLeaderStateElectedEvent) {
+TEST_F(TestRaftStateMachine, TestLeaderStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
@@ -272,7 +272,7 @@ TEST_F(TestNodeCluster, TestLeaderStateElectedEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kLeader);
 }
 
-TEST_F(TestNodeCluster, TestLeaderStateLeaderDiscoveredEvent) {
+TEST_F(TestRaftStateMachine, TestLeaderStateLeaderDiscoveredEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kStandby);
   state_machine_->Handle(raft::Event::kStarted);
   EXPECT_TRUE(state_machine_->GetCurrentState() == raft::StateType::kFollower);
