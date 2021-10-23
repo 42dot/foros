@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_OBSERVER_HPP_
-#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_OBSERVER_HPP_
-
-#include "raft/event/event.hpp"
-#include "raft/event/event_listener.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_TYPE_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_STATE_TYPE_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
-class EventObserver {
- public:
-  explicit EventObserver(EventListener *listener);
-
-  void Emit(Event event);
-
- private:
-  EventListener *listener_;
+enum class StateType {
+  kStandBy,
+  kFollower,
+  kCandidate,
+  kLeader,
+  kUnknown,
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_OBSERVER_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_STATE_TYPE_HPP_

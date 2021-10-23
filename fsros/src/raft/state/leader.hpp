@@ -19,17 +19,18 @@
 
 #include <memory>
 
-#include "raft/event/event.hpp"
-#include "raft/state/state.hpp"
+#include "raft/event.hpp"
+#include "raft/state.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 class Leader final : public State {
  public:
-  explicit Leader(std::shared_ptr<EventObserver> observer)
-      : State(StateType::kLeader, observer,
+  Leader()
+      : State(StateType::kLeader,
               {{Event::kTerminated, StateType::kStandBy},
                {Event::kLeaderDiscovered, StateType::kFollower}}) {}
 
@@ -44,6 +45,7 @@ class Leader final : public State {
   void Exit() override;
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

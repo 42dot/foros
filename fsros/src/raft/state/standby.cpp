@@ -21,6 +21,7 @@
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 void Standby::OnStarted() {}
 
@@ -38,6 +39,7 @@ void Standby::Entry() {}
 
 void Standby::Exit() {}
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

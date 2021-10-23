@@ -20,18 +20,18 @@
 #include <iostream>
 #include <memory>
 
-#include "raft/event/event.hpp"
-#include "raft/state/state.hpp"
+#include "raft/event.hpp"
+#include "raft/state.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 class Standby final : public State {
  public:
-  explicit Standby(std::shared_ptr<EventObserver> observer)
-      : State(StateType::kStandBy, observer,
-              {{Event::kStarted, StateType::kFollower}}) {}
+  Standby()
+      : State(StateType::kStandBy, {{Event::kStarted, StateType::kFollower}}) {}
 
   void OnStarted() override;
   void OnTimedout() override;
@@ -44,6 +44,7 @@ class Standby final : public State {
   void Exit() override;
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

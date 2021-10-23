@@ -32,7 +32,7 @@ NodeClusterImpl::NodeClusterImpl(const std::string &node_name,
           node_name, node_namespace, options.context(),
           *(options.get_rcl_node_options()), options.use_intra_process_comms(),
           options.enable_topic_statistics())),
-      raft_fsm_(std::make_unique<StateMachine>()) {}
+      raft_fsm_(std::make_unique<raft::StateMachine>()) {}
 
 }  // namespace fsros
 }  // namespace failsafe

@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
-#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
-
-#include "raft/event/event.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_EVENT_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_EVENT_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
-class EventListener {
- public:
-  virtual void OnEventReceived(const Event &event) = 0;
+enum class Event {
+  kStarted,
+  kTimedout,
+  kVoteReceived,
+  kLeaderDiscovered,
+  kElected,
+  kTerminated,
+  kUnknown,
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_LISTENER_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_EVENT_HPP_

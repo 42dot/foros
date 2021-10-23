@@ -19,17 +19,18 @@
 
 #include <memory>
 
-#include "raft/event/event.hpp"
-#include "raft/state/state.hpp"
+#include "raft/event.hpp"
+#include "raft/state.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 class Follower final : public State {
  public:
-  explicit Follower(std::shared_ptr<EventObserver> observer)
-      : State(StateType::kFollower, observer,
+  Follower()
+      : State(StateType::kFollower,
               {{Event::kTerminated, StateType::kStandBy},
                {Event::kTimedout, StateType::kCandidate}}) {}
 
@@ -43,6 +44,7 @@ class Follower final : public State {
   void Exit() override;
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

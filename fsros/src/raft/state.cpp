@@ -14,27 +14,31 @@
  * limitations under the License.
  */
 
-#include "raft/state/state.hpp"
+#include "raft/state.hpp"
 
 #include <iostream>
 #include <map>
 #include <memory>
 
-#include "raft/event/event_observer.hpp"
+#include "common/observable.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
-State::State(StateType type, std::shared_ptr<EventObserver> observer,
-             std::map<Event, StateType> transition_map)
-    : type_(type), event_observer_(observer), transition_map_(transition_map) {}
+State::State(StateType type, std::map<Event, StateType> transition_map)
+    : type_(type), transition_map_(transition_map) {}
 
 StateType State::GetType() { return type_; }
 
-void State::Emit(const Event &event) { event_observer_->Emit(event); }
+void State::Emit(const Event &event) { event_source_->Notify(event); }
 
 StateType State::Handle(const Event &event) {
+  if (transition_map_.count(event) < 1) {
+    return type_;
+  }
+
   switch (event) {
     case Event::kStarted:
       OnStarted();
@@ -55,22 +59,18 @@ StateType State::Handle(const Event &event) {
       OnTerminated();
       break;
     default:
-      std::cerr << "State( << " << static_cast<int>(type_) << ") Event("
-                << static_cast<int>(event) << " is not exist in callback map"
-                << std::endl;
-      return StateType::kUnknown;
-  }
-
-  if (transition_map_.count(event) < 1) {
-    std::cerr << "State( << " << static_cast<int>(type_) << ") Event("
-              << static_cast<int>(event) << " is not exist in transition map"
-              << std::endl;
-    return StateType::kUnknown;
+      std::cerr << "Invalid event: " << static_cast<int>(event) << std::endl;
+      return type_;
   }
 
   return transition_map_[event];
 }
 
+void State::SetEventSource(std::shared_ptr<Observable<Event>> event_source) {
+  event_source_ = event_source;
+}
+
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

@@ -19,6 +19,7 @@
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 void Leader::OnStarted() {}
 
@@ -36,6 +37,7 @@ void Leader::Entry() {}
 
 void Leader::Exit() {}
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

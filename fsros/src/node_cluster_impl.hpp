@@ -37,7 +37,7 @@ class NodeClusterImpl final {
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  std::unique_ptr<StateMachine> raft_fsm_;
+  std::unique_ptr<raft::StateMachine> raft_fsm_;
 };
 
 }  // namespace fsros

@@ -22,23 +22,24 @@
 #include <memory>
 #include <string>
 
-#include "raft/event/event.hpp"
-#include "raft/event/event_observer.hpp"
-#include "raft/state/state_type.hpp"
+#include "common/observable.hpp"
+#include "raft/event.hpp"
+#include "raft/state_type.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 class State {
  public:
-  State(StateType type, std::shared_ptr<EventObserver> observer,
-        std::map<Event, StateType> transition_map);
+  State(StateType type, std::map<Event, StateType> transition_map);
   virtual ~State() {}
 
   StateType GetType();
   StateType Handle(const Event &event);
   void Emit(const Event &event);
+  void SetEventSource(std::shared_ptr<Observable<Event>> event_source);
 
   virtual void OnStarted() = 0;
   virtual void OnTimedout() = 0;
@@ -52,10 +53,11 @@ class State {
 
  private:
   StateType type_;
-  std::shared_ptr<EventObserver> event_observer_;
+  std::shared_ptr<Observable<Event>> event_source_;
   std::map<Event, StateType> transition_map_;
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

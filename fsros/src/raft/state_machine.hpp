@@ -20,29 +20,35 @@
 #include <map>
 #include <memory>
 
-#include "raft/event/event.hpp"
-#include "raft/event/event_listener.hpp"
-#include "raft/event/event_observer.hpp"
-#include "raft/state/state.hpp"
-#include "raft/state/state_type.hpp"
+#include "common/observer.hpp"
+#include "common/state_machine.hpp"
+#include "raft/event.hpp"
+#include "raft/state.hpp"
+#include "raft/state/candidate.hpp"
+#include "raft/state/follower.hpp"
+#include "raft/state/leader.hpp"
+#include "raft/state/standby.hpp"
+#include "raft/state_type.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
-class StateMachine : public EventListener {
+namespace common = akit::failsafe::fsros::common;
+
+class StateMachine : public common::StateMachine<State, StateType, Event> {
  public:
-  StateMachine();
-
-  StateType GetCurrentState();
-  void Handle(const Event &event);
-  void OnEventReceived(const Event &event) override;
-
- private:
-  std::map<StateType, std::shared_ptr<State>> states_ = {};
-  StateType current_state_ = StateType::kStandBy;
+  StateMachine()
+      : common::StateMachine<State, StateType, Event>(
+            StateType::kStandBy,
+            {{StateType::kStandBy, std::make_shared<Standby>()},
+             {StateType::kFollower, std::make_shared<Follower>()},
+             {StateType::kCandidate, std::make_shared<Candidate>()},
+             {StateType::kLeader, std::make_shared<Leader>()}}) {}
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
