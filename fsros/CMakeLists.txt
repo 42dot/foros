@@ -22,6 +22,10 @@ set(${PROJECT_NAME}_SRCS
   src/raft/state/follower.cpp
   src/raft/state/leader.cpp
   src/raft/state/standby.cpp
+  src/lifecycle/state.cpp
+  src/lifecycle/state/active.cpp
+  src/lifecycle/state/inactive.cpp
+  src/lifecycle/state/standby.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SRCS})
