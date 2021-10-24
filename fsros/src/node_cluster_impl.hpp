@@ -23,21 +23,32 @@
 #include <memory>
 #include <string>
 
+#include "akit/failsafe/fsros/lifecycle_listener.hpp"
+#include "common/observer.hpp"
+#include "lifecycle/state_machine.hpp"
+#include "lifecycle/state_type.hpp"
 #include "raft/state_machine.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class NodeClusterImpl final {
+class NodeClusterImpl final : Observer<lifecycle::StateType>,
+                              Observer<raft::StateType> {
  public:
   explicit NodeClusterImpl(
-      const std::string &node_name, const std::string &node_namespace = "",
+      LifecycleListener &lifecycle_listener, const std::string &node_name,
+      const std::string &node_namespace = "",
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
+
+  void Handle(const lifecycle::StateType &state) override;
+  void Handle(const raft::StateType &state) override;
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
+  std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
+  LifecycleListener &lifecycle_listener_;
 };
 
 }  // namespace fsros

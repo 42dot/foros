@@ -14,49 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_LIFECYCLE_STATE_HPP_
-#define AKIT_FAILSAFE_FSROS_LIFECYCLE_STATE_HPP_
-
-#include <functional>
-#include <map>
-#include <memory>
-#include <string>
-
-#include "common/observable.hpp"
-#include "lifecycle/event.hpp"
-#include "lifecycle/state_type.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_LIFECYCLE_LISTENER_HPP_
+#define AKIT_FAILSAFE_FSROS_LIFECYCLE_LISTENER_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
-namespace lifecycle {
 
-class State {
+class LifecycleListener {
  public:
-  State(StateType type, std::map<Event, StateType> transition_map);
-  virtual ~State() {}
-
-  StateType GetType();
-  StateType Handle(const Event &event);
-  void Emit(const Event &event);
-  void SetEventNotifier(std::shared_ptr<Observable<Event>> event_source);
-
   virtual void OnActivated() = 0;
   virtual void OnDeactivated() = 0;
   virtual void OnStandby() = 0;
-
-  virtual void Entry() = 0;
-  virtual void Exit() = 0;
-
- private:
-  StateType type_;
-  std::shared_ptr<Observable<Event>> event_source_;
-  std::map<Event, StateType> transition_map_;
 };
 
-}  // namespace lifecycle
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_LIFECYCLE_STATE_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_LIFECYCLE_LISTENER_HPP_

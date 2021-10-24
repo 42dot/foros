@@ -24,7 +24,7 @@ namespace fsros {
 template <typename T>
 class Observer {
  public:
-  virtual void Update(const T &event) = 0;
+  virtual void Handle(const T &data) = 0;
 };
 
 }  // namespace fsros

@@ -28,7 +28,7 @@ namespace fsros {
 NodeCluster::NodeCluster(const std::string &node_name,
                          const std::string &node_namespace,
                          const rclcpp::NodeOptions &options)
-    : impl_(std::make_unique<NodeClusterImpl>(node_name, node_namespace,
+    : impl_(std::make_unique<NodeClusterImpl>(*this, node_name, node_namespace,
                                               options)) {}
 
 NodeCluster::~NodeCluster() {}

@@ -36,7 +36,7 @@ void State::Emit(const Event &event) { event_source_->Notify(event); }
 
 StateType State::Handle(const Event &event) {
   if (transition_map_.count(event) < 1) {
-    return type_;
+    return StateType::kUnknown;
   }
 
   switch (event) {
@@ -57,7 +57,7 @@ StateType State::Handle(const Event &event) {
   return transition_map_[event];
 }
 
-void State::SetEventSource(std::shared_ptr<Observable<Event>> event_source) {
+void State::SetEventNotifier(std::shared_ptr<Observable<Event>> event_source) {
   event_source_ = event_source;
 }
 

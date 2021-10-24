@@ -23,6 +23,7 @@
 #include <string>
 
 #include "akit/failsafe/fsros/common.hpp"
+#include "akit/failsafe/fsros/lifecycle_listener.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -30,7 +31,7 @@ namespace fsros {
 
 class NodeClusterImpl;
 
-class NodeCluster {
+class NodeCluster : public LifecycleListener {
  public:
   EXPORT_API
   explicit NodeCluster(

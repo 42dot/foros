@@ -32,7 +32,7 @@ State::State(StateType type, std::map<Event, StateType> transition_map)
 
 StateType State::GetType() { return type_; }
 
-void State::Emit(const Event &event) { event_source_->Notify(event); }
+void State::Emit(const Event &event) { event_notifier_->Notify(event); }
 
 StateType State::Handle(const Event &event) {
   if (transition_map_.count(event) < 1) {
@@ -66,8 +66,8 @@ StateType State::Handle(const Event &event) {
   return transition_map_[event];
 }
 
-void State::SetEventSource(std::shared_ptr<Observable<Event>> event_source) {
-  event_source_ = event_source;
+void State::SetEventNotifier(std::shared_ptr<Observable<Event>> event_source) {
+  event_notifier_ = event_source;
 }
 
 }  // namespace raft

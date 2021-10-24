@@ -26,6 +26,7 @@ enum class StateType {
   kInactive,
   kStandby,
   kActive,
+  kUnknown,
 };
 
 }  // namespace lifecycle

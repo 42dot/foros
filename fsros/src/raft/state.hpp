@@ -39,7 +39,7 @@ class State {
   StateType GetType();
   StateType Handle(const Event &event);
   void Emit(const Event &event);
-  void SetEventSource(std::shared_ptr<Observable<Event>> event_source);
+  void SetEventNotifier(std::shared_ptr<Observable<Event>> event_source);
 
   virtual void OnStarted() = 0;
   virtual void OnTimedout() = 0;
@@ -53,7 +53,7 @@ class State {
 
  private:
   StateType type_;
-  std::shared_ptr<Observable<Event>> event_source_;
+  std::shared_ptr<Observable<Event>> event_notifier_;
   std::map<Event, StateType> transition_map_;
 };
 
