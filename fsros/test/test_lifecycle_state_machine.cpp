@@ -24,7 +24,7 @@
 
 namespace lifecycle = akit::failsafe::fsros::lifecycle;
 
-class TestLifecycle : public ::testing::Test {
+class TestLifecycleStateMachine : public ::testing::Test {
  protected:
   static void SetUpTestCase() {}
 
@@ -38,12 +38,12 @@ class TestLifecycle : public ::testing::Test {
 };
 
 // Test in inactive state
-TEST_F(TestLifecycle, TestInactiveStateInit) {
+TEST_F(TestLifecycleStateMachine, TestInactiveStateInit) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
 }
 
-TEST_F(TestLifecycle, TestInactiveStateActivateEvent) {
+TEST_F(TestLifecycleStateMachine, TestInactiveStateActivateEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
 
@@ -52,7 +52,7 @@ TEST_F(TestLifecycle, TestInactiveStateActivateEvent) {
               lifecycle::StateType::kActive);
 }
 
-TEST_F(TestLifecycle, TestInactiveStateDeactivateEvent) {
+TEST_F(TestLifecycleStateMachine, TestInactiveStateDeactivateEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
 
@@ -61,7 +61,7 @@ TEST_F(TestLifecycle, TestInactiveStateDeactivateEvent) {
               lifecycle::StateType::kInactive);
 }
 
-TEST_F(TestLifecycle, TestInactiveStateStandbyEvent) {
+TEST_F(TestLifecycleStateMachine, TestInactiveStateStandbyEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
 
@@ -71,7 +71,7 @@ TEST_F(TestLifecycle, TestInactiveStateStandbyEvent) {
 }
 
 // Test in active state
-TEST_F(TestLifecycle, TestActiveStateActivateEvent) {
+TEST_F(TestLifecycleStateMachine, TestActiveStateActivateEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
   state_machine_->Handle(lifecycle::Event::kActivate);
@@ -83,7 +83,7 @@ TEST_F(TestLifecycle, TestActiveStateActivateEvent) {
               lifecycle::StateType::kActive);
 }
 
-TEST_F(TestLifecycle, TestActiveStateDeactivateEvent) {
+TEST_F(TestLifecycleStateMachine, TestActiveStateDeactivateEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
   state_machine_->Handle(lifecycle::Event::kActivate);
@@ -95,7 +95,7 @@ TEST_F(TestLifecycle, TestActiveStateDeactivateEvent) {
               lifecycle::StateType::kInactive);
 }
 
-TEST_F(TestLifecycle, TestActiveStateStandbyEvent) {
+TEST_F(TestLifecycleStateMachine, TestActiveStateStandbyEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
   state_machine_->Handle(lifecycle::Event::kActivate);
@@ -108,7 +108,7 @@ TEST_F(TestLifecycle, TestActiveStateStandbyEvent) {
 }
 
 // Test in standby state
-TEST_F(TestLifecycle, TestStandbyStateActivateEvent) {
+TEST_F(TestLifecycleStateMachine, TestStandbyStateActivateEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
   state_machine_->Handle(lifecycle::Event::kStandby);
@@ -120,7 +120,7 @@ TEST_F(TestLifecycle, TestStandbyStateActivateEvent) {
               lifecycle::StateType::kActive);
 }
 
-TEST_F(TestLifecycle, TestStandbyStateDeactivateEvent) {
+TEST_F(TestLifecycleStateMachine, TestStandbyStateDeactivateEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
   state_machine_->Handle(lifecycle::Event::kStandby);
@@ -132,7 +132,7 @@ TEST_F(TestLifecycle, TestStandbyStateDeactivateEvent) {
               lifecycle::StateType::kInactive);
 }
 
-TEST_F(TestLifecycle, TestStandbyStateStandbyEvent) {
+TEST_F(TestLifecycleStateMachine, TestStandbyStateStandbyEvent) {
   EXPECT_TRUE(state_machine_->GetCurrentState() ==
               lifecycle::StateType::kInactive);
   state_machine_->Handle(lifecycle::Event::kStandby);
