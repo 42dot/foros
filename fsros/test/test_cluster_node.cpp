@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "akit/failsafe/fsros/node_cluster.hpp"
+#include "akit/failsafe/fsros/cluster_node.hpp"
 
 class TestNodeCluster : public ::testing::Test {
  protected:
@@ -29,11 +29,11 @@ class TestNodeCluster : public ::testing::Test {
   static void TearDownTestCase() { rclcpp::shutdown(); }
 };
 
-class MyNodeCluster : public akit::failsafe::fsros::NodeCluster {
+class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
  public:
-  explicit MyNodeCluster(const std::string &node,
+  explicit MyClusterNode(const std::string &node,
                          const std::string &node_namespace = "")
-      : akit::failsafe::fsros::NodeCluster(node, node_namespace) {}
+      : akit::failsafe::fsros::ClusterNode(node, node_namespace) {}
 
   void on_activated() override {}
 
@@ -46,18 +46,18 @@ class MyNodeCluster : public akit::failsafe::fsros::NodeCluster {
    Testing node constructor
  */
 TEST_F(TestNodeCluster, TestConstructor) {
-  { auto node_cluster = std::make_shared<MyNodeCluster>("test_node"); }
+  { auto cluster_node = std::make_shared<MyClusterNode>("test_node"); }
 
   {
-    auto node_cluster =
-        std::make_shared<MyNodeCluster>("test_node", "/test_ns");
+    auto cluster_node =
+        std::make_shared<MyClusterNode>("test_node", "/test_ns");
   }
 
   {
     ASSERT_THROW(
         {
-          auto node_cluster = std::make_shared<MyNodeCluster>("");
-          (void)node_cluster;
+          auto cluster_node = std::make_shared<MyClusterNode>("");
+          (void)cluster_node;
         },
         rclcpp::exceptions::InvalidNodeNameError);
   }
@@ -65,8 +65,8 @@ TEST_F(TestNodeCluster, TestConstructor) {
   {
     ASSERT_THROW(
         {
-          auto node_cluster = std::make_shared<MyNodeCluster>("invalid_node?");
-          (void)node_cluster;
+          auto cluster_node = std::make_shared<MyClusterNode>("invalid_node?");
+          (void)cluster_node;
         },
         rclcpp::exceptions::InvalidNodeNameError);
   }
@@ -74,9 +74,9 @@ TEST_F(TestNodeCluster, TestConstructor) {
   {
     ASSERT_THROW(
         {
-          auto node_cluster =
-              std::make_shared<MyNodeCluster>("test_node", "/invalid_ns?");
-          (void)node_cluster;
+          auto cluster_node =
+              std::make_shared<MyClusterNode>("test_node", "/invalid_ns?");
+          (void)cluster_node;
         },
         rclcpp::exceptions::InvalidNamespaceError);
   }

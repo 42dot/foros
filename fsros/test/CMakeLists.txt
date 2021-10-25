@@ -2,9 +2,9 @@ find_package(ament_cmake_gtest REQUIRED)
 find_package(ament_cmake_gmock REQUIRED)
 
 ament_add_gtest(
-  test_node_cluster
-  test_node_cluster.cpp)
-target_link_libraries(test_node_cluster ${PROJECT_NAME})
+  test_cluster_node
+  test_cluster_node.cpp)
+target_link_libraries(test_cluster_node ${PROJECT_NAME})
 
 ament_add_gtest(
   test_raft_state_machine

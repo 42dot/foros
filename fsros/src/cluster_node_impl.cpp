@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "node_cluster_impl.hpp"
+#include "cluster_node_impl.hpp"
 
 #include <rclcpp/node_interfaces/node_base.hpp>
 
@@ -25,7 +25,7 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-NodeClusterImpl::NodeClusterImpl(LifecycleListener &lifecycle_listener,
+ClusterNodeImpl::ClusterNodeImpl(LifecycleListener &lifecycle_listener,
                                  const std::string &node_name,
                                  const std::string &node_namespace,
                                  const rclcpp::NodeOptions &options)
@@ -39,7 +39,7 @@ NodeClusterImpl::NodeClusterImpl(LifecycleListener &lifecycle_listener,
   lifecycle_fsm_->Subscribe(this);
 }
 
-void NodeClusterImpl::handle(const lifecycle::StateType &state) {
+void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
   switch (state) {
     case lifecycle::StateType::kStandby:
       lifecycle_listener_.on_standby();
@@ -57,7 +57,7 @@ void NodeClusterImpl::handle(const lifecycle::StateType &state) {
   }
 }
 
-void NodeClusterImpl::handle(const raft::StateType &state) {
+void ClusterNodeImpl::handle(const raft::StateType &state) {
   switch (state) {
     case raft::StateType::kStandby:
       break;

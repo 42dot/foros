@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_NODE_CLUSTER_IMPL_HPP_
-#define AKIT_FAILSAFE_FSROS_NODE_CLUSTER_IMPL_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_CLUSTER_NODE_IMPL_HPP_
+#define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_IMPL_HPP_
 
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_options.hpp>
@@ -33,10 +33,10 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class NodeClusterImpl final : Observer<lifecycle::StateType>,
+class ClusterNodeImpl final : Observer<lifecycle::StateType>,
                               Observer<raft::StateType> {
  public:
-  explicit NodeClusterImpl(
+  explicit ClusterNodeImpl(
       LifecycleListener &lifecycle_listener, const std::string &node_name,
       const std::string &node_namespace = "",
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
@@ -55,4 +55,4 @@ class NodeClusterImpl final : Observer<lifecycle::StateType>,
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_NODE_CLUSTER_IMPL_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_CLUSTER_NODE_IMPL_HPP_

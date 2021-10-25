@@ -15,8 +15,8 @@ find_package(rclcpp REQUIRED)
 include_directories(src)
 
 set(${PROJECT_NAME}_SRCS
-  src/node_cluster.cpp
-  src/node_cluster_impl.cpp
+  src/cluster_node.cpp
+  src/cluster_node_impl.cpp
   src/raft/state.cpp
   src/raft/state/candidate.cpp
   src/raft/state/follower.cpp
