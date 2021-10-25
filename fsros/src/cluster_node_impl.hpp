@@ -18,6 +18,7 @@
 #define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_IMPL_HPP_
 
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_services_interface.hpp>
 #include <rclcpp/node_options.hpp>
 
 #include <functional>
@@ -40,6 +41,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
  public:
   explicit ClusterNodeImpl(
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+      rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_,
       ClusterNodeInterface &node_interface);
 
   void handle(const lifecycle::StateType &state) override;

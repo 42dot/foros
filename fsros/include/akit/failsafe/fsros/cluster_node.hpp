@@ -22,6 +22,7 @@
 #include <rclcpp/create_subscription.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_logging_interface.hpp>
+#include <rclcpp/node_interfaces/node_services_interface.hpp>
 #include <rclcpp/node_interfaces/node_timers.hpp>
 #include <rclcpp/node_interfaces/node_timers_interface.hpp>
 #include <rclcpp/node_interfaces/node_topics_interface.hpp>
@@ -191,6 +192,7 @@ class ClusterNode : public ClusterNodeInterface {
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   rclcpp::node_interfaces::NodeTimers::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
 
   std::unique_ptr<ClusterNodeImpl> impl_;
 };

@@ -30,11 +30,13 @@ class TestRaftStateMachine : public ::testing::Test {
 
   static void TearDownTestCase() {}
 
-  void SetUp() { state_machine_ = std::make_shared<raft::StateMachine>(); }
+  void SetUp() {
+    state_machine_ = std::make_shared<raft::StateMachine>(nullptr);
+  }
 
   void TearDown() { state_machine_.reset(); }
 
-  std::shared_ptr<raft::StateMachine> state_machine_;
+  std::shared_ptr<raft::StateMachine> state_machine_ = nullptr;
 };
 
 // Test in standby state

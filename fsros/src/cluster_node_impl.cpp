@@ -27,9 +27,10 @@ namespace fsros {
 
 ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     ClusterNodeInterface &node_interface)
     : node_base_(node_base),
-      raft_fsm_(std::make_unique<raft::StateMachine>()),
+      raft_fsm_(std::make_unique<raft::StateMachine>(node_services)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
       node_interface_(node_interface) {
   lifecycle_fsm_->Subscribe(this);

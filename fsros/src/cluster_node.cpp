@@ -18,6 +18,7 @@
 
 #include <rclcpp/node_interfaces/node_base.hpp>
 #include <rclcpp/node_interfaces/node_logging.hpp>
+#include <rclcpp/node_interfaces/node_services.hpp>
 #include <rclcpp/node_interfaces/node_topics.hpp>
 
 #include <memory>
@@ -41,7 +42,10 @@ ClusterNode::ClusterNode(const std::string &node_name,
       node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
       node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(),
                                                            node_timers_.get())),
-      impl_(std::make_unique<ClusterNodeImpl>(node_base_, *this)) {}
+      node_services_(
+          new rclcpp::node_interfaces::NodeServices(node_base_.get())),
+      impl_(std::make_unique<ClusterNodeImpl>(node_base_, node_services_,
+                                              *this)) {}
 
 ClusterNode::~ClusterNode() {}
 
