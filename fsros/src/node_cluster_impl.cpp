@@ -39,16 +39,16 @@ NodeClusterImpl::NodeClusterImpl(LifecycleListener &lifecycle_listener,
   lifecycle_fsm_->Subscribe(this);
 }
 
-void NodeClusterImpl::Handle(const lifecycle::StateType &state) {
+void NodeClusterImpl::handle(const lifecycle::StateType &state) {
   switch (state) {
     case lifecycle::StateType::kStandby:
-      lifecycle_listener_.OnStandby();
+      lifecycle_listener_.on_standby();
       break;
     case lifecycle::StateType::kActive:
-      lifecycle_listener_.OnActivated();
+      lifecycle_listener_.on_activated();
       break;
     case lifecycle::StateType::kInactive:
-      lifecycle_listener_.OnDeactivated();
+      lifecycle_listener_.on_deactivated();
       break;
     default:
       std::cerr << "Invalid lifecycle state : " << static_cast<int>(state)
@@ -57,7 +57,7 @@ void NodeClusterImpl::Handle(const lifecycle::StateType &state) {
   }
 }
 
-void NodeClusterImpl::Handle(const raft::StateType &state) {
+void NodeClusterImpl::handle(const raft::StateType &state) {
   switch (state) {
     case raft::StateType::kStandby:
       break;

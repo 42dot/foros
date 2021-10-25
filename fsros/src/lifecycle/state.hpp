@@ -36,17 +36,17 @@ class State {
   State(StateType type, std::map<Event, StateType> transition_map);
   virtual ~State() {}
 
-  StateType GetType();
-  StateType Handle(const Event &event);
-  void Emit(const Event &event);
-  void SetEventNotifier(std::shared_ptr<Observable<Event>> event_source);
+  StateType get_type();
+  StateType handle(const Event &event);
+  void emit(const Event &event);
+  void set_event_notifier(std::shared_ptr<Observable<Event>> event_source);
 
-  virtual void OnActivated() = 0;
-  virtual void OnDeactivated() = 0;
-  virtual void OnStandby() = 0;
+  virtual void on_activated() = 0;
+  virtual void on_deactivated() = 0;
+  virtual void on_standby() = 0;
 
-  virtual void Entry() = 0;
-  virtual void Exit() = 0;
+  virtual void entry() = 0;
+  virtual void exit() = 0;
 
  private:
   StateType type_;

@@ -36,20 +36,20 @@ class State {
   State(StateType type, std::map<Event, StateType> transition_map);
   virtual ~State() {}
 
-  StateType GetType();
-  StateType Handle(const Event &event);
-  void Emit(const Event &event);
-  void SetEventNotifier(std::shared_ptr<Observable<Event>> event_source);
+  StateType get_type();
+  StateType handle(const Event &event);
+  void emit(const Event &event);
+  void set_event_notifier(std::shared_ptr<Observable<Event>> event_source);
 
-  virtual void OnStarted() = 0;
-  virtual void OnTimedout() = 0;
-  virtual void OnVoteReceived() = 0;
-  virtual void OnLeaderDiscovered() = 0;
-  virtual void OnElected() = 0;
-  virtual void OnTerminated() = 0;
+  virtual void on_started() = 0;
+  virtual void on_timedout() = 0;
+  virtual void on_vote_received() = 0;
+  virtual void on_leader_discovered() = 0;
+  virtual void on_elected() = 0;
+  virtual void on_terminated() = 0;
 
-  virtual void Entry() = 0;
-  virtual void Exit() = 0;
+  virtual void entry() = 0;
+  virtual void exit() = 0;
 
  private:
   StateType type_;

@@ -30,24 +30,24 @@ namespace lifecycle {
 State::State(StateType type, std::map<Event, StateType> transition_map)
     : type_(type), transition_map_(transition_map) {}
 
-StateType State::GetType() { return type_; }
+StateType State::get_type() { return type_; }
 
-void State::Emit(const Event &event) { event_source_->Notify(event); }
+void State::emit(const Event &event) { event_source_->notify(event); }
 
-StateType State::Handle(const Event &event) {
+StateType State::handle(const Event &event) {
   if (transition_map_.count(event) < 1) {
     return StateType::kUnknown;
   }
 
   switch (event) {
     case Event::kActivate:
-      OnActivated();
+      on_activated();
       break;
     case Event::kDeactivate:
-      OnDeactivated();
+      on_deactivated();
       break;
     case Event::kStandby:
-      OnStandby();
+      on_standby();
       break;
     default:
       std::cerr << "Invalid event: " << static_cast<int>(event) << std::endl;
@@ -57,7 +57,8 @@ StateType State::Handle(const Event &event) {
   return transition_map_[event];
 }
 
-void State::SetEventNotifier(std::shared_ptr<Observable<Event>> event_source) {
+void State::set_event_notifier(
+    std::shared_ptr<Observable<Event>> event_source) {
   event_source_ = event_source;
 }
 

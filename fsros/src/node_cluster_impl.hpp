@@ -41,8 +41,8 @@ class NodeClusterImpl final : Observer<lifecycle::StateType>,
       const std::string &node_namespace = "",
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
-  void Handle(const lifecycle::StateType &state) override;
-  void Handle(const raft::StateType &state) override;
+  void handle(const lifecycle::StateType &state) override;
+  void handle(const raft::StateType &state) override;
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;

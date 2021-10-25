@@ -30,33 +30,33 @@ namespace raft {
 State::State(StateType type, std::map<Event, StateType> transition_map)
     : type_(type), transition_map_(transition_map) {}
 
-StateType State::GetType() { return type_; }
+StateType State::get_type() { return type_; }
 
-void State::Emit(const Event &event) { event_notifier_->Notify(event); }
+void State::emit(const Event &event) { event_notifier_->notify(event); }
 
-StateType State::Handle(const Event &event) {
+StateType State::handle(const Event &event) {
   if (transition_map_.count(event) < 1) {
     return type_;
   }
 
   switch (event) {
     case Event::kStarted:
-      OnStarted();
+      on_started();
       break;
     case Event::kTimedout:
-      OnTimedout();
+      on_timedout();
       break;
     case Event::kLeaderDiscovered:
-      OnLeaderDiscovered();
+      on_leader_discovered();
       break;
     case Event::kVoteReceived:
-      OnVoteReceived();
+      on_vote_received();
       break;
     case Event::kElected:
-      OnElected();
+      on_elected();
       break;
     case Event::kTerminated:
-      OnTerminated();
+      on_terminated();
       break;
     default:
       std::cerr << "Invalid event: " << static_cast<int>(event) << std::endl;
@@ -66,7 +66,8 @@ StateType State::Handle(const Event &event) {
   return transition_map_[event];
 }
 
-void State::SetEventNotifier(std::shared_ptr<Observable<Event>> event_source) {
+void State::set_event_notifier(
+    std::shared_ptr<Observable<Event>> event_source) {
   event_notifier_ = event_source;
 }
 

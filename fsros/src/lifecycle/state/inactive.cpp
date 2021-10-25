@@ -21,15 +21,15 @@ namespace failsafe {
 namespace fsros {
 namespace lifecycle {
 
-void Inactive::OnActivated() {}
+void Inactive::on_activated() {}
 
-void Inactive::OnDeactivated() {}
+void Inactive::on_deactivated() {}
 
-void Inactive::OnStandby() {}
+void Inactive::on_standby() {}
 
-void Inactive::Entry() {}
+void Inactive::entry() {}
 
-void Inactive::Exit() {}
+void Inactive::exit() {}
 
 }  // namespace lifecycle
 }  // namespace fsros

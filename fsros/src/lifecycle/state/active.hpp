@@ -35,12 +35,12 @@ class Active final : public State {
               {{Event::kStandby, StateType::kStandby},
                {Event::kDeactivate, StateType::kInactive}}) {}
 
-  void OnActivated() override;
-  void OnDeactivated() override;
-  void OnStandby() override;
+  void on_activated() override;
+  void on_deactivated() override;
+  void on_standby() override;
 
-  void Entry() override;
-  void Exit() override;
+  void entry() override;
+  void exit() override;
 };
 
 }  // namespace lifecycle

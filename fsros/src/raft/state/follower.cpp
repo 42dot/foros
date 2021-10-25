@@ -21,21 +21,21 @@ namespace failsafe {
 namespace fsros {
 namespace raft {
 
-void Follower::OnStarted() {}
+void Follower::on_started() {}
 
-void Follower::OnTimedout() {}
+void Follower::on_timedout() {}
 
-void Follower::OnVoteReceived() {}
+void Follower::on_vote_received() {}
 
-void Follower::OnLeaderDiscovered() {}
+void Follower::on_leader_discovered() {}
 
-void Follower::OnElected() {}
+void Follower::on_elected() {}
 
-void Follower::OnTerminated() {}
+void Follower::on_terminated() {}
 
-void Follower::Entry() {}
+void Follower::entry() {}
 
-void Follower::Exit() {}
+void Follower::exit() {}
 
 }  // namespace raft
 }  // namespace fsros

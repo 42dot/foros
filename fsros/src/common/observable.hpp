@@ -28,11 +28,11 @@ namespace fsros {
 template <typename T>
 class Observable {
  public:
-  void Subscribe(Observer<T> *observer) { observers_.push_back(observer); }
-  void Unsubscribe(Observer<T> *observer) { observers_.remove(observer); }
-  void Notify(const T &data) {
+  void subscribe(Observer<T> *observer) { observers_.push_back(observer); }
+  void unsubscribe(Observer<T> *observer) { observers_.remove(observer); }
+  void notify(const T &data) {
     for (auto observer : observers_) {
-      observer->Handle(data);
+      observer->handle(data);
     }
   }
 

@@ -36,15 +36,15 @@ class Candidate final : public State {
                {Event::kElected, StateType::kLeader},
                {Event::kLeaderDiscovered, StateType::kFollower}}) {}
 
-  void OnStarted() override;
-  void OnTimedout() override;
-  void OnVoteReceived() override;
-  void OnLeaderDiscovered() override;
-  void OnElected() override;
-  void OnTerminated() override;
+  void on_started() override;
+  void on_timedout() override;
+  void on_vote_received() override;
+  void on_leader_discovered() override;
+  void on_elected() override;
+  void on_terminated() override;
 
-  void Entry() override;
-  void Exit() override;
+  void entry() override;
+  void exit() override;
 };
 
 }  // namespace raft

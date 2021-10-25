@@ -35,11 +35,11 @@ class MyNodeCluster : public akit::failsafe::fsros::NodeCluster {
                          const std::string &node_namespace = "")
       : akit::failsafe::fsros::NodeCluster(node, node_namespace) {}
 
-  void OnActivated() override {}
+  void on_activated() override {}
 
-  void OnDeactivated() override {}
+  void on_deactivated() override {}
 
-  void OnStandby() override {}
+  void on_standby() override {}
 };
 
 /*

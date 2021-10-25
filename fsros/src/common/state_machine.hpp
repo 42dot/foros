@@ -37,38 +37,38 @@ class StateMachine : public Observer<Event> {
       : states_(states), current_state_(current_state) {
     // create event source and attach it to states
     event_notifier_ = std::make_shared<Observable<Event>>();
-    event_notifier_->Subscribe(this);
+    event_notifier_->subscribe(this);
     for (auto state = states_.begin(); state != states_.end(); state++) {
-      state->second->SetEventNotifier(event_notifier_);
+      state->second->set_event_notifier(event_notifier_);
     }
 
     // invoke Entry() of initial state
-    states_[current_state_]->Entry();
+    states_[current_state_]->entry();
   }
-  virtual ~StateMachine() { event_notifier_->Unsubscribe(this); }
+  virtual ~StateMachine() { event_notifier_->unsubscribe(this); }
 
-  StateType GetCurrentState() { return current_state_; }
+  StateType get_current_state() { return current_state_; }
 
-  void Handle(const Event &event) override {
-    auto next_state = states_[current_state_]->Handle(event);
+  void handle(const Event &event) override {
+    auto next_state = states_[current_state_]->handle(event);
     if (states_.count(next_state) < 1) {
       std::cerr << "Invalid next state (" << static_cast<int>(next_state)
                 << std::endl;
       return;
     }
 
-    states_[current_state_]->Exit();
+    states_[current_state_]->exit();
     current_state_ = next_state;
-    states_[current_state_]->Entry();
-    current_state_notifier_.Notify(current_state_);
+    states_[current_state_]->entry();
+    current_state_notifier_.notify(current_state_);
   }
 
   void Subscribe(Observer<StateType> *observer) {
-    current_state_notifier_.Subscribe(observer);
+    current_state_notifier_.subscribe(observer);
   }
 
   void Unsubscribe(Observer<StateType> *observer) {
-    current_state_notifier_.Unsubscribe(observer);
+    current_state_notifier_.unsubscribe(observer);
   }
 
  private:
