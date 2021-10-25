@@ -72,6 +72,16 @@ ClusterNode::get_node_topics_interface() {
   return node_topics_;
 }
 
+void ClusterNode::add_publisher(
+    std::shared_ptr<ClusterNodeInterface> publisher) {
+  impl_->add_publisher(publisher);
+}
+
+void ClusterNode::remove_publisher(
+    std::shared_ptr<ClusterNodeInterface> publisher) {
+  impl_->remove_publisher(publisher);
+}
+
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

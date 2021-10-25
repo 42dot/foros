@@ -35,16 +35,32 @@ ClusterNodeImpl::ClusterNodeImpl(
   lifecycle_fsm_->Subscribe(this);
 }
 
+void ClusterNodeImpl::visit_publishers(
+    std::function<void(std::shared_ptr<ClusterNodeInterface>)> f) {
+  auto pub = publishers_.begin();
+  while (pub != publishers_.end()) {
+    auto pub_shared = pub->lock();
+    if (pub_shared == nullptr) {
+      pub = publishers_.erase(pub);
+    } else {
+      f(pub_shared);
+    }
+  }
+}
+
 void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
   switch (state) {
     case lifecycle::StateType::kStandby:
       node_interface_.on_standby();
+      visit_publishers([](auto publisher) { publisher->on_standby(); });
       break;
     case lifecycle::StateType::kActive:
       node_interface_.on_activated();
+      visit_publishers([](auto publisher) { publisher->on_activated(); });
       break;
     case lifecycle::StateType::kInactive:
       node_interface_.on_deactivated();
+      visit_publishers([](auto publisher) { publisher->on_deactivated(); });
       break;
     default:
       std::cerr << "Invalid lifecycle state : " << static_cast<int>(state)
@@ -67,6 +83,22 @@ void ClusterNodeImpl::handle(const raft::StateType &state) {
       std::cerr << "Invalid raft state : " << static_cast<int>(state)
                 << std::endl;
       break;
+  }
+}
+
+void ClusterNodeImpl::add_publisher(
+    std::shared_ptr<ClusterNodeInterface> publisher) {
+  publishers_.push_back(publisher);
+}
+
+void ClusterNodeImpl::remove_publisher(
+    std::shared_ptr<ClusterNodeInterface> publisher) {
+  auto pub = publishers_.begin();
+  while (pub != publishers_.end()) {
+    auto pub_shared = pub->lock();
+    if (pub_shared == publisher) {
+      pub = publishers_.erase(pub);
+    }
   }
 }
 

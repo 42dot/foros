@@ -118,9 +118,13 @@ class ClusterNode : public ClusterNodeInterface {
       const std::string &topic_name, const rclcpp::QoS &qos,
       const rclcpp::PublisherOptionsWithAllocator<AllocatorT> &options =
           (rclcpp::PublisherOptionsWithAllocator<AllocatorT>())) {
-    return rclcpp::create_publisher<MessageT, AllocatorT,
-                                    ClusterNodePublisher<MessageT, AllocatorT>>(
-        *this, topic_name, qos, options);
+    auto pub =
+        rclcpp::create_publisher<MessageT, AllocatorT,
+                                 ClusterNodePublisher<MessageT, AllocatorT>>(
+            *this, topic_name, qos, options);
+    add_publisher(pub);
+
+    return pub;
   }
 
   /// Create and return a Subscription.
@@ -180,6 +184,9 @@ class ClusterNode : public ClusterNodeInterface {
   get_node_topics_interface();
 
  private:
+  void add_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
+  void remove_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
+
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   rclcpp::node_interfaces::NodeTimers::SharedPtr node_timers_;
