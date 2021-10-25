@@ -17,7 +17,35 @@
 #ifndef AKIT_FAILSAFE_FSROS_COMMON_HPP_
 #define AKIT_FAILSAFE_FSROS_COMMON_HPP_
 
-// Support Linux and GCC version 4.0 or later
-#define EXPORT_API __attribute__((visibility("default")))
+// This logic was borrowed (then namespaced) from the examples on the gcc wiki:
+//     https://gcc.gnu.org/wiki/Visibility
+
+#if defined _WIN32 || defined __CYGWIN__
+#ifdef __GNUC__
+#define CLUSTER_NODE_EXPORT __attribute__((dllexport))
+#define CLUSTER_NODE_IMPORT __attribute__((dllimport))
+#else
+#define CLUSTER_NODE_EXPORT __declspec(dllexport)
+#define CLUSTER_NODE_IMPORT __declspec(dllimport)
+#endif
+#ifdef CLUSTER_NODE_BUILDING_DLL
+#define CLUSTER_NODE_PUBLIC CLUSTER_NODE_EXPORT
+#else
+#define CLUSTER_NODE_PUBLIC CLUSTER_NODE_IMPORT
+#endif
+#define CLUSTER_NODE_PUBLIC_TYPE CLUSTER_NODE_PUBLIC
+#define CLUSTER_NODE_LOCAL
+#else
+#define CLUSTER_NODE_EXPORT __attribute__((visibility("default")))
+#define CLUSTER_NODE_IMPORT
+#if __GNUC__ >= 4
+#define CLUSTER_NODE_PUBLIC __attribute__((visibility("default")))
+#define CLUSTER_NODE_LOCAL __attribute__((visibility("hidden")))
+#else
+#define CLUSTER_NODE_PUBLIC
+#define CLUSTER_NODE_LOCAL
+#endif
+#define CLUSTER_NODE_PUBLIC_TYPE
+#endif
 
 #endif  // AKIT_FAILSAFE_FSROS_COMMON_HPP_

@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_LIFECYCLE_LISTENER_HPP_
-#define AKIT_FAILSAFE_FSROS_LIFECYCLE_LISTENER_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_CLUSTER_NODE_INTERFACE_HPP_
+#define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_INTERFACE_HPP_
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class LifecycleListener {
+enum class ClusterNodeState {
+  kActive,
+  kInactive,
+  kStandby,
+  kUnknown,
+};
+
+class ClusterNodeInterface {
  public:
   virtual void on_activated() = 0;
   virtual void on_deactivated() = 0;
@@ -32,4 +39,4 @@ class LifecycleListener {
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_LIFECYCLE_LISTENER_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_CLUSTER_NODE_INTERFACE_HPP_

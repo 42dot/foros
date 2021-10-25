@@ -16,8 +16,13 @@
 
 #include "akit/failsafe/fsros/cluster_node.hpp"
 
+#include <rclcpp/node_interfaces/node_base.hpp>
+#include <rclcpp/node_interfaces/node_logging.hpp>
+#include <rclcpp/node_interfaces/node_topics.hpp>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "cluster_node_impl.hpp"
 
@@ -28,10 +33,44 @@ namespace fsros {
 ClusterNode::ClusterNode(const std::string &node_name,
                          const std::string &node_namespace,
                          const rclcpp::NodeOptions &options)
-    : impl_(std::make_unique<ClusterNodeImpl>(*this, node_name, node_namespace,
-                                              options)) {}
+    : node_base_(new rclcpp::node_interfaces::NodeBase(
+          node_name, node_namespace, options.context(),
+          *(options.get_rcl_node_options()), options.use_intra_process_comms(),
+          options.enable_topic_statistics())),
+      node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
+      node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
+      node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(),
+                                                           node_timers_.get())),
+      impl_(std::make_unique<ClusterNodeImpl>(node_base_, *this)) {}
 
 ClusterNode::~ClusterNode() {}
+
+const char *ClusterNode::get_name() const { return node_base_->get_name(); }
+
+const char *ClusterNode::get_namespace() const {
+  return node_base_->get_namespace();
+}
+
+rclcpp::Logger ClusterNode::get_logger() const {
+  return node_logging_->get_logger();
+}
+
+rclcpp::CallbackGroup::SharedPtr ClusterNode::create_callback_group(
+    rclcpp::CallbackGroupType group_type,
+    bool automatically_add_to_executor_with_node) {
+  return node_base_->create_callback_group(
+      group_type, automatically_add_to_executor_with_node);
+}
+
+const std::vector<rclcpp::CallbackGroup::WeakPtr>
+    &ClusterNode::get_callback_groups() const {
+  return node_base_->get_callback_groups();
+}
+
+rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
+ClusterNode::get_node_topics_interface() {
+  return node_topics_;
+}
 
 }  // namespace fsros
 }  // namespace failsafe

@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 
-#include "akit/failsafe/fsros/lifecycle_listener.hpp"
+#include "akit/failsafe/fsros/cluster_node_interface.hpp"
 #include "common/observer.hpp"
 #include "lifecycle/state_machine.hpp"
 #include "lifecycle/state_type.hpp"
@@ -37,9 +37,8 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
                               Observer<raft::StateType> {
  public:
   explicit ClusterNodeImpl(
-      LifecycleListener &lifecycle_listener, const std::string &node_name,
-      const std::string &node_namespace = "",
-      const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
+      rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+      ClusterNodeInterface &node_interface);
 
   void handle(const lifecycle::StateType &state) override;
   void handle(const raft::StateType &state) override;
@@ -48,7 +47,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
-  LifecycleListener &lifecycle_listener_;
+  ClusterNodeInterface &node_interface_;
 };
 
 }  // namespace fsros
