@@ -16,6 +16,8 @@
 
 #include "raft/state_machine.hpp"
 
+#include <rclcpp/create_client.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -28,9 +30,9 @@ namespace fsros {
 namespace raft {
 
 StateMachine::StateMachine(
-    const std::string &node_name, const std::string &cluster_name,
     const std::vector<std::string> &cluster_node_names,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services)
     : common::StateMachine<State, StateType, Event>(
           StateType::kStandby,
@@ -39,13 +41,17 @@ StateMachine::StateMachine(
            {StateType::kCandidate, std::make_shared<Candidate>()},
            {StateType::kLeader, std::make_shared<Leader>()}}),
       node_base_(node_base),
-      node_services_(node_services),
-      service_prefix_("/" + cluster_name + "/" + node_name) {
+      node_graph_(node_graph),
+      node_services_(node_services) {
   initialize_services();
   initialize_clients(cluster_node_names);
 }
 
 void StateMachine::initialize_services() {
+  std::string service_prefix = std::string(node_base_->get_namespace()) + "/" +
+                               std::string(node_base_->get_name());
+  rcl_service_options_t options = rcl_service_get_default_options();
+
   append_entries_callback_.set(std::bind(
       &StateMachine::on_append_entries_requested, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3));
@@ -53,8 +59,8 @@ void StateMachine::initialize_services() {
   append_entries_service_ =
       std::make_shared<rclcpp::Service<fsros_msgs::srv::AppendEntries>>(
           node_base_->get_shared_rcl_node_handle(),
-          service_prefix_ + "/append_entries", append_entries_callback_,
-          service_options_);
+          service_prefix + "/append_entries", append_entries_callback_,
+          options);
   node_services_->add_service(
       std::dynamic_pointer_cast<rclcpp::ServiceBase>(append_entries_service_),
       nullptr);
@@ -66,15 +72,39 @@ void StateMachine::initialize_services() {
   request_vote_service_ =
       std::make_shared<rclcpp::Service<fsros_msgs::srv::RequestVote>>(
           node_base_->get_shared_rcl_node_handle(),
-          service_prefix_ + "/request_vote", request_vote_callback_,
-          service_options_);
+          service_prefix + "/request_vote", request_vote_callback_, options);
   node_services_->add_service(
       std::dynamic_pointer_cast<rclcpp::ServiceBase>(request_vote_service_),
       nullptr);
 }
 
-void StateMachine::initialize_clients(const std::vector<std::string> &) {
-  // TODO(wonguk.jeong): initialze clients of nodes in cluster
+void StateMachine::initialize_clients(
+    const std::vector<std::string> &cluster_node_names) {
+  std::string node_name = node_base_->get_name();
+  std::string cluster_name = node_base_->get_namespace();
+  rcl_client_options_t options = rcl_client_get_default_options();
+  options.qos = rmw_qos_profile_services_default;
+
+  for (std::string node : cluster_node_names) {
+    if (node == node_name) {
+      continue;
+    }
+    auto append_entries =
+        rclcpp::Client<fsros_msgs::srv::AppendEntries>::make_shared(
+            node_base_.get(), node_graph_,
+            cluster_name + "/" + node + "/append_entries", options);
+    node_services_->add_client(
+        std::dynamic_pointer_cast<rclcpp::ClientBase>(append_entries), nullptr);
+    append_entries_clients_.push_back(append_entries);
+
+    auto request_vote =
+        rclcpp::Client<fsros_msgs::srv::RequestVote>::make_shared(
+            node_base_.get(), node_graph_,
+            cluster_name + "/" + node + "/request_vote", options);
+    node_services_->add_client(
+        std::dynamic_pointer_cast<rclcpp::ClientBase>(request_vote), nullptr);
+    request_vote_clients_.push_back(request_vote);
+  }
 }
 
 void StateMachine::on_append_entries_requested(

@@ -21,6 +21,7 @@
 #include <rclcpp/create_publisher.hpp>
 #include <rclcpp/create_subscription.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_graph_interface.hpp>
 #include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/node_interfaces/node_services_interface.hpp>
 #include <rclcpp/node_interfaces/node_timers.hpp>
@@ -186,6 +187,14 @@ class ClusterNode : public ClusterNodeInterface {
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface();
 
+  /// Return the Node's internal NodeGraphInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_graph_interface
+   */
+  CLUSTER_NODE_PUBLIC
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+  get_node_graph_interface();
+
   /// Return the Node's internal NodeTopicsInterface implementation.
   /**
    * \sa rclcpp::Node::get_node_topics_interface
@@ -219,6 +228,7 @@ class ClusterNode : public ClusterNodeInterface {
   void remove_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   rclcpp::node_interfaces::NodeTimers::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;

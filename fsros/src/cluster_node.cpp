@@ -17,6 +17,7 @@
 #include "akit/failsafe/fsros/cluster_node.hpp"
 
 #include <rclcpp/node_interfaces/node_base.hpp>
+#include <rclcpp/node_interfaces/node_graph.hpp>
 #include <rclcpp/node_interfaces/node_logging.hpp>
 #include <rclcpp/node_interfaces/node_services.hpp>
 #include <rclcpp/node_interfaces/node_topics.hpp>
@@ -39,15 +40,16 @@ ClusterNode::ClusterNode(const std::string &node_name,
           node_name, cluster_name, options.context(),
           *(options.get_rcl_node_options()), options.use_intra_process_comms(),
           options.enable_topic_statistics())),
+      node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
       node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
       node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
       node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(),
                                                            node_timers_.get())),
       node_services_(
           new rclcpp::node_interfaces::NodeServices(node_base_.get())),
-      impl_(std::make_unique<ClusterNodeImpl>(cluster_name, node_name,
-                                              cluster_node_names, node_base_,
-                                              node_services_, *this)) {}
+      impl_(std::make_unique<ClusterNodeImpl>(
+          cluster_node_names, node_base_, node_graph_, node_services_, *this)) {
+}
 
 ClusterNode::~ClusterNode() {}
 
@@ -76,6 +78,11 @@ const std::vector<rclcpp::CallbackGroup::WeakPtr>
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 ClusterNode::get_node_base_interface() {
   return node_base_;
+}
+
+rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+ClusterNode::get_node_graph_interface() {
+  return node_graph_;
 }
 
 rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr

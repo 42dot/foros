@@ -21,6 +21,7 @@
 #include <fsros_msgs/srv/request_vote.hpp>
 #include <rclcpp/any_service_callback.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_graph_interface.hpp>
 #include <rclcpp/node_interfaces/node_services_interface.hpp>
 
 #include <map>
@@ -48,9 +49,9 @@ namespace common = akit::failsafe::fsros::common;
 class StateMachine : public common::StateMachine<State, StateType, Event> {
  public:
   explicit StateMachine(
-      const std::string &node_name, const std::string &cluster_name,
       const std::vector<std::string> &cluster_node_names,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+      rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services);
 
   void initialize_services();
@@ -68,17 +69,21 @@ class StateMachine : public common::StateMachine<State, StateType, Event> {
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   std::shared_ptr<rclcpp::Service<fsros_msgs::srv::AppendEntries>>
       append_entries_service_;
   rclcpp::AnyServiceCallback<fsros_msgs::srv::AppendEntries>
       append_entries_callback_;
+  std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::AppendEntries>>>
+      append_entries_clients_ = {};
+
   std::shared_ptr<rclcpp::Service<fsros_msgs::srv::RequestVote>>
       request_vote_service_;
   rclcpp::AnyServiceCallback<fsros_msgs::srv::RequestVote>
       request_vote_callback_;
-  rcl_service_options_t service_options_ = rcl_service_get_default_options();
-  std::string service_prefix_;
+  std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::RequestVote>>>
+      request_vote_clients_ = {};
 };
 
 }  // namespace raft

@@ -39,9 +39,9 @@ class TestRaftStateMachine : public ::testing::Test {
         "node1", "test_cluster",
         std::initializer_list<std::string>{"node1", "node2"});
     state_machine_ = std::make_shared<raft::StateMachine>(
-        "node1", "test_cluster",
         std::initializer_list<std::string>{"node1", "node2"},
-        node_->get_node_base_interface(), node_->get_node_services_interface());
+        node_->get_node_base_interface(), node_->get_node_graph_interface(),
+        node_->get_node_services_interface());
   }
 
   void TearDown() {
