@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILSAFE_FSROS_CLUSTER_NODE_INTERFACE_HPP_
 #define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_INTERFACE_HPP_
 
+#include "akit/failsafe/fsros/common.hpp"
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
@@ -30,8 +32,16 @@ enum class ClusterNodeState {
 
 class ClusterNodeInterface {
  public:
+  /// Callback function for activate transition
+  CLUSTER_NODE_PUBLIC
   virtual void on_activated() = 0;
+
+  /// Callback function for deactivate transition
+  CLUSTER_NODE_PUBLIC
   virtual void on_deactivated() = 0;
+
+  /// Callback function for standby transition
+  CLUSTER_NODE_PUBLIC
   virtual void on_standby() = 0;
 };
 
