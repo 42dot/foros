@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
+#include "akit/failsafe/fsros/common.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -45,6 +46,14 @@ class ClusterNodePublisher : public ClusterNodeInterface,
   using MessageDeleter = rclcpp::allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
+  /// Create a new publisher for cluster node.
+  /**
+   * \param[in] node_base Handle of node base interface
+   * \param[in] topic Name of the topic
+   * \param[in] qos QoS settings
+   * \param[in] options Options of the publisher
+   */
+  CLUSTER_NODE_PUBLIC
   ClusterNodePublisher(
       rclcpp::node_interfaces::NodeBaseInterface* node_base,
       const std::string& topic, const rclcpp::QoS& qos,
@@ -53,6 +62,7 @@ class ClusterNodePublisher : public ClusterNodeInterface,
         state_(ClusterNodeState::kUnknown),
         logger_(rclcpp::get_logger("ClusterNodePublisher")) {}
 
+  CLUSTER_NODE_PUBLIC
   ~ClusterNodePublisher() {}
 
   /// ClusterNodePublisher publish function
@@ -60,6 +70,7 @@ class ClusterNodePublisher : public ClusterNodeInterface,
    * The publish function checks whether the node is active or not and forwards
    * the message to the actual rclcpp Publisher base class
    */
+  CLUSTER_NODE_PUBLIC
   void publish(std::unique_ptr<MessageT, MessageDeleter> msg) override {
     if (state_ != ClusterNodeState::kActive) {
       RCLCPP_WARN(logger_,
@@ -77,6 +88,7 @@ class ClusterNodePublisher : public ClusterNodeInterface,
    * The publish function checks whether the node is active or not and forwards
    * the message to the actual rclcpp Publisher base class
    */
+  CLUSTER_NODE_PUBLIC
   void publish(const MessageT& msg) override {
     if (state_ != ClusterNodeState::kActive) {
       RCLCPP_WARN(logger_,
@@ -89,12 +101,23 @@ class ClusterNodePublisher : public ClusterNodeInterface,
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// Callback function for activate transition
+  CLUSTER_NODE_PUBLIC
   void on_activated() override { state_ = ClusterNodeState::kActive; }
 
+  /// Callback function for deactivate transition
+  CLUSTER_NODE_PUBLIC
   void on_deactivated() override { state_ = ClusterNodeState::kInactive; }
 
+  /// Callback function for standby transition
+  CLUSTER_NODE_PUBLIC
   void on_standby() override { state_ = ClusterNodeState::kStandby; }
 
+  /// Get current state of the publisher
+  /**
+   * \return The current state of the publisher.
+   */
+  CLUSTER_NODE_PUBLIC
   virtual ClusterNodeState get_current_state() { return state_; }
 
  private:
