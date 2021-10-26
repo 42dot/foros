@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "akit/failsafe/fsros/cluster_node.hpp"
 #include "akit/failsafe/fsros/cluster_node_publisher.hpp"
@@ -28,9 +29,11 @@ namespace fsros = akit::failsafe::fsros;
 
 class MyClusterNode : public fsros::ClusterNode {
  public:
-  explicit MyClusterNode(const std::string &node,
-                         const std::string &node_namespace = "")
-      : fsros::ClusterNode(node, node_namespace) {
+  explicit MyClusterNode(const std::string &cluster_name,
+                         const std::string &node_name,
+                         const std::vector<std::string> &cluster_node_names)
+      : akit::failsafe::fsros::ClusterNode(cluster_name, node_name,
+                                           cluster_node_names) {
     rclcpp::PublisherOptionsWithAllocator<std::allocator<void>> options;
 
     publisher_ = create_publisher<std_msgs::msg::Empty>("test_pub", 10);
@@ -52,10 +55,15 @@ class TestPublisher : public ::testing::Test {
  public:
   void SetUp() {
     rclcpp::init(0, nullptr);
-    node_ = std::make_shared<MyClusterNode>("test_node");
+    node_ = std::make_shared<MyClusterNode>(
+        "node1", "test_cluster",
+        std::initializer_list<std::string>{"node1", "node2", "node3", "node4"});
   }
 
-  void TearDown() { rclcpp::shutdown(); }
+  void TearDown() {
+    node_.reset();
+    rclcpp::shutdown();
+  }
 
  protected:
   std::shared_ptr<MyClusterNode> node_;

@@ -53,13 +53,15 @@ class ClusterNode : public ClusterNodeInterface {
 
   /// Create a new cluster node with the specified name.
   /**
-   * \param[in] node_name Name of the node.
-   * \param[in] namespace_ Namespace of the node.
+   * \param[in] node_name Name of the node
+   * \param[in] cluster_name Cluster name of the node. (name space)
+   * \param[in] cluster_node_names Names of nodes in the cluster
    * \param[in] options Additional options to control creation of the node.
    */
   CLUSTER_NODE_PUBLIC
   explicit ClusterNode(
-      const std::string &node_name, const std::string &node_namespace = "",
+      const std::string &node_name, const std::string &cluster_name,
+      const std::vector<std::string> &cluster_node_names,
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
   CLUSTER_NODE_PUBLIC
@@ -176,6 +178,14 @@ class ClusterNode : public ClusterNodeInterface {
     return timer;
   }
 
+  /// Return the Node's internal NodeBaseInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_base_interface
+   */
+  CLUSTER_NODE_PUBLIC
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+  get_node_base_interface();
+
   /// Return the Node's internal NodeTopicsInterface implementation.
   /**
    * \sa rclcpp::Node::get_node_topics_interface
@@ -183,6 +193,26 @@ class ClusterNode : public ClusterNodeInterface {
   CLUSTER_NODE_PUBLIC
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
   get_node_topics_interface();
+
+  /// Return the Node's internal NodeServicesInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_services_interface
+   */
+  CLUSTER_NODE_PUBLIC
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+  get_node_services_interface();
+
+  /// Callback function for activate transition
+  CLUSTER_NODE_PUBLIC
+  void on_activated() override;
+
+  /// Callback function for deactivate transition
+  CLUSTER_NODE_PUBLIC
+  void on_deactivated() override;
+
+  /// Callback function for standby transition
+  CLUSTER_NODE_PUBLIC
+  void on_standby() override;
 
  private:
   void add_publisher(std::shared_ptr<ClusterNodeInterface> publisher);

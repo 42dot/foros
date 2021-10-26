@@ -11,6 +11,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(fsros_msgs REQUIRED)
 
 include_directories(src)
 
@@ -37,13 +38,14 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(${PROJECT_NAME}
-  "rclcpp"
+  rclcpp
+  fsros_msgs
 )
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(${PROJECT_NAME})
-ament_export_dependencies(rclcpp)
+ament_export_dependencies(rclcpp fsros_msgs)
 
 install(
   DIRECTORY include/

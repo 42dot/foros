@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
+  <depend>fsros_msgs</depend>
 
   <test_depend>ament_lint_common</test_depend>
   <test_depend>std_msgs</test_depend>

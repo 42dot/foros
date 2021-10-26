@@ -32,10 +32,11 @@ namespace failsafe {
 namespace fsros {
 
 ClusterNode::ClusterNode(const std::string &node_name,
-                         const std::string &node_namespace,
+                         const std::string &cluster_name,
+                         const std::vector<std::string> &cluster_node_names,
                          const rclcpp::NodeOptions &options)
     : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, node_namespace, options.context(),
+          node_name, cluster_name, options.context(),
           *(options.get_rcl_node_options()), options.use_intra_process_comms(),
           options.enable_topic_statistics())),
       node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
@@ -44,8 +45,9 @@ ClusterNode::ClusterNode(const std::string &node_name,
                                                            node_timers_.get())),
       node_services_(
           new rclcpp::node_interfaces::NodeServices(node_base_.get())),
-      impl_(std::make_unique<ClusterNodeImpl>(node_base_, node_services_,
-                                              *this)) {}
+      impl_(std::make_unique<ClusterNodeImpl>(cluster_name, node_name,
+                                              cluster_node_names, node_base_,
+                                              node_services_, *this)) {}
 
 ClusterNode::~ClusterNode() {}
 
@@ -71,9 +73,19 @@ const std::vector<rclcpp::CallbackGroup::WeakPtr>
   return node_base_->get_callback_groups();
 }
 
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+ClusterNode::get_node_base_interface() {
+  return node_base_;
+}
+
 rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 ClusterNode::get_node_topics_interface() {
   return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+ClusterNode::get_node_services_interface() {
+  return node_services_;
 }
 
 void ClusterNode::add_publisher(
@@ -85,6 +97,12 @@ void ClusterNode::remove_publisher(
     std::shared_ptr<ClusterNodeInterface> publisher) {
   impl_->remove_publisher(publisher);
 }
+
+void ClusterNode::on_activated() {}
+
+void ClusterNode::on_deactivated() {}
+
+void ClusterNode::on_standby() {}
 
 }  // namespace fsros
 }  // namespace failsafe

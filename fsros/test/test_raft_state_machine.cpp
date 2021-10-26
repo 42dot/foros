@@ -17,11 +17,14 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <string>
 
+#include "akit/failsafe/fsros/cluster_node.hpp"
 #include "raft/event.hpp"
 #include "raft/state_machine.hpp"
 #include "raft/state_type.hpp"
 
+namespace fsros = akit::failsafe::fsros;
 namespace raft = akit::failsafe::fsros::raft;
 
 class TestRaftStateMachine : public ::testing::Test {
@@ -31,11 +34,23 @@ class TestRaftStateMachine : public ::testing::Test {
   static void TearDownTestCase() {}
 
   void SetUp() {
-    state_machine_ = std::make_shared<raft::StateMachine>(nullptr);
+    rclcpp::init(0, nullptr);
+    node_ = std::make_shared<fsros::ClusterNode>(
+        "node1", "test_cluster",
+        std::initializer_list<std::string>{"node1", "node2"});
+    state_machine_ = std::make_shared<raft::StateMachine>(
+        "node1", "test_cluster",
+        std::initializer_list<std::string>{"node1", "node2"},
+        node_->get_node_base_interface(), node_->get_node_services_interface());
   }
 
-  void TearDown() { state_machine_.reset(); }
+  void TearDown() {
+    state_machine_.reset();
+    node_.reset();
+    rclcpp::shutdown();
+  }
 
+  std::shared_ptr<fsros::ClusterNode> node_ = nullptr;
   std::shared_ptr<raft::StateMachine> state_machine_ = nullptr;
 };
 

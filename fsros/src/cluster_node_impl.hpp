@@ -25,6 +25,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
 #include "common/observer.hpp"
@@ -40,8 +41,10 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
                               Observer<raft::StateType> {
  public:
   explicit ClusterNodeImpl(
+      const std::string &cluster_name, const std::string &node_name,
+      const std::vector<std::string> &cluster_node_names,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-      rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_,
+      rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       ClusterNodeInterface &node_interface);
 
   void handle(const lifecycle::StateType &state) override;

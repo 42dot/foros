@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "akit/failsafe/fsros/cluster_node.hpp"
 
@@ -29,43 +30,24 @@ class TestNodeCluster : public ::testing::Test {
   static void TearDownTestCase() { rclcpp::shutdown(); }
 };
 
-class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
- public:
-  explicit MyClusterNode(const std::string &node,
-                         const std::string &node_namespace = "")
-      : akit::failsafe::fsros::ClusterNode(node, node_namespace) {}
-
-  void on_activated() override {}
-
-  void on_deactivated() override {}
-
-  void on_standby() override {}
-};
-
 /*
    Testing node constructor
  */
 TEST_F(TestNodeCluster, TestConstructor) {
-  { auto cluster_node = std::make_shared<MyClusterNode>("test_node"); }
-
   {
-    auto cluster_node =
-        std::make_shared<MyClusterNode>("test_node", "/test_ns");
+    auto cluster_node = std::make_shared<akit::failsafe::fsros::ClusterNode>(
+        "node1", "test_cluster",
+        std::initializer_list<std::string>{"node1", "node2", "node3", "node4"});
   }
 
   {
     ASSERT_THROW(
         {
-          auto cluster_node = std::make_shared<MyClusterNode>("");
-          (void)cluster_node;
-        },
-        rclcpp::exceptions::InvalidNodeNameError);
-  }
-
-  {
-    ASSERT_THROW(
-        {
-          auto cluster_node = std::make_shared<MyClusterNode>("invalid_node?");
+          auto cluster_node =
+              std::make_shared<akit::failsafe::fsros::ClusterNode>(
+                  "", "test_cluster",
+                  std::initializer_list<std::string>{"node1", "node2", "node3",
+                                                     "node4"});
           (void)cluster_node;
         },
         rclcpp::exceptions::InvalidNodeNameError);
@@ -75,7 +57,24 @@ TEST_F(TestNodeCluster, TestConstructor) {
     ASSERT_THROW(
         {
           auto cluster_node =
-              std::make_shared<MyClusterNode>("test_node", "/invalid_ns?");
+              std::make_shared<akit::failsafe::fsros::ClusterNode>(
+                  "invalid_node?", "test_cluster",
+                  std::initializer_list<std::string>{"node1", "node2", "node3",
+                                                     "node4"});
+          (void)cluster_node;
+        },
+        rclcpp::exceptions::InvalidNodeNameError);
+  }
+
+  {
+    ASSERT_THROW(
+        {
+          auto cluster_node =
+              std::make_shared<akit::failsafe::fsros::ClusterNode>(
+                  "node1", "invalid_cluster?",
+                  std::initializer_list<std::string>{"node1", "node2", "node3",
+                                                     "node4"});
+
           (void)cluster_node;
         },
         rclcpp::exceptions::InvalidNamespaceError);
