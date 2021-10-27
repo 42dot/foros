@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 
+#include "akit/failsafe/fsros/cluster_node_options.hpp"
+#include "common/context.hpp"
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
@@ -31,13 +34,18 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-    ClusterNodeInterface &node_interface)
-    : node_base_(node_base),
-      raft_fsm_(std::make_unique<raft::StateMachine>(
-          cluster_node_names, node_base, node_graph, node_services)),
+    rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+    ClusterNodeInterface &node_interface, const ClusterNodeOptions &options)
+    : context_(std::make_shared<Context>(
+          node_base, node_graph, node_services, node_timers, node_clock,
+          options.election_timeout.min, options.election_timeout.max)),
+      raft_fsm_(
+          std::make_unique<raft::StateMachine>(cluster_node_names, context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
       node_interface_(node_interface) {
   lifecycle_fsm_->Subscribe(this);
+  raft_fsm_->handle(raft::Event::kStarted);
 }
 
 void ClusterNodeImpl::visit_publishers(

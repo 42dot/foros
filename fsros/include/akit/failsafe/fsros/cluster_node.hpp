@@ -21,6 +21,7 @@
 #include <rclcpp/create_publisher.hpp>
 #include <rclcpp/create_subscription.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/node_interfaces/node_graph_interface.hpp>
 #include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/node_interfaces/node_services_interface.hpp>
@@ -35,6 +36,7 @@
 #include <vector>
 
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
+#include "akit/failsafe/fsros/cluster_node_options.hpp"
 #include "akit/failsafe/fsros/cluster_node_publisher.hpp"
 #include "akit/failsafe/fsros/common.hpp"
 
@@ -63,7 +65,7 @@ class ClusterNode : public ClusterNodeInterface {
   explicit ClusterNode(
       const std::string &node_name, const std::string &cluster_name,
       const std::vector<std::string> &cluster_node_names,
-      const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
+      const ClusterNodeOptions &options = ClusterNodeOptions());
 
   CLUSTER_NODE_PUBLIC
   virtual ~ClusterNode();
@@ -195,6 +197,14 @@ class ClusterNode : public ClusterNodeInterface {
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
 
+  /// Return the Node's internal NodeTimersInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_timers_interface
+   */
+  CLUSTER_NODE_PUBLIC
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+  get_node_timers_interface();
+
   /// Return the Node's internal NodeTopicsInterface implementation.
   /**
    * \sa rclcpp::Node::get_node_topics_interface
@@ -210,6 +220,14 @@ class ClusterNode : public ClusterNodeInterface {
   CLUSTER_NODE_PUBLIC
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
   get_node_services_interface();
+
+  /// Return the Node's internal NodeClockInterface implementation.
+  /**
+   * \sa rclcpp::Node::get_node_clock_interface
+   */
+  CLUSTER_NODE_PUBLIC
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr
+  get_node_clock_interface();
 
   /// Callback function for activate transition
   CLUSTER_NODE_PUBLIC
@@ -233,6 +251,7 @@ class ClusterNode : public ClusterNodeInterface {
   rclcpp::node_interfaces::NodeTimers::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 
   std::unique_ptr<ClusterNodeImpl> impl_;
 };

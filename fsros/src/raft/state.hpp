@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 
+#include "common/context.hpp"
 #include "common/observable.hpp"
 #include "raft/event.hpp"
 #include "raft/state_type.hpp"
@@ -33,7 +34,8 @@ namespace raft {
 
 class State {
  public:
-  State(StateType type, std::map<Event, StateType> transition_map);
+  State(StateType type, std::map<Event, StateType> transition_map,
+        std::shared_ptr<akit::failsafe::fsros::Context> context);
   virtual ~State() {}
 
   StateType get_type();
@@ -50,6 +52,9 @@ class State {
 
   virtual void entry() = 0;
   virtual void exit() = 0;
+
+ protected:
+  std::shared_ptr<akit::failsafe::fsros::Context> context_;
 
  private:
   StateType type_;

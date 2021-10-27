@@ -23,12 +23,14 @@
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_graph_interface.hpp>
 #include <rclcpp/node_interfaces/node_services_interface.hpp>
+#include <rclcpp/node_interfaces/node_timers_interface.hpp>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "common/context.hpp"
 #include "common/observer.hpp"
 #include "common/state_machine.hpp"
 #include "raft/event.hpp"
@@ -48,11 +50,8 @@ namespace common = akit::failsafe::fsros::common;
 
 class StateMachine : public common::StateMachine<State, StateType, Event> {
  public:
-  explicit StateMachine(
-      const std::vector<std::string> &cluster_node_names,
-      rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-      rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
-      rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services);
+  explicit StateMachine(const std::vector<std::string> &cluster_node_names,
+                        std::shared_ptr<Context> context);
 
   void initialize_services();
   void initialize_clients(const std::vector<std::string> &cluster_node_names);
@@ -68,22 +67,7 @@ class StateMachine : public common::StateMachine<State, StateType, Event> {
       std::shared_ptr<fsros_msgs::srv::RequestVote::Response> response);
 
  private:
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
-  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-  std::shared_ptr<rclcpp::Service<fsros_msgs::srv::AppendEntries>>
-      append_entries_service_;
-  rclcpp::AnyServiceCallback<fsros_msgs::srv::AppendEntries>
-      append_entries_callback_;
-  std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::AppendEntries>>>
-      append_entries_clients_ = {};
-
-  std::shared_ptr<rclcpp::Service<fsros_msgs::srv::RequestVote>>
-      request_vote_service_;
-  rclcpp::AnyServiceCallback<fsros_msgs::srv::RequestVote>
-      request_vote_callback_;
-  std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::RequestVote>>>
-      request_vote_clients_ = {};
+  std::shared_ptr<Context> context_;
 };
 
 }  // namespace raft

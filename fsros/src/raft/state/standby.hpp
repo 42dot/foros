@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 
+#include "common/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 
@@ -30,8 +31,9 @@ namespace raft {
 
 class Standby final : public State {
  public:
-  Standby()
-      : State(StateType::kStandby, {{Event::kStarted, StateType::kFollower}}) {}
+  explicit Standby(std::shared_ptr<akit::failsafe::fsros::Context> context)
+      : State(StateType::kStandby, {{Event::kStarted, StateType::kFollower}},
+              context) {}
 
   void on_started() override;
   void on_timedout() override;

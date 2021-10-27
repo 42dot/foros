@@ -14,48 +14,30 @@
  * limitations under the License.
  */
 
-#include "raft/state/follower.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_CLUSTER_NODE_OPTIONS_HPP_
+#define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_OPTIONS_HPP_
 
-#include <rclcpp/duration.hpp>
-#include <rclcpp/timer.hpp>
-
-#include <chrono>
-#include <functional>
-#include <iostream>
+#include <rclcpp/node_options.hpp>
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
-namespace raft {
 
-void Follower::on_started() {}
+/// This contains cluster node options
+struct ClusterNodeOptions {
+  /// Election timeout (random beween #min and #max)
+  struct {
+    /// Minimum timeout (default 150ms)
+    unsigned int min = 150;
+    /// Maximum timeout (default 300ms)
+    unsigned int max = 300;
+  } election_timeout;
 
-void Follower::on_election_timer_expired() {
-  // FIXME: temporary log for test
-  std::cerr << "timedout" << std::endl;
-}
+  rclcpp::NodeOptions node_options;
+};
 
-void Follower::on_timedout() {}
-
-void Follower::on_vote_received() {}
-
-void Follower::on_leader_discovered() {}
-
-void Follower::on_elected() {}
-
-void Follower::on_terminated() {}
-
-void Follower::entry() {
-  timer_ = context_->create_election_timer(
-      std::bind(&Follower::on_election_timer_expired, this));
-}
-
-void Follower::exit() {
-  timer_->cancel();
-  timer_.reset();
-}
-
-}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
+
+#endif  // AKIT_FAILSAFE_FSROS_CLUSTER_NODE_OPTIONS_HPP_

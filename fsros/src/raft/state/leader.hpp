@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "common/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 
@@ -29,10 +30,11 @@ namespace raft {
 
 class Leader final : public State {
  public:
-  Leader()
+  explicit Leader(std::shared_ptr<akit::failsafe::fsros::Context> context)
       : State(StateType::kLeader,
               {{Event::kTerminated, StateType::kStandby},
-               {Event::kLeaderDiscovered, StateType::kFollower}}) {}
+               {Event::kLeaderDiscovered, StateType::kFollower}},
+              context) {}
 
   void on_started() override;
   void on_timedout() override;

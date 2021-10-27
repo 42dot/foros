@@ -18,7 +18,10 @@
 #define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_IMPL_HPP_
 
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_clock_interface.hpp>
+#include <rclcpp/node_interfaces/node_graph_interface.hpp>
 #include <rclcpp/node_interfaces/node_services_interface.hpp>
+#include <rclcpp/node_interfaces/node_timers_interface.hpp>
 #include <rclcpp/node_options.hpp>
 
 #include <functional>
@@ -28,6 +31,8 @@
 #include <vector>
 
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
+#include "akit/failsafe/fsros/cluster_node_options.hpp"
+#include "common/context.hpp"
 #include "common/observer.hpp"
 #include "lifecycle/state_machine.hpp"
 #include "lifecycle/state_type.hpp"
@@ -45,7 +50,9 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-      ClusterNodeInterface &node_interface);
+      rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
+      rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+      ClusterNodeInterface &node_interface, const ClusterNodeOptions &options);
 
   void handle(const lifecycle::StateType &state) override;
   void handle(const raft::StateType &state) override;
@@ -57,7 +64,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void visit_publishers(
       std::function<void(std::shared_ptr<ClusterNodeInterface>)> f);
 
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  std::shared_ptr<Context> context_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
   ClusterNodeInterface &node_interface_;

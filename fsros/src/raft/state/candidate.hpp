@@ -17,8 +17,11 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_CANDIDATE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_CANDIDATE_HPP_
 
+#include <rclcpp/timer.hpp>
+
 #include <memory>
 
+#include "common/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 
@@ -29,12 +32,13 @@ namespace raft {
 
 class Candidate final : public State {
  public:
-  Candidate()
+  explicit Candidate(std::shared_ptr<akit::failsafe::fsros::Context> context)
       : State(StateType::kCandidate,
               {{Event::kTerminated, StateType::kStandby},
                {Event::kTimedout, StateType::kCandidate},
                {Event::kElected, StateType::kLeader},
-               {Event::kLeaderDiscovered, StateType::kFollower}}) {}
+               {Event::kLeaderDiscovered, StateType::kFollower}},
+              context) {}
 
   void on_started() override;
   void on_timedout() override;

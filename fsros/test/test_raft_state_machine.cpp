@@ -20,6 +20,7 @@
 #include <string>
 
 #include "akit/failsafe/fsros/cluster_node.hpp"
+#include "common/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state_machine.hpp"
 #include "raft/state_type.hpp"
@@ -40,8 +41,11 @@ class TestRaftStateMachine : public ::testing::Test {
         std::initializer_list<std::string>{"node1", "node2"});
     state_machine_ = std::make_shared<raft::StateMachine>(
         std::initializer_list<std::string>{"node1", "node2"},
-        node_->get_node_base_interface(), node_->get_node_graph_interface(),
-        node_->get_node_services_interface());
+        std::make_shared<fsros::Context>(
+            node_->get_node_base_interface(), node_->get_node_graph_interface(),
+            node_->get_node_services_interface(),
+            node_->get_node_timers_interface(),
+            node_->get_node_clock_interface(), 150, 300));
   }
 
   void TearDown() {

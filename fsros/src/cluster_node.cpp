@@ -17,6 +17,7 @@
 #include "akit/failsafe/fsros/cluster_node.hpp"
 
 #include <rclcpp/node_interfaces/node_base.hpp>
+#include <rclcpp/node_interfaces/node_clock.hpp>
 #include <rclcpp/node_interfaces/node_graph.hpp>
 #include <rclcpp/node_interfaces/node_logging.hpp>
 #include <rclcpp/node_interfaces/node_services.hpp>
@@ -26,6 +27,7 @@
 #include <string>
 #include <vector>
 
+#include "akit/failsafe/fsros/cluster_node_options.hpp"
 #include "cluster_node_impl.hpp"
 
 namespace akit {
@@ -35,11 +37,12 @@ namespace fsros {
 ClusterNode::ClusterNode(const std::string &node_name,
                          const std::string &cluster_name,
                          const std::vector<std::string> &cluster_node_names,
-                         const rclcpp::NodeOptions &options)
+                         const ClusterNodeOptions &options)
     : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, cluster_name, options.context(),
-          *(options.get_rcl_node_options()), options.use_intra_process_comms(),
-          options.enable_topic_statistics())),
+          node_name, cluster_name, options.node_options.context(),
+          *(options.node_options.get_rcl_node_options()),
+          options.node_options.use_intra_process_comms(),
+          options.node_options.enable_topic_statistics())),
       node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
       node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
       node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
@@ -47,9 +50,12 @@ ClusterNode::ClusterNode(const std::string &node_name,
                                                            node_timers_.get())),
       node_services_(
           new rclcpp::node_interfaces::NodeServices(node_base_.get())),
+      node_clock_(new rclcpp::node_interfaces::NodeClock(
+          node_base_, node_topics_, node_graph_, node_services_,
+          node_logging_)),
       impl_(std::make_unique<ClusterNodeImpl>(
-          cluster_node_names, node_base_, node_graph_, node_services_, *this)) {
-}
+          cluster_node_names, node_base_, node_graph_, node_services_,
+          node_timers_, node_clock_, *this, options)) {}
 
 ClusterNode::~ClusterNode() {}
 
@@ -85,6 +91,11 @@ ClusterNode::get_node_graph_interface() {
   return node_graph_;
 }
 
+rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+ClusterNode::get_node_timers_interface() {
+  return node_timers_;
+}
+
 rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 ClusterNode::get_node_topics_interface() {
   return node_topics_;
@@ -93,6 +104,11 @@ ClusterNode::get_node_topics_interface() {
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
 ClusterNode::get_node_services_interface() {
   return node_services_;
+}
+
+rclcpp::node_interfaces::NodeClockInterface::SharedPtr
+ClusterNode::get_node_clock_interface() {
+  return node_clock_;
 }
 
 void ClusterNode::add_publisher(

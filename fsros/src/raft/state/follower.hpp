@@ -17,8 +17,12 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_FOLLOWER_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_FOLLOWER_HPP_
 
-#include <memory>
+#include <rclcpp/timer.hpp>
 
+#include <memory>
+#include <utility>
+
+#include "common/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 
@@ -29,10 +33,11 @@ namespace raft {
 
 class Follower final : public State {
  public:
-  Follower()
+  explicit Follower(std::shared_ptr<akit::failsafe::fsros::Context> context)
       : State(StateType::kFollower,
               {{Event::kTerminated, StateType::kStandby},
-               {Event::kTimedout, StateType::kCandidate}}) {}
+               {Event::kTimedout, StateType::kCandidate}},
+              context) {}
 
   void on_started() override;
   void on_timedout() override;
@@ -42,6 +47,11 @@ class Follower final : public State {
   void on_terminated() override;
   void entry() override;
   void exit() override;
+
+ private:
+  void on_election_timer_expired();
+
+  rclcpp::TimerBase::SharedPtr timer_;
 };
 
 }  // namespace raft
