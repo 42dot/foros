@@ -18,6 +18,7 @@
 
 #include <rclcpp/create_client.hpp>
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -56,7 +57,7 @@ void StateMachine::initialize_services() {
   context_->append_entries_service_ =
       std::make_shared<rclcpp::Service<fsros_msgs::srv::AppendEntries>>(
           context_->node_base_->get_shared_rcl_node_handle(),
-          service_prefix + "/append_entries",
+          service_prefix + kAppendEntriesServiceName,
           context_->append_entries_callback_, options);
   context_->node_services_->add_service(
       std::dynamic_pointer_cast<rclcpp::ServiceBase>(
@@ -70,8 +71,8 @@ void StateMachine::initialize_services() {
   context_->request_vote_service_ =
       std::make_shared<rclcpp::Service<fsros_msgs::srv::RequestVote>>(
           context_->node_base_->get_shared_rcl_node_handle(),
-          service_prefix + "/request_vote", context_->request_vote_callback_,
-          options);
+          service_prefix + kRequestVoteServiceName,
+          context_->request_vote_callback_, options);
   context_->node_services_->add_service(
       std::dynamic_pointer_cast<rclcpp::ServiceBase>(
           context_->request_vote_service_),
@@ -92,7 +93,7 @@ void StateMachine::initialize_clients(
     auto append_entries =
         rclcpp::Client<fsros_msgs::srv::AppendEntries>::make_shared(
             context_->node_base_.get(), context_->node_graph_,
-            cluster_name + "/" + node + "/append_entries", options);
+            cluster_name + "/" + node + kAppendEntriesServiceName, options);
     context_->node_services_->add_client(
         std::dynamic_pointer_cast<rclcpp::ClientBase>(append_entries), nullptr);
     context_->append_entries_clients_.push_back(append_entries);
@@ -100,7 +101,7 @@ void StateMachine::initialize_clients(
     auto request_vote =
         rclcpp::Client<fsros_msgs::srv::RequestVote>::make_shared(
             context_->node_base_.get(), context_->node_graph_,
-            cluster_name + "/" + node + "/request_vote", options);
+            cluster_name + "/" + node + kRequestVoteServiceName, options);
     context_->node_services_->add_client(
         std::dynamic_pointer_cast<rclcpp::ClientBase>(request_vote), nullptr);
     context_->request_vote_clients_.push_back(request_vote);
@@ -109,8 +110,16 @@ void StateMachine::initialize_clients(
 
 void StateMachine::on_append_entries_requested(
     const std::shared_ptr<rmw_request_id_t>,
-    const std::shared_ptr<fsros_msgs::srv::AppendEntries::Request>,
-    std::shared_ptr<fsros_msgs::srv::AppendEntries::Response>) {}
+    const std::shared_ptr<fsros_msgs::srv::AppendEntries::Request> request,
+    std::shared_ptr<fsros_msgs::srv::AppendEntries::Response>) {
+  auto state = get_current_state();
+  if (state == nullptr) {
+    std::cerr << "FATAL: there is no current state" << std::endl;
+    return;
+  }
+
+  state->on_append_entries_received(request->term);
+}
 
 void StateMachine::on_request_vote_requested(
     const std::shared_ptr<rmw_request_id_t>,

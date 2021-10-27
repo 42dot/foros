@@ -47,6 +47,8 @@ class Candidate final : public State {
   void on_elected() override;
   void on_terminated() override;
 
+  void on_append_entries_received(uint64_t term) override;
+
   void entry() override;
   void exit() override;
 };

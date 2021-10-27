@@ -50,6 +50,8 @@ class State {
   virtual void on_elected() = 0;
   virtual void on_terminated() = 0;
 
+  virtual void on_append_entries_received(uint64_t term) = 0;
+
   virtual void entry() = 0;
   virtual void exit() = 0;
 

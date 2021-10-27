@@ -47,7 +47,7 @@ class StateMachine : public Observer<Event> {
   }
   virtual ~StateMachine() { event_notifier_->unsubscribe(this); }
 
-  StateType get_current_state() { return current_state_; }
+  StateType get_current_state_type() { return current_state_; }
 
   void handle(const Event &event) override {
     auto next_state = states_[current_state_]->handle(event);
@@ -63,13 +63,16 @@ class StateMachine : public Observer<Event> {
     current_state_notifier_.notify(current_state_);
   }
 
-  void Subscribe(Observer<StateType> *observer) {
+  void subscribe(Observer<StateType> *observer) {
     current_state_notifier_.subscribe(observer);
   }
 
-  void Unsubscribe(Observer<StateType> *observer) {
+  void unsubscribe(Observer<StateType> *observer) {
     current_state_notifier_.unsubscribe(observer);
   }
+
+ protected:
+  std::shared_ptr<State> get_current_state() { return states_[current_state_]; }
 
  private:
   std::map<StateType, std::shared_ptr<State>> states_;

@@ -33,6 +33,8 @@ void Candidate::on_elected() {}
 
 void Candidate::on_terminated() {}
 
+void Candidate::on_append_entries_received(uint64_t) {}
+
 void Candidate::entry() {}
 
 void Candidate::exit() {}

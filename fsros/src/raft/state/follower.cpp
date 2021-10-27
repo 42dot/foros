@@ -23,6 +23,8 @@
 #include <functional>
 #include <iostream>
 
+#include "raft/event.hpp"
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
@@ -31,8 +33,8 @@ namespace raft {
 void Follower::on_started() {}
 
 void Follower::on_election_timer_expired() {
-  // FIXME: temporary log for test
-  std::cerr << "timedout" << std::endl;
+  std::cerr << "Follower: emit timedout event" << std::endl;
+  emit(Event::kTimedout);
 }
 
 void Follower::on_timedout() {}
@@ -45,14 +47,35 @@ void Follower::on_elected() {}
 
 void Follower::on_terminated() {}
 
-void Follower::entry() {
+void Follower::on_append_entries_received(uint64_t term) {
+  if (term <= term_) {
+    std::cerr << "Follower: new term (" << term
+              << ") is not greater than existing one (" << term_ << ")"
+              << std::endl;
+    return;
+  }
+
+  std::cout << "Follower: restart election timer since we received new term ("
+            << term << ")" << std::endl;
+  term_ = term;
+  start_election_timer();
+}
+
+void Follower::entry() { start_election_timer(); }
+
+void Follower::exit() { stop_election_timer(); }
+
+void Follower::start_election_timer() {
+  stop_election_timer();
   timer_ = context_->create_election_timer(
       std::bind(&Follower::on_election_timer_expired, this));
 }
 
-void Follower::exit() {
-  timer_->cancel();
-  timer_.reset();
+void Follower::stop_election_timer() {
+  if (timer_ != nullptr) {
+    timer_->cancel();
+    timer_.reset();
+  }
 }
 
 }  // namespace raft

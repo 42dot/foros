@@ -33,6 +33,8 @@ void Leader::on_elected() {}
 
 void Leader::on_terminated() {}
 
+void Leader::on_append_entries_received(uint64_t) {}
+
 void Leader::entry() {}
 
 void Leader::exit() {}

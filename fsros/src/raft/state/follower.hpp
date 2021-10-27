@@ -45,13 +45,19 @@ class Follower final : public State {
   void on_leader_discovered() override;
   void on_elected() override;
   void on_terminated() override;
+
+  void on_append_entries_received(uint64_t term) override;
+
   void entry() override;
   void exit() override;
 
  private:
+  void start_election_timer();
+  void stop_election_timer();
   void on_election_timer_expired();
 
   rclcpp::TimerBase::SharedPtr timer_;
+  uint64_t term_ = 0;
 };
 
 }  // namespace raft

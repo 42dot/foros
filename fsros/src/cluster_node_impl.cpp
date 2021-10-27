@@ -44,8 +44,14 @@ ClusterNodeImpl::ClusterNodeImpl(
           std::make_unique<raft::StateMachine>(cluster_node_names, context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
       node_interface_(node_interface) {
-  lifecycle_fsm_->Subscribe(this);
+  lifecycle_fsm_->subscribe(this);
+  raft_fsm_->subscribe(this);
   raft_fsm_->handle(raft::Event::kStarted);
+}
+
+ClusterNodeImpl::~ClusterNodeImpl() {
+  lifecycle_fsm_->unsubscribe(this);
+  raft_fsm_->unsubscribe(this);
 }
 
 void ClusterNodeImpl::visit_publishers(
@@ -85,12 +91,16 @@ void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
 void ClusterNodeImpl::handle(const raft::StateType &state) {
   switch (state) {
     case raft::StateType::kStandby:
+      std::cout << "raft state: Standby" << std::endl;
       break;
     case raft::StateType::kFollower:
+      std::cout << "raft state: Follower" << std::endl;
       break;
     case raft::StateType::kCandidate:
+      std::cout << "raft state: Candidate" << std::endl;
       break;
     case raft::StateType::kLeader:
+      std::cout << "raft state: Leader" << std::endl;
       break;
     default:
       std::cerr << "Invalid raft state : " << static_cast<int>(state)

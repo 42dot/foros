@@ -67,7 +67,10 @@ class StateMachine : public common::StateMachine<State, StateType, Event> {
       std::shared_ptr<fsros_msgs::srv::RequestVote::Response> response);
 
  private:
-  std::shared_ptr<Context> context_;
+  const char *kAppendEntriesServiceName = "/append_entries";
+  const char *kRequestVoteServiceName = "/request_vote";
+
+  const std::shared_ptr<Context> context_;
 };
 
 }  // namespace raft

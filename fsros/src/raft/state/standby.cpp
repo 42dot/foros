@@ -33,6 +33,8 @@ void Standby::on_elected() {}
 
 void Standby::on_terminated() {}
 
+void Standby::on_append_entries_received(uint64_t) {}
+
 void Standby::entry() {}
 
 void Standby::exit() {}

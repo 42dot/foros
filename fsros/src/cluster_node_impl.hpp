@@ -54,6 +54,8 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
       ClusterNodeInterface &node_interface, const ClusterNodeOptions &options);
 
+  ~ClusterNodeImpl();
+
   void handle(const lifecycle::StateType &state) override;
   void handle(const raft::StateType &state) override;
 

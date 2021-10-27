@@ -39,107 +39,107 @@ class TestLifecycleStateMachine : public ::testing::Test {
 
 // Test in inactive state
 TEST_F(TestLifecycleStateMachine, TestInactiveStateInit) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestInactiveStateActivateEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 
   state_machine_->handle(lifecycle::Event::kActivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kActive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestInactiveStateDeactivateEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 
   state_machine_->handle(lifecycle::Event::kDeactivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestInactiveStateStandbyEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 
   state_machine_->handle(lifecycle::Event::kStandby);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kStandby);
 }
 
 // Test in active state
 TEST_F(TestLifecycleStateMachine, TestActiveStateActivateEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
   state_machine_->handle(lifecycle::Event::kActivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kActive);
 
   state_machine_->handle(lifecycle::Event::kActivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kActive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestActiveStateDeactivateEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
   state_machine_->handle(lifecycle::Event::kActivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kActive);
 
   state_machine_->handle(lifecycle::Event::kDeactivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestActiveStateStandbyEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
   state_machine_->handle(lifecycle::Event::kActivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kActive);
 
   state_machine_->handle(lifecycle::Event::kStandby);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kStandby);
 }
 
 // Test in standby state
 TEST_F(TestLifecycleStateMachine, TestStandbyStateActivateEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
   state_machine_->handle(lifecycle::Event::kStandby);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kStandby);
 
   state_machine_->handle(lifecycle::Event::kActivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kActive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestStandbyStateDeactivateEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
   state_machine_->handle(lifecycle::Event::kStandby);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kStandby);
 
   state_machine_->handle(lifecycle::Event::kDeactivate);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
 }
 
 TEST_F(TestLifecycleStateMachine, TestStandbyStateStandbyEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kInactive);
   state_machine_->handle(lifecycle::Event::kStandby);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kStandby);
 
   state_machine_->handle(lifecycle::Event::kStandby);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               lifecycle::StateType::kStandby);
 }

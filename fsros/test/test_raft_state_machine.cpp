@@ -60,289 +60,333 @@ class TestRaftStateMachine : public ::testing::Test {
 
 // Test in standby state
 TEST_F(TestRaftStateMachine, TestStandbyStateInit) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestStandbyStateStartedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
 
 TEST_F(TestRaftStateMachine, TestStandbyStateTerminatedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 
   state_machine_->handle(raft::Event::kTerminated);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestStandbyStateTimedoutEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestStandbyStateVoteReceivedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 
   state_machine_->handle(raft::Event::kVoteReceived);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestStandbyStateElectedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestStandbyStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 
   state_machine_->handle(raft::Event::kLeaderDiscovered);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 // Test in follower state
 TEST_F(TestRaftStateMachine, TestFollowerStateStartedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
 
 TEST_F(TestRaftStateMachine, TestFollowerStateTerminatedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 
   state_machine_->handle(raft::Event::kTerminated);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestFollowerStateTimedoutEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 }
 
 TEST_F(TestRaftStateMachine, TestFollowerStateVoteReceivedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 
   state_machine_->handle(raft::Event::kVoteReceived);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
 
 TEST_F(TestRaftStateMachine, TestFollowerStateElectedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
 
 TEST_F(TestRaftStateMachine, TestFollowerStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 
   state_machine_->handle(raft::Event::kLeaderDiscovered);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
 
 // Test in candidate state
 TEST_F(TestRaftStateMachine, TestCandidateStateStartedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 }
 
 TEST_F(TestRaftStateMachine, TestCandidateStateTerminatedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 
   state_machine_->handle(raft::Event::kTerminated);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestCandidateStateTimedoutEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 }
 
 TEST_F(TestRaftStateMachine, TestCandidateStateVoteReceivedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 
   state_machine_->handle(raft::Event::kVoteReceived);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 }
 
 TEST_F(TestRaftStateMachine, TestCandidateStateElectedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 }
 
 TEST_F(TestRaftStateMachine, TestCandidateStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
 
   state_machine_->handle(raft::Event::kLeaderDiscovered);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
 
 // Test in leader state
 TEST_F(TestRaftStateMachine, TestLeaderStateStartedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 }
 
 TEST_F(TestRaftStateMachine, TestLeaderStateTerminatedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 
   state_machine_->handle(raft::Event::kTerminated);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
 }
 
 TEST_F(TestRaftStateMachine, TestLeaderStateTimedoutEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 }
 
 TEST_F(TestRaftStateMachine, TestLeaderStateVoteReceivedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 
   state_machine_->handle(raft::Event::kVoteReceived);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 }
 
 TEST_F(TestRaftStateMachine, TestLeaderStateElectedEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 }
 
 TEST_F(TestRaftStateMachine, TestLeaderStateLeaderDiscoveredEvent) {
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kStandby);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kStandby);
   state_machine_->handle(raft::Event::kStarted);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
   state_machine_->handle(raft::Event::kTimedout);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kCandidate);
   state_machine_->handle(raft::Event::kElected);
-  EXPECT_TRUE(state_machine_->get_current_state() == raft::StateType::kLeader);
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
+              raft::StateType::kLeader);
 
   state_machine_->handle(raft::Event::kLeaderDiscovered);
-  EXPECT_TRUE(state_machine_->get_current_state() ==
+  EXPECT_TRUE(state_machine_->get_current_state_type() ==
               raft::StateType::kFollower);
 }
