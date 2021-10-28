@@ -51,6 +51,9 @@ StateType State::handle(const Event &event) {
     case Event::kLeaderDiscovered:
       on_leader_discovered();
       break;
+    case Event::kNewTermReceived:
+      on_new_term_received();
+      break;
     case Event::kVoteReceived:
       on_vote_received();
       break;
@@ -61,7 +64,8 @@ StateType State::handle(const Event &event) {
       on_terminated();
       break;
     default:
-      std::cerr << "Invalid event: " << static_cast<int>(event) << std::endl;
+      std::cerr << "[" << static_cast<int>(type_)
+                << "]: invalid event: " << static_cast<int>(event) << std::endl;
       return type_;
   }
 
@@ -71,6 +75,34 @@ StateType State::handle(const Event &event) {
 void State::set_event_notifier(
     std::shared_ptr<Observable<Event>> event_source) {
   event_notifier_ = event_source;
+}
+
+bool State::update_term(uint64_t term) {
+  if (term <= context_->current_term_) return false;
+
+  std::cout << "[" << static_cast<int>(type_)
+            << "]: new term received, emit event." << std::endl;
+  context_->current_term_ = term;
+
+  emit(Event::kNewTermReceived);
+
+  return true;
+}
+
+std::tuple<uint64_t, bool> State::on_append_entries_received(uint64_t term) {
+  bool success = true;
+
+  if (term < context_->current_term_) {
+    std::cerr << "[" << static_cast<int>(type_) << "]: new term (" << term
+              << ") is less than existing one (" << context_->current_term_
+              << ")" << std::endl;
+    success = false;
+  } else {
+    update_term(term);
+    success = true;
+  }
+
+  return std::make_tuple(context_->current_term_, success);
 }
 
 }  // namespace raft

@@ -31,13 +31,11 @@ void Standby::on_vote_received() {}
 
 void Standby::on_leader_discovered() {}
 
+void Standby::on_new_term_received() {}
+
 void Standby::on_elected() {}
 
 void Standby::on_terminated() {}
-
-std::tuple<uint64_t, bool> Standby::on_append_entries_received(uint64_t) {
-  return std::make_tuple(context_->current_term_, false);
-}
 
 void Standby::entry() { context_->stop_election_timer(); }
 

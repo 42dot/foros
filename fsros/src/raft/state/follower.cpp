@@ -41,27 +41,11 @@ void Follower::on_vote_received() {}
 
 void Follower::on_leader_discovered() {}
 
+void Follower::on_new_term_received() {}
+
 void Follower::on_elected() {}
 
 void Follower::on_terminated() {}
-
-std::tuple<uint64_t, bool> Follower::on_append_entries_received(uint64_t term) {
-  // TODO(wonguk.jeong): Log replicateion is not implemented yet
-  bool success = false;
-  if (term < context_->current_term_) {
-    std::cerr << "Follower: new term (" << term
-              << ") is less than existing one (" << context_->current_term_
-              << ")" << std::endl;
-
-  } else {
-    std::cout << "Follower: restart election timer since we received new term ("
-              << term << ")" << std::endl;
-    context_->current_term_ = term;
-    success = true;
-  }
-
-  return std::make_tuple(context_->current_term_, success);
-}
 
 void Follower::entry() { context_->start_election_timer(); }
 

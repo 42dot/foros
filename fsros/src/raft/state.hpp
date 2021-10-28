@@ -48,16 +48,18 @@ class State {
   virtual void on_timedout() = 0;
   virtual void on_vote_received() = 0;
   virtual void on_leader_discovered() = 0;
+  virtual void on_new_term_received() = 0;
   virtual void on_elected() = 0;
   virtual void on_terminated() = 0;
-
-  virtual std::tuple<uint64_t, bool> on_append_entries_received(
-      uint64_t term) = 0;
 
   virtual void entry() = 0;
   virtual void exit() = 0;
 
+  std::tuple<uint64_t, bool> on_append_entries_received(uint64_t term);
+
  protected:
+  bool update_term(uint64_t);
+
   std::shared_ptr<Context> context_;
 
  private:

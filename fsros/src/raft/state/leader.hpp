@@ -34,17 +34,17 @@ class Leader final : public State {
   explicit Leader(std::shared_ptr<Context> context)
       : State(StateType::kLeader,
               {{Event::kTerminated, StateType::kStandby},
-               {Event::kLeaderDiscovered, StateType::kFollower}},
+               {Event::kLeaderDiscovered, StateType::kFollower},
+               {Event::kNewTermReceived, StateType::kFollower}},
               context) {}
 
   void on_started() override;
   void on_timedout() override;
   void on_vote_received() override;
   void on_leader_discovered() override;
+  void on_new_term_received() override;
   void on_elected() override;
   void on_terminated() override;
-
-  std::tuple<uint64_t, bool> on_append_entries_received(uint64_t term) override;
 
   void entry() override;
   void exit() override;

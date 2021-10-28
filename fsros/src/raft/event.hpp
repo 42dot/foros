@@ -27,6 +27,7 @@ enum class Event {
   kTimedout,
   kVoteReceived,
   kLeaderDiscovered,
+  kNewTermReceived,
   kElected,
   kTerminated,
   kUnknown,

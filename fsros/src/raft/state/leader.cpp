@@ -31,13 +31,11 @@ void Leader::on_vote_received() {}
 
 void Leader::on_leader_discovered() {}
 
+void Leader::on_new_term_received() {}
+
 void Leader::on_elected() {}
 
 void Leader::on_terminated() {}
-
-std::tuple<uint64_t, bool> Leader::on_append_entries_received(uint64_t) {
-  return std::make_tuple(context_->current_term_, false);
-}
 
 void Leader::entry() {}
 
