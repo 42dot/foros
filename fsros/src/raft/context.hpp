@@ -44,6 +44,7 @@ namespace raft {
 class Context {
  public:
   Context(
+      const uint32_t node_id,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
@@ -53,11 +54,16 @@ class Context {
 
   void start_election_timer();
   void stop_election_timer();
+  void reset_election_timer();
   std::weak_ptr<VoidCallback> add_election_timer_callback(
       std::function<void()> callback);
   void remove_election_timer_callback(std::weak_ptr<VoidCallback> handle);
   void on_election_timer_expired();
 
+  void vote_for_me();
+  void increase_term();
+
+  uint32_t node_id_;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;

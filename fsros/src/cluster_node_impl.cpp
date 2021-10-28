@@ -30,7 +30,7 @@ namespace failsafe {
 namespace fsros {
 
 ClusterNodeImpl::ClusterNodeImpl(
-    const std::vector<uint32_t> &cluster_node_ids,
+    const uint32_t node_id, const std::vector<uint32_t> &cluster_node_ids,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
@@ -38,8 +38,9 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     ClusterNodeInterface &node_interface, const ClusterNodeOptions &options)
     : raft_context_(std::make_shared<raft::Context>(
-          node_base, node_graph, node_services, node_timers, node_clock,
-          options.election_timeout.min, options.election_timeout.max)),
+          node_id, node_base, node_graph, node_services, node_timers,
+          node_clock, options.election_timeout.min,
+          options.election_timeout.max)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),

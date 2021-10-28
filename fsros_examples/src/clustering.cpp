@@ -18,13 +18,18 @@
 #include <string>
 
 #include "akit/failsafe/fsros/cluster_node.hpp"
+#include "akit/failsafe/fsros/cluster_node_options.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
 
+  auto options = akit::failsafe::fsros::ClusterNodeOptions();
+  options.election_timeout.max = 1500;
+  options.election_timeout.min = 1000;
+
   auto node = std::make_shared<akit::failsafe::fsros::ClusterNode>(
-      1, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4});
+      1, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4}, options);
 
   rclcpp::spin(node->get_node_base_interface());
   rclcpp::shutdown();

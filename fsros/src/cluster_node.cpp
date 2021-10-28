@@ -56,7 +56,7 @@ ClusterNode::ClusterNode(const uint32_t node_id,
           node_base_, node_topics_, node_graph_, node_services_,
           node_logging_)),
       impl_(std::make_unique<ClusterNodeImpl>(
-          cluster_node_ids, node_base_, node_graph_, node_services_,
+          node_id, cluster_node_ids, node_base_, node_graph_, node_services_,
           node_timers_, node_clock_, *this, options)) {}
 
 ClusterNode::~ClusterNode() {}

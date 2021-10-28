@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <tuple>
 
 #include "common/observable.hpp"
 #include "raft/context.hpp"

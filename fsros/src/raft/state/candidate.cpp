@@ -25,7 +25,7 @@ namespace raft {
 
 void Candidate::on_started() {}
 
-void Candidate::on_timedout() {}
+void Candidate::on_timedout() { start_election(); }
 
 void Candidate::on_vote_received() {}
 
@@ -37,9 +37,17 @@ void Candidate::on_elected() {}
 
 void Candidate::on_terminated() {}
 
-void Candidate::entry() {}
+void Candidate::entry() { start_election(); }
 
 void Candidate::exit() {}
+
+void Candidate::start_election() {
+  context_->increase_term();
+  context_->vote_for_me();
+  context_->reset_election_timer();
+  // TODO(wonguk.jeong): send RequestVote RPCs to others
+  // TODO(wonguk.jeong): check available nodes
+}
 
 }  // namespace raft
 }  // namespace fsros

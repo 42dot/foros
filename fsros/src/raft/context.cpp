@@ -30,13 +30,15 @@ namespace fsros {
 namespace raft {
 
 Context::Context(
+    const uint32_t node_id,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     unsigned int election_timeout_min, unsigned int election_timeout_max)
-    : node_base_(node_base),
+    : node_id_(node_id),
+      node_base_(node_base),
       node_graph_(node_graph),
       node_services_(node_services),
       node_timers_(node_timers),
@@ -72,6 +74,11 @@ void Context::stop_election_timer() {
   }
 }
 
+void Context::reset_election_timer() {
+  stop_election_timer();
+  start_election_timer();
+}
+
 std::weak_ptr<VoidCallback> Context::add_election_timer_callback(
     std::function<void()> callback) {
   auto handle = std::make_shared<VoidCallback>(callback);
@@ -91,6 +98,14 @@ void Context::on_election_timer_expired() {
       cb->call();
     }
   }
+}
+
+void Context::vote_for_me() { voted_for_ = node_id_; }
+
+void Context::increase_term() {
+  current_term_++;
+  std::cout << "[" << node_base_->get_name()
+            << "] term increased: " << current_term_ << std::endl;
 }
 
 }  // namespace raft

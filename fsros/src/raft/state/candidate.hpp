@@ -36,7 +36,6 @@ class Candidate final : public State {
   explicit Candidate(std::shared_ptr<Context> context)
       : State(StateType::kCandidate,
               {{Event::kTerminated, StateType::kStandby},
-               {Event::kTimedout, StateType::kCandidate},
                {Event::kElected, StateType::kLeader},
                {Event::kLeaderDiscovered, StateType::kFollower},
                {Event::kNewTermReceived, StateType::kFollower}},
@@ -52,6 +51,9 @@ class Candidate final : public State {
 
   void entry() override;
   void exit() override;
+
+ private:
+  void start_election();
 };
 
 }  // namespace raft
