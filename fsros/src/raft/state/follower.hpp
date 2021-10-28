@@ -20,9 +20,10 @@
 #include <rclcpp/timer.hpp>
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
-#include "common/context.hpp"
+#include "raft/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 
@@ -33,7 +34,7 @@ namespace raft {
 
 class Follower final : public State {
  public:
-  explicit Follower(std::shared_ptr<akit::failsafe::fsros::Context> context)
+  explicit Follower(std::shared_ptr<Context> context)
       : State(StateType::kFollower,
               {{Event::kTerminated, StateType::kStandby},
                {Event::kTimedout, StateType::kCandidate}},
@@ -46,18 +47,13 @@ class Follower final : public State {
   void on_elected() override;
   void on_terminated() override;
 
-  void on_append_entries_received(uint64_t term) override;
+  std::tuple<uint64_t, bool> on_append_entries_received(uint64_t term) override;
 
   void entry() override;
   void exit() override;
 
  private:
-  void start_election_timer();
-  void stop_election_timer();
-  void on_election_timer_expired();
-
   rclcpp::TimerBase::SharedPtr timer_;
-  uint64_t term_ = 0;
 };
 
 }  // namespace raft

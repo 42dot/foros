@@ -18,8 +18,9 @@
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_LEADER_HPP_
 
 #include <memory>
+#include <tuple>
 
-#include "common/context.hpp"
+#include "raft/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 
@@ -30,7 +31,7 @@ namespace raft {
 
 class Leader final : public State {
  public:
-  explicit Leader(std::shared_ptr<akit::failsafe::fsros::Context> context)
+  explicit Leader(std::shared_ptr<Context> context)
       : State(StateType::kLeader,
               {{Event::kTerminated, StateType::kStandby},
                {Event::kLeaderDiscovered, StateType::kFollower}},
@@ -43,7 +44,7 @@ class Leader final : public State {
   void on_elected() override;
   void on_terminated() override;
 
-  void on_append_entries_received(uint64_t term) override;
+  std::tuple<uint64_t, bool> on_append_entries_received(uint64_t term) override;
 
   void entry() override;
   void exit() override;

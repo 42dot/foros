@@ -16,6 +16,8 @@
 
 #include "raft/state/standby.hpp"
 
+#include <tuple>
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
@@ -33,9 +35,11 @@ void Standby::on_elected() {}
 
 void Standby::on_terminated() {}
 
-void Standby::on_append_entries_received(uint64_t) {}
+std::tuple<uint64_t, bool> Standby::on_append_entries_received(uint64_t) {
+  return std::make_tuple(context_->current_term_, false);
+}
 
-void Standby::entry() {}
+void Standby::entry() { context_->stop_election_timer(); }
 
 void Standby::exit() {}
 

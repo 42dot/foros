@@ -20,8 +20,8 @@
 #include <map>
 #include <memory>
 
-#include "common/context.hpp"
 #include "common/observable.hpp"
+#include "raft/context.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -29,7 +29,7 @@ namespace fsros {
 namespace raft {
 
 State::State(StateType type, std::map<Event, StateType> transition_map,
-             std::shared_ptr<akit::failsafe::fsros::Context> context)
+             std::shared_ptr<Context> context)
     : context_(context), type_(type), transition_map_(transition_map) {}
 
 StateType State::get_type() { return type_; }

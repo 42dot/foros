@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-#include "common/context.hpp"
+#include "raft/context.hpp"
 
+#include <functional>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <utility>
+
+#include "common/void_callback.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 Context::Context(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -40,25 +45,55 @@ Context::Context(
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()) {}
 
-rclcpp::TimerBase::SharedPtr Context::create_election_timer(
-    rclcpp::VoidCallbackType&& callback) {
+void Context::start_election_timer() {
+  if (election_timer_ != nullptr) {
+    std::cerr << "[" << node_base_->get_name() << "] Election timer exist"
+              << std::endl;
+  }
+
   std::uniform_int_distribution<> dist(election_timeout_min_,
                                        election_timeout_max_);
-
   auto period = dist(random_generator_);
-
   std::cout << "[" << node_base_->get_name()
-            << "] Election Timeout Timer Period: " << period << std::endl;
+            << "] Election timeout period: " << period << std::endl;
 
-  auto timer = rclcpp::GenericTimer<rclcpp::VoidCallbackType>::make_shared(
+  election_timer_ = rclcpp::GenericTimer<rclcpp::VoidCallbackType>::make_shared(
       node_clock_->get_clock(), std::chrono::milliseconds(period),
-      std::forward<rclcpp::VoidCallbackType>(callback),
+      std::forward<rclcpp::VoidCallbackType>(
+          std::bind(&Context::on_election_timer_expired, this)),
       node_base_->get_context());
-
-  node_timers_->add_timer(timer, nullptr);
-  return timer;
+  node_timers_->add_timer(election_timer_, nullptr);
 }
 
+void Context::stop_election_timer() {
+  if (election_timer_ != nullptr) {
+    election_timer_->cancel();
+    election_timer_.reset();
+  }
+}
+
+std::weak_ptr<VoidCallback> Context::add_election_timer_callback(
+    std::function<void()> callback) {
+  auto handle = std::make_shared<VoidCallback>(callback);
+  election_timer_callbacks_.emplace_back(handle);
+  return handle;
+}
+
+void Context::remove_election_timer_callback(
+    std::weak_ptr<VoidCallback> handle) {
+  auto callback = handle.lock();
+  election_timer_callbacks_.remove(callback);
+}
+
+void Context::on_election_timer_expired() {
+  for (auto cb : election_timer_callbacks_) {
+    if (cb != nullptr) {
+      cb->call();
+    }
+  }
+}
+
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit

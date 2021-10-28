@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_COMMON_CONTEXT_HPP_
-#define AKIT_FAILSAFE_FSROS_COMMON_CONTEXT_HPP_
+#ifndef AKIT_FAILSAFE_FSROS_RAFT_CONTEXT_HPP_
+#define AKIT_FAILSAFE_FSROS_RAFT_CONTEXT_HPP_
 
 #include <fsros_msgs/srv/append_entries.hpp>
 #include <fsros_msgs/srv/request_vote.hpp>
@@ -28,13 +28,18 @@
 #include <rclcpp/timer.hpp>
 
 #include <chrono>
+#include <functional>
+#include <list>
 #include <memory>
 #include <random>
 #include <vector>
 
+#include "common/void_callback.hpp"
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
+namespace raft {
 
 class Context {
  public:
@@ -46,8 +51,12 @@ class Context {
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
       unsigned int election_timeout_min, unsigned int election_timeout_max);
 
-  rclcpp::TimerBase::SharedPtr create_election_timer(
-      rclcpp::VoidCallbackType &&callback);
+  void start_election_timer();
+  void stop_election_timer();
+  std::weak_ptr<VoidCallback> add_election_timer_callback(
+      std::function<void()> callback);
+  void remove_election_timer_callback(std::weak_ptr<VoidCallback> handle);
+  void on_election_timer_expired();
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
@@ -68,14 +77,22 @@ class Context {
   std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::RequestVote>>>
       request_vote_clients_ = {};
 
+  uint64_t current_term_ = 0;
+  uint32_t voted_for_ = -1;
+
+ private:
   unsigned int election_timeout_min_;
   unsigned int election_timeout_max_;
   std::random_device random_device_;
   std::mt19937 random_generator_;
+
+  rclcpp::TimerBase::SharedPtr election_timer_;
+  std::list<std::shared_ptr<VoidCallback>> election_timer_callbacks_ = {};
 };
 
+}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
 
-#endif  // AKIT_FAILSAFE_FSROS_COMMON_CONTEXT_HPP_
+#endif  // AKIT_FAILSAFE_FSROS_RAFT_CONTEXT_HPP_

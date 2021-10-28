@@ -21,9 +21,10 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 
-#include "common/context.hpp"
 #include "common/observable.hpp"
+#include "raft/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state_type.hpp"
 
@@ -35,7 +36,7 @@ namespace raft {
 class State {
  public:
   State(StateType type, std::map<Event, StateType> transition_map,
-        std::shared_ptr<akit::failsafe::fsros::Context> context);
+        std::shared_ptr<Context> context);
   virtual ~State() {}
 
   StateType get_type();
@@ -50,13 +51,14 @@ class State {
   virtual void on_elected() = 0;
   virtual void on_terminated() = 0;
 
-  virtual void on_append_entries_received(uint64_t term) = 0;
+  virtual std::tuple<uint64_t, bool> on_append_entries_received(
+      uint64_t term) = 0;
 
   virtual void entry() = 0;
   virtual void exit() = 0;
 
  protected:
-  std::shared_ptr<akit::failsafe::fsros::Context> context_;
+  std::shared_ptr<Context> context_;
 
  private:
   StateType type_;

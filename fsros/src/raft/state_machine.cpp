@@ -21,10 +21,11 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
-#include "common/context.hpp"
 #include "fsros_msgs/srv/append_entries.hpp"
+#include "raft/context.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -42,6 +43,8 @@ StateMachine::StateMachine(const std::vector<std::string> &cluster_node_names,
       context_(context) {
   initialize_services();
   initialize_clients(cluster_node_names);
+  context_->add_election_timer_callback(
+      std::bind(&StateMachine::on_election_timedout, this));
 }
 
 void StateMachine::initialize_services() {
@@ -111,20 +114,28 @@ void StateMachine::initialize_clients(
 void StateMachine::on_append_entries_requested(
     const std::shared_ptr<rmw_request_id_t>,
     const std::shared_ptr<fsros_msgs::srv::AppendEntries::Request> request,
-    std::shared_ptr<fsros_msgs::srv::AppendEntries::Response>) {
+    std::shared_ptr<fsros_msgs::srv::AppendEntries::Response> response) {
   auto state = get_current_state();
   if (state == nullptr) {
     std::cerr << "FATAL: there is no current state" << std::endl;
     return;
   }
 
-  state->on_append_entries_received(request->term);
+  std::tie(response->term, response->success) =
+      state->on_append_entries_received(request->term);
 }
 
 void StateMachine::on_request_vote_requested(
     const std::shared_ptr<rmw_request_id_t>,
     const std::shared_ptr<fsros_msgs::srv::RequestVote::Request>,
     std::shared_ptr<fsros_msgs::srv::RequestVote::Response>) {}
+
+void StateMachine::on_election_timedout() {
+  std::cout << "[" << context_->node_base_->get_name() << ": State("
+            << static_cast<int>(get_current_state_type())
+            << ")] on_election_timedout" << std::endl;
+  handle(Event::kTimedout);
+}
 
 }  // namespace raft
 }  // namespace fsros

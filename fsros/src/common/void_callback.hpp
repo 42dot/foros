@@ -14,36 +14,31 @@
  * limitations under the License.
  */
 
-#include "raft/state/leader.hpp"
+#ifndef AKIT_FAILSAFE_FSROS_COMMON_VOID_CALLBACK_HPP_
+#define AKIT_FAILSAFE_FSROS_COMMON_VOID_CALLBACK_HPP_
 
-#include <tuple>
+#include <functional>
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
-namespace raft {
 
-void Leader::on_started() {}
+class VoidCallback {
+ public:
+  explicit VoidCallback(std::function<void()> callback) : callback_(callback) {}
 
-void Leader::on_timedout() {}
+  void call() {
+    if (callback_ != nullptr) {
+      callback_();
+    }
+  }
 
-void Leader::on_vote_received() {}
+ private:
+  std::function<void()> callback_;
+};
 
-void Leader::on_leader_discovered() {}
-
-void Leader::on_elected() {}
-
-void Leader::on_terminated() {}
-
-std::tuple<uint64_t, bool> Leader::on_append_entries_received(uint64_t) {
-  return std::make_tuple(context_->current_term_, false);
-}
-
-void Leader::entry() {}
-
-void Leader::exit() {}
-
-}  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
+
+#endif  // AKIT_FAILSAFE_FSROS_COMMON_VOID_CALLBACK_HPP_

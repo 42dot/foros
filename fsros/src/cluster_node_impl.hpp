@@ -32,10 +32,10 @@
 
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
 #include "akit/failsafe/fsros/cluster_node_options.hpp"
-#include "common/context.hpp"
 #include "common/observer.hpp"
 #include "lifecycle/state_machine.hpp"
 #include "lifecycle/state_type.hpp"
+#include "raft/context.hpp"
 #include "raft/state_machine.hpp"
 
 namespace akit {
@@ -66,7 +66,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void visit_publishers(
       std::function<void(std::shared_ptr<ClusterNodeInterface>)> f);
 
-  std::shared_ptr<Context> context_;
+  std::shared_ptr<raft::Context> raft_context_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
   ClusterNodeInterface &node_interface_;

@@ -16,6 +16,8 @@
 
 #include "raft/state/candidate.hpp"
 
+#include <tuple>
+
 namespace akit {
 namespace failsafe {
 namespace fsros {
@@ -33,7 +35,9 @@ void Candidate::on_elected() {}
 
 void Candidate::on_terminated() {}
 
-void Candidate::on_append_entries_received(uint64_t) {}
+std::tuple<uint64_t, bool> Candidate::on_append_entries_received(uint64_t) {
+  return std::make_tuple(context_->current_term_, false);
+}
 
 void Candidate::entry() {}
 

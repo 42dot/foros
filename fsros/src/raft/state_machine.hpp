@@ -30,9 +30,9 @@
 #include <string>
 #include <vector>
 
-#include "common/context.hpp"
 #include "common/observer.hpp"
 #include "common/state_machine.hpp"
+#include "raft/context.hpp"
 #include "raft/event.hpp"
 #include "raft/state.hpp"
 #include "raft/state/candidate.hpp"
@@ -67,6 +67,8 @@ class StateMachine : public common::StateMachine<State, StateType, Event> {
       std::shared_ptr<fsros_msgs::srv::RequestVote::Response> response);
 
  private:
+  void on_election_timedout();
+
   const char *kAppendEntriesServiceName = "/append_entries";
   const char *kRequestVoteServiceName = "/request_vote";
 

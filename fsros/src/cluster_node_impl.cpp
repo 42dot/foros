@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "akit/failsafe/fsros/cluster_node_options.hpp"
-#include "common/context.hpp"
+#include "raft/context.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -37,11 +37,11 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     ClusterNodeInterface &node_interface, const ClusterNodeOptions &options)
-    : context_(std::make_shared<Context>(
+    : raft_context_(std::make_shared<raft::Context>(
           node_base, node_graph, node_services, node_timers, node_clock,
           options.election_timeout.min, options.election_timeout.max)),
-      raft_fsm_(
-          std::make_unique<raft::StateMachine>(cluster_node_names, context_)),
+      raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_names,
+                                                     raft_context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
       node_interface_(node_interface) {
   lifecycle_fsm_->subscribe(this);
