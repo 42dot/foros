@@ -29,17 +29,19 @@
 
 #include "akit/failsafe/fsros/cluster_node_options.hpp"
 #include "cluster_node_impl.hpp"
+#include "common/node_util.hpp"
 
 namespace akit {
 namespace failsafe {
 namespace fsros {
 
-ClusterNode::ClusterNode(const std::string &node_name,
+ClusterNode::ClusterNode(const uint32_t node_id,
                          const std::string &cluster_name,
-                         const std::vector<std::string> &cluster_node_names,
+                         const std::vector<uint32_t> &cluster_node_ids,
                          const ClusterNodeOptions &options)
     : node_base_(new rclcpp::node_interfaces::NodeBase(
-          node_name, cluster_name, options.node_options.context(),
+          NodeUtil::get_node_name(node_id), cluster_name,
+          options.node_options.context(),
           *(options.node_options.get_rcl_node_options()),
           options.node_options.use_intra_process_comms(),
           options.node_options.enable_topic_statistics())),
@@ -54,7 +56,7 @@ ClusterNode::ClusterNode(const std::string &node_name,
           node_base_, node_topics_, node_graph_, node_services_,
           node_logging_)),
       impl_(std::make_unique<ClusterNodeImpl>(
-          cluster_node_names, node_base_, node_graph_, node_services_,
+          cluster_node_ids, node_base_, node_graph_, node_services_,
           node_timers_, node_clock_, *this, options)) {}
 
 ClusterNode::~ClusterNode() {}

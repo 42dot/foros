@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-#include <memory>
+#ifndef AKIT_FAILSAFE_FSROS_COMMON_NODE_UTIL_HPP_
+#define AKIT_FAILSAFE_FSROS_COMMON_NODE_UTIL_HPP_
+
 #include <string>
 
-#include "akit/failsafe/fsros/cluster_node.hpp"
-#include "rclcpp/rclcpp.hpp"
+namespace akit {
+namespace failsafe {
+namespace fsros {
 
-int main(int argc, char **argv) {
-  rclcpp::init(argc, argv);
+class NodeUtil {
+ public:
+  static std::string get_node_name(uint32_t node_id) {
+    return "node" + std::to_string(node_id);
+  }
+};
 
-  auto node = std::make_shared<akit::failsafe::fsros::ClusterNode>(
-      1, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4});
+}  // namespace fsros
+}  // namespace failsafe
+}  // namespace akit
 
-  rclcpp::spin(node->get_node_base_interface());
-  rclcpp::shutdown();
-}
+#endif  // AKIT_FAILSAFE_FSROS_COMMON_NODE_UTIL_HPP_

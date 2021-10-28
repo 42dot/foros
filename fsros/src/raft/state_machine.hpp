@@ -50,11 +50,11 @@ namespace common = akit::failsafe::fsros::common;
 
 class StateMachine : public common::StateMachine<State, StateType, Event> {
  public:
-  explicit StateMachine(const std::vector<std::string> &cluster_node_names,
+  explicit StateMachine(const std::vector<uint32_t> &cluster_node_ids,
                         std::shared_ptr<Context> context);
 
   void initialize_services();
-  void initialize_clients(const std::vector<std::string> &cluster_node_names);
+  void initialize_clients(const std::vector<uint32_t> &cluster_node_ids);
 
   void on_append_entries_requested(
       const std::shared_ptr<rmw_request_id_t> header,

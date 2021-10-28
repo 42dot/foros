@@ -24,6 +24,7 @@
 #include <tuple>
 #include <vector>
 
+#include "common/node_util.hpp"
 #include "fsros_msgs/srv/append_entries.hpp"
 #include "raft/context.hpp"
 
@@ -32,7 +33,7 @@ namespace failsafe {
 namespace fsros {
 namespace raft {
 
-StateMachine::StateMachine(const std::vector<std::string> &cluster_node_names,
+StateMachine::StateMachine(const std::vector<uint32_t> &cluster_node_ids,
                            std::shared_ptr<Context> context)
     : common::StateMachine<State, StateType, Event>(
           StateType::kStandby,
@@ -42,7 +43,7 @@ StateMachine::StateMachine(const std::vector<std::string> &cluster_node_names,
            {StateType::kLeader, std::make_shared<Leader>(context)}}),
       context_(context) {
   initialize_services();
-  initialize_clients(cluster_node_names);
+  initialize_clients(cluster_node_ids);
   context_->add_election_timer_callback(
       std::bind(&StateMachine::on_election_timedout, this));
 }
@@ -83,16 +84,18 @@ void StateMachine::initialize_services() {
 }
 
 void StateMachine::initialize_clients(
-    const std::vector<std::string> &cluster_node_names) {
+    const std::vector<uint32_t> &cluster_node_ids) {
   std::string node_name = context_->node_base_->get_name();
   std::string cluster_name = context_->node_base_->get_namespace();
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
-  for (std::string node : cluster_node_names) {
+  for (auto id : cluster_node_ids) {
+    std::string node = NodeUtil::get_node_name(id);
     if (node == node_name) {
       continue;
     }
+
     auto append_entries =
         rclcpp::Client<fsros_msgs::srv::AppendEntries>::make_shared(
             context_->node_base_.get(), context_->node_graph_,
@@ -117,7 +120,7 @@ void StateMachine::on_append_entries_requested(
     std::shared_ptr<fsros_msgs::srv::AppendEntries::Response> response) {
   auto state = get_current_state();
   if (state == nullptr) {
-    std::cerr << "FATAL: there is no current state" << std::endl;
+    std::cerr << "There is no current state" << std::endl;
     return;
   }
 

@@ -36,8 +36,7 @@ class TestNodeCluster : public ::testing::Test {
 TEST_F(TestNodeCluster, TestConstructor) {
   {
     auto cluster_node = std::make_shared<akit::failsafe::fsros::ClusterNode>(
-        "node1", "test_cluster",
-        std::initializer_list<std::string>{"node1", "node2", "node3", "node4"});
+        1, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4});
   }
 
   {
@@ -45,35 +44,8 @@ TEST_F(TestNodeCluster, TestConstructor) {
         {
           auto cluster_node =
               std::make_shared<akit::failsafe::fsros::ClusterNode>(
-                  "", "test_cluster",
-                  std::initializer_list<std::string>{"node1", "node2", "node3",
-                                                     "node4"});
-          (void)cluster_node;
-        },
-        rclcpp::exceptions::InvalidNodeNameError);
-  }
-
-  {
-    ASSERT_THROW(
-        {
-          auto cluster_node =
-              std::make_shared<akit::failsafe::fsros::ClusterNode>(
-                  "invalid_node?", "test_cluster",
-                  std::initializer_list<std::string>{"node1", "node2", "node3",
-                                                     "node4"});
-          (void)cluster_node;
-        },
-        rclcpp::exceptions::InvalidNodeNameError);
-  }
-
-  {
-    ASSERT_THROW(
-        {
-          auto cluster_node =
-              std::make_shared<akit::failsafe::fsros::ClusterNode>(
-                  "node1", "invalid_cluster?",
-                  std::initializer_list<std::string>{"node1", "node2", "node3",
-                                                     "node4"});
+                  1, "invalid_cluster?",
+                  std::initializer_list<uint32_t>{1, 2, 3, 4});
 
           (void)cluster_node;
         },

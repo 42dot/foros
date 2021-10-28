@@ -37,10 +37,9 @@ class TestRaftStateMachine : public ::testing::Test {
   void SetUp() {
     rclcpp::init(0, nullptr);
     node_ = std::make_shared<fsros::ClusterNode>(
-        "node1", "test_cluster",
-        std::initializer_list<std::string>{"node1", "node2"});
+        1, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4});
     state_machine_ = std::make_shared<raft::StateMachine>(
-        std::initializer_list<std::string>{"node1", "node2"},
+        std::initializer_list<uint32_t>{1, 2, 3, 4},
         std::make_shared<raft::Context>(
             node_->get_node_base_interface(), node_->get_node_graph_interface(),
             node_->get_node_services_interface(),
