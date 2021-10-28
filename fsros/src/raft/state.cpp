@@ -31,7 +31,17 @@ namespace raft {
 
 State::State(StateType type, std::map<Event, StateType> transition_map,
              std::shared_ptr<Context> context)
-    : context_(context), type_(type), transition_map_(transition_map) {}
+    : context_(context), type_(type), transition_map_(transition_map) {
+  callback_map_ = {
+      {Event::kStarted, std::bind(&State::on_started, this)},
+      {Event::kTimedout, std::bind(&State::on_timedout, this)},
+      {Event::kLeaderDiscovered, std::bind(&State::on_leader_discovered, this)},
+      {Event::kNewTermReceived, std::bind(&State::on_new_term_received, this)},
+      {Event::kVoteReceived, std::bind(&State::on_vote_received, this)},
+      {Event::kElected, std::bind(&State::on_elected, this)},
+      {Event::kTerminated, std::bind(&State::on_terminated, this)},
+  };
+}
 
 StateType State::get_type() { return type_; }
 
@@ -42,33 +52,13 @@ StateType State::handle(const Event &event) {
     return type_;
   }
 
-  switch (event) {
-    case Event::kStarted:
-      on_started();
-      break;
-    case Event::kTimedout:
-      on_timedout();
-      break;
-    case Event::kLeaderDiscovered:
-      on_leader_discovered();
-      break;
-    case Event::kNewTermReceived:
-      on_new_term_received();
-      break;
-    case Event::kVoteReceived:
-      on_vote_received();
-      break;
-    case Event::kElected:
-      on_elected();
-      break;
-    case Event::kTerminated:
-      on_terminated();
-      break;
-    default:
-      std::cerr << "[" << static_cast<int>(type_)
-                << "]: invalid event: " << static_cast<int>(event) << std::endl;
-      return type_;
+  if (callback_map_.count(event) < 1) {
+    std::cerr << "[" << static_cast<int>(type_)
+              << "]: invalid event: " << static_cast<int>(event) << std::endl;
+    return type_;
   }
+
+  callback_map_[event]();
 
   return transition_map_[event];
 }
@@ -76,40 +66,6 @@ StateType State::handle(const Event &event) {
 void State::set_event_notifier(
     std::shared_ptr<Observable<Event>> event_source) {
   event_notifier_ = event_source;
-}
-
-bool State::update_term(uint64_t term) {
-  if (term <= context_->current_term_) return false;
-
-  std::cout << "[" << static_cast<int>(type_)
-            << "]: new term received, emit event." << std::endl;
-  context_->current_term_ = term;
-
-  emit(Event::kNewTermReceived);
-
-  return true;
-}
-
-std::tuple<uint64_t, bool> State::on_append_entries_received(uint64_t term) {
-  bool success = true;
-
-  if (term < context_->current_term_) {
-    std::cerr << "[" << static_cast<int>(type_) << "]: new term (" << term
-              << ") is less than existing one (" << context_->current_term_
-              << ")" << std::endl;
-    success = false;
-  } else {
-    update_term(term);
-    success = true;
-  }
-
-  return std::make_tuple(context_->current_term_, success);
-}
-
-std::tuple<uint64_t, bool> State::on_request_vote_received(
-    uint64_t term, uint32_t candidate_id) {
-  update_term(term);
-  return context_->vote(term, candidate_id);
 }
 
 }  // namespace raft

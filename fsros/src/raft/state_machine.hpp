@@ -17,17 +17,7 @@
 #ifndef AKIT_FAILSAFE_FSROS_RAFT_STATE_MACHINE_HPP_
 #define AKIT_FAILSAFE_FSROS_RAFT_STATE_MACHINE_HPP_
 
-#include <fsros_msgs/srv/append_entries.hpp>
-#include <fsros_msgs/srv/request_vote.hpp>
-#include <rclcpp/any_service_callback.hpp>
-#include <rclcpp/node_interfaces/node_base_interface.hpp>
-#include <rclcpp/node_interfaces/node_graph_interface.hpp>
-#include <rclcpp/node_interfaces/node_services_interface.hpp>
-#include <rclcpp/node_interfaces/node_timers_interface.hpp>
-
-#include <map>
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "common/observer.hpp"
@@ -39,6 +29,7 @@
 #include "raft/state/follower.hpp"
 #include "raft/state/leader.hpp"
 #include "raft/state/standby.hpp"
+#include "raft/state_machine_interface.hpp"
 #include "raft/state_type.hpp"
 
 namespace akit {
@@ -48,29 +39,15 @@ namespace raft {
 
 namespace common = akit::failsafe::fsros::common;
 
-class StateMachine : public common::StateMachine<State, StateType, Event> {
+class StateMachine : public common::StateMachine<State, StateType, Event>,
+                     public StateMachineInterface {
  public:
   explicit StateMachine(const std::vector<uint32_t> &cluster_node_ids,
                         std::shared_ptr<Context> context);
 
-  void initialize_services();
-  void initialize_clients(const std::vector<uint32_t> &cluster_node_ids);
-
-  void on_append_entries_requested(
-      const std::shared_ptr<rmw_request_id_t> header,
-      const std::shared_ptr<fsros_msgs::srv::AppendEntries::Request> request,
-      std::shared_ptr<fsros_msgs::srv::AppendEntries::Response> response);
-
-  void on_request_vote_requested(
-      const std::shared_ptr<rmw_request_id_t> header,
-      const std::shared_ptr<fsros_msgs::srv::RequestVote::Request> request,
-      std::shared_ptr<fsros_msgs::srv::RequestVote::Response> response);
-
  private:
-  void on_election_timedout();
-
-  const char *kAppendEntriesServiceName = "/append_entries";
-  const char *kRequestVoteServiceName = "/request_vote";
+  void on_election_timedout() override;
+  void on_new_term_received() override;
 
   const std::shared_ptr<Context> context_;
 };

@@ -55,19 +55,14 @@ class State {
   virtual void entry() = 0;
   virtual void exit() = 0;
 
-  std::tuple<uint64_t, bool> on_append_entries_received(uint64_t term);
-  std::tuple<uint64_t, bool> on_request_vote_received(uint64_t term,
-                                                      uint32_t canidate_id);
-
  protected:
-  bool update_term(uint64_t);
-
   std::shared_ptr<Context> context_;
 
  private:
   StateType type_;
   std::shared_ptr<Observable<Event>> event_notifier_;
   std::map<Event, StateType> transition_map_;
+  std::map<Event, std::function<void()>> callback_map_;
 };
 
 }  // namespace raft
