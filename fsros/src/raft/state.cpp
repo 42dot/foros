@@ -106,6 +106,12 @@ std::tuple<uint64_t, bool> State::on_append_entries_received(uint64_t term) {
   return std::make_tuple(context_->current_term_, success);
 }
 
+std::tuple<uint64_t, bool> State::on_request_vote_received(
+    uint64_t term, uint32_t candidate_id) {
+  update_term(term);
+  return context_->vote(term, candidate_id);
+}
+
 }  // namespace raft
 }  // namespace fsros
 }  // namespace failsafe

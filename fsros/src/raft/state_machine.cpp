@@ -130,8 +130,17 @@ void StateMachine::on_append_entries_requested(
 
 void StateMachine::on_request_vote_requested(
     const std::shared_ptr<rmw_request_id_t>,
-    const std::shared_ptr<fsros_msgs::srv::RequestVote::Request>,
-    std::shared_ptr<fsros_msgs::srv::RequestVote::Response>) {}
+    const std::shared_ptr<fsros_msgs::srv::RequestVote::Request> request,
+    std::shared_ptr<fsros_msgs::srv::RequestVote::Response> response) {
+  auto state = get_current_state();
+  if (state == nullptr) {
+    std::cerr << "There is no current state" << std::endl;
+    return;
+  }
+
+  std::tie(response->term, response->vote_granted) =
+      state->on_request_vote_received(request->term, request->candidate_id);
+}
 
 void StateMachine::on_election_timedout() {
   std::cout << "[" << context_->node_base_->get_name() << ": State("

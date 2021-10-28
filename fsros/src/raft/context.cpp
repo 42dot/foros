@@ -16,10 +16,13 @@
 
 #include "raft/context.hpp"
 
+#include <fsros_msgs/srv/request_vote.hpp>
+
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <random>
+#include <tuple>
 #include <utility>
 
 #include "common/void_callback.hpp"
@@ -100,12 +103,57 @@ void Context::on_election_timer_expired() {
   }
 }
 
-void Context::vote_for_me() { voted_for_ = node_id_; }
+void Context::vote_for_me() {
+  voted_for_ = node_id_;
+  voted_ = true;
+}
+
+std::tuple<uint64_t, bool> Context::vote(uint64_t term, uint32_t id) {
+  bool granted = false;
+
+  if (term >= current_term_) {
+    if (voted_ == false) {
+      voted_for_ = id;
+      voted_ = true;
+      granted = true;
+    } else if (voted_for_ == id) {
+      granted = true;
+    }
+  }
+
+  return std::make_tuple(current_term_, granted);
+}
+
+void Context::reset_vote() {
+  voted_for_ = 0;
+  voted_ = false;
+}
 
 void Context::increase_term() {
   current_term_++;
   std::cout << "[" << node_base_->get_name()
             << "] term increased: " << current_term_ << std::endl;
+}
+
+void Context::request_vote() {
+  for (auto client : request_vote_clients_) {
+    auto request = std::make_shared<fsros_msgs::srv::RequestVote::Request>();
+    request->term = current_term_;
+    request->candidate_id = node_id_;
+    auto response = client->async_send_request(
+        request, std::bind(&Context::on_request_vote_response, this,
+                           std::placeholders::_1));
+  }
+}
+
+void Context::on_request_vote_response(
+    rclcpp::Client<fsros_msgs::srv::RequestVote>::SharedFutureWithRequest
+        future) {
+  std::cout << "vote response" << std::endl;
+  auto ret = future.get();
+  auto response = ret.second;
+
+  std::cout << "response: " << response->term << std::endl;
 }
 
 }  // namespace raft

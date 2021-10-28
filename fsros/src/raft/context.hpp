@@ -60,7 +60,10 @@ class Context {
   void remove_election_timer_callback(std::weak_ptr<VoidCallback> handle);
   void on_election_timer_expired();
 
+  void request_vote();
   void vote_for_me();
+  std::tuple<uint64_t, bool> vote(uint64_t term, uint32_t id);
+  void reset_vote();
   void increase_term();
 
   uint32_t node_id_;
@@ -84,9 +87,14 @@ class Context {
       request_vote_clients_ = {};
 
   uint64_t current_term_ = 0;
-  uint32_t voted_for_ = -1;
+  uint32_t voted_for_;
+  bool voted_ = false;
 
  private:
+  void on_request_vote_response(
+      rclcpp::Client<fsros_msgs::srv::RequestVote>::SharedFutureWithRequest
+          future);
+
   unsigned int election_timeout_min_;
   unsigned int election_timeout_max_;
   std::random_device random_device_;

@@ -45,6 +45,7 @@ void Candidate::start_election() {
   context_->increase_term();
   context_->vote_for_me();
   context_->reset_election_timer();
+  context_->request_vote();
   // TODO(wonguk.jeong): send RequestVote RPCs to others
   // TODO(wonguk.jeong): check available nodes
 }

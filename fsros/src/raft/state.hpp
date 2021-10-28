@@ -56,6 +56,8 @@ class State {
   virtual void exit() = 0;
 
   std::tuple<uint64_t, bool> on_append_entries_received(uint64_t term);
+  std::tuple<uint64_t, bool> on_request_vote_received(uint64_t term,
+                                                      uint32_t canidate_id);
 
  protected:
   bool update_term(uint64_t);
