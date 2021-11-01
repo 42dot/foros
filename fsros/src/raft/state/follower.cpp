@@ -37,8 +37,6 @@ void Follower::on_timedout() {}
 
 void Follower::on_broadcast_timedout() {}
 
-void Follower::on_vote_received() {}
-
 void Follower::on_leader_discovered() {}
 
 void Follower::on_new_term_received() {}

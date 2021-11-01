@@ -29,8 +29,6 @@ void Standby::on_timedout() {}
 
 void Standby::on_broadcast_timedout() {}
 
-void Standby::on_vote_received() {}
-
 void Standby::on_leader_discovered() {}
 
 void Standby::on_new_term_received() {}

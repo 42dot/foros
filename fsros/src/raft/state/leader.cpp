@@ -29,8 +29,6 @@ void Leader::on_timedout() {}
 
 void Leader::on_broadcast_timedout() { context_->broadcast(); }
 
-void Leader::on_vote_received() {}
-
 void Leader::on_leader_discovered() {}
 
 void Leader::on_new_term_received() {}

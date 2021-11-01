@@ -47,7 +47,6 @@ class State {
   virtual void on_started() = 0;
   virtual void on_timedout() = 0;
   virtual void on_broadcast_timedout() = 0;
-  virtual void on_vote_received() = 0;
   virtual void on_leader_discovered() = 0;
   virtual void on_new_term_received() = 0;
   virtual void on_elected() = 0;
