@@ -52,15 +52,13 @@ class StateMachine : public Observer<Event> {
   void handle(const Event &event) override {
     auto next_state = states_[current_state_]->handle(event);
     if (states_.count(next_state) < 1) {
-      std::cerr << "Invalid next state (" << static_cast<int>(next_state)
-                << std::endl;
       return;
     }
 
     states_[current_state_]->exit();
     current_state_ = next_state;
-    states_[current_state_]->entry();
     current_state_notifier_.notify(current_state_);
+    states_[current_state_]->entry();
   }
 
   void subscribe(Observer<StateType> *observer) {
