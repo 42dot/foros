@@ -27,6 +27,8 @@ void Candidate::on_started() {}
 
 void Candidate::on_timedout() { start_election(); }
 
+void Candidate::on_broadcast_timedout() {}
+
 void Candidate::on_vote_received() {}
 
 void Candidate::on_leader_discovered() {}
@@ -43,11 +45,10 @@ void Candidate::exit() {}
 
 void Candidate::start_election() {
   context_->increase_term();
+  context_->reset_vote();
   context_->vote_for_me();
   context_->reset_election_timer();
   context_->request_vote();
-  // TODO(wonguk.jeong): send RequestVote RPCs to others
-  // TODO(wonguk.jeong): check available nodes
 }
 
 }  // namespace raft

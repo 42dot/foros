@@ -48,6 +48,9 @@ class StateMachine : public common::StateMachine<State, StateType, Event>,
  private:
   void on_election_timedout() override;
   void on_new_term_received() override;
+  void on_elected() override;
+  void on_broadcast_timedout() override;
+  void on_leader_discovered() override;
 
   const std::shared_ptr<Context> context_;
 };

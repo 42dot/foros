@@ -27,6 +27,8 @@ void Leader::on_started() {}
 
 void Leader::on_timedout() {}
 
+void Leader::on_broadcast_timedout() { context_->broadcast(); }
+
 void Leader::on_vote_received() {}
 
 void Leader::on_leader_discovered() {}
@@ -37,9 +39,9 @@ void Leader::on_elected() {}
 
 void Leader::on_terminated() {}
 
-void Leader::entry() {}
+void Leader::entry() { context_->start_broadcast_timer(); }
 
-void Leader::exit() {}
+void Leader::exit() { context_->stop_broadcast_timer(); }
 
 }  // namespace raft
 }  // namespace fsros

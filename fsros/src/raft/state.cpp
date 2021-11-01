@@ -40,6 +40,8 @@ State::State(StateType type, std::map<Event, StateType> transition_map,
       {Event::kVoteReceived, std::bind(&State::on_vote_received, this)},
       {Event::kElected, std::bind(&State::on_elected, this)},
       {Event::kTerminated, std::bind(&State::on_terminated, this)},
+      {Event::kBroadcastTimedout,
+       std::bind(&State::on_broadcast_timedout, this)},
   };
 }
 
@@ -49,7 +51,7 @@ void State::emit(const Event &event) { event_notifier_->notify(event); }
 
 StateType State::handle(const Event &event) {
   if (transition_map_.count(event) < 1) {
-    return type_;
+    return StateType::kStay;
   }
 
   if (callback_map_.count(event) < 1) {

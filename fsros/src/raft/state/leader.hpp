@@ -35,11 +35,13 @@ class Leader final : public State {
       : State(StateType::kLeader,
               {{Event::kTerminated, StateType::kStandby},
                {Event::kLeaderDiscovered, StateType::kFollower},
-               {Event::kNewTermReceived, StateType::kFollower}},
+               {Event::kNewTermReceived, StateType::kFollower},
+               {Event::kBroadcastTimedout, StateType::kStay}},
               context) {}
 
   void on_started() override;
   void on_timedout() override;
+  void on_broadcast_timedout() override;
   void on_vote_received() override;
   void on_leader_discovered() override;
   void on_new_term_received() override;

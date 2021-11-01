@@ -33,9 +33,9 @@ namespace raft {
 
 void Follower::on_started() {}
 
-void Follower::on_timedout() {
-  std::cerr << "Follower: timedout event" << std::endl;
-}
+void Follower::on_timedout() {}
+
+void Follower::on_broadcast_timedout() {}
 
 void Follower::on_vote_received() {}
 

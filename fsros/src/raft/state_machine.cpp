@@ -39,14 +39,17 @@ StateMachine::StateMachine(const std::vector<uint32_t> &cluster_node_ids,
   context_->initialize(cluster_node_ids, this);
 }
 
-void StateMachine::on_election_timedout() {
-  std::cout << "[" << context_->get_node_name() << ": State("
-            << static_cast<int>(get_current_state_type())
-            << ")] on_election_timedout" << std::endl;
-  handle(Event::kTimedout);
-}
+void StateMachine::on_election_timedout() { handle(Event::kTimedout); }
 
 void StateMachine::on_new_term_received() { handle(Event::kNewTermReceived); }
+
+void StateMachine::on_elected() { handle(Event::kElected); }
+
+void StateMachine::on_broadcast_timedout() {
+  handle(Event::kBroadcastTimedout);
+}
+
+void StateMachine::on_leader_discovered() { handle(Event::kLeaderDiscovered); }
 
 }  // namespace raft
 }  // namespace fsros

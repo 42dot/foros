@@ -26,6 +26,9 @@ class StateMachineInterface {
  public:
   virtual void on_election_timedout() = 0;
   virtual void on_new_term_received() = 0;
+  virtual void on_elected() = 0;
+  virtual void on_broadcast_timedout() = 0;
+  virtual void on_leader_discovered() = 0;
 };
 
 }  // namespace raft

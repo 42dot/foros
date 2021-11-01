@@ -59,12 +59,17 @@ class Context {
   void start_election_timer();
   void stop_election_timer();
   void reset_election_timer();
+  void start_broadcast_timer();
+  void stop_broadcast_timer();
+  void reset_broadcast_timer();
   std::string get_node_name();
   void request_vote();
   void vote_for_me();
   std::tuple<uint64_t, bool> vote(uint64_t term, uint32_t id);
   void reset_vote();
   void increase_term();
+  uint64_t get_term();
+  void broadcast();
 
  private:
   void initialize_services();
@@ -73,6 +78,9 @@ class Context {
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<fsros_msgs::srv::AppendEntries::Request> request,
       std::shared_ptr<fsros_msgs::srv::AppendEntries::Response> response);
+  void on_append_entries_response(
+      rclcpp::Client<fsros_msgs::srv::AppendEntries>::SharedFutureWithRequest
+          future);
   void on_request_vote_requested(
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<fsros_msgs::srv::RequestVote::Request> request,
@@ -80,7 +88,8 @@ class Context {
   void on_request_vote_response(
       rclcpp::Client<fsros_msgs::srv::RequestVote>::SharedFutureWithRequest
           future);
-  void update_term(uint64_t term);
+  bool update_term(uint64_t term);
+  void check_elected();
 
   uint32_t node_id_;
 
@@ -106,13 +115,21 @@ class Context {
   uint64_t current_term_;
   uint32_t voted_for_;
   bool voted_;
+  unsigned int vote_received_;
+  unsigned int available_candidates_;
+
   unsigned int election_timeout_min_;
   unsigned int election_timeout_max_;
   std::random_device random_device_;
   std::mt19937 random_generator_;
   rclcpp::TimerBase::SharedPtr election_timer_;
 
+  unsigned int broadcast_timeout_;
+  rclcpp::TimerBase::SharedPtr broadcast_timer_;
+
   StateMachineInterface *state_machine_interface_;
+
+  bool broadcast_received_;
 };
 
 }  // namespace raft

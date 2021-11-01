@@ -36,6 +36,7 @@ class Candidate final : public State {
   explicit Candidate(std::shared_ptr<Context> context)
       : State(StateType::kCandidate,
               {{Event::kTerminated, StateType::kStandby},
+               {Event::kTimedout, StateType::kStay},
                {Event::kElected, StateType::kLeader},
                {Event::kLeaderDiscovered, StateType::kFollower},
                {Event::kNewTermReceived, StateType::kFollower}},
@@ -43,6 +44,7 @@ class Candidate final : public State {
 
   void on_started() override;
   void on_timedout() override;
+  void on_broadcast_timedout() override;
   void on_vote_received() override;
   void on_leader_discovered() override;
   void on_new_term_received() override;

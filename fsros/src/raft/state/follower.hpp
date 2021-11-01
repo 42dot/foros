@@ -42,6 +42,7 @@ class Follower final : public State {
 
   void on_started() override;
   void on_timedout() override;
+  void on_broadcast_timedout() override;
   void on_vote_received() override;
   void on_leader_discovered() override;
   void on_new_term_received() override;
