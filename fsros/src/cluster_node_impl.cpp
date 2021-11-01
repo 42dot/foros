@@ -92,20 +92,24 @@ void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
 void ClusterNodeImpl::handle(const raft::StateType &state) {
   switch (state) {
     case raft::StateType::kStandby:
-      std::cout << "raft state: Standby" << std::endl;
+      std::cout << "raft state: Standby (" << raft_context_->get_term() << ")"
+                << std::endl;
       break;
     case raft::StateType::kFollower:
-      std::cout << "raft state: Follower" << std::endl;
+      std::cout << "raft state: Follower (" << raft_context_->get_term() << ")"
+                << std::endl;
       break;
     case raft::StateType::kCandidate:
-      std::cout << "raft state: Candidate" << std::endl;
+      std::cout << "raft state: Candidate (" << raft_context_->get_term() << ")"
+                << std::endl;
       break;
     case raft::StateType::kLeader:
-      std::cout << "raft state: Leader" << std::endl;
+      std::cout << "raft state: Leader (" << raft_context_->get_term() << ")"
+                << std::endl;
       break;
     default:
-      std::cerr << "Invalid raft state : " << static_cast<int>(state)
-                << std::endl;
+      std::cerr << "Invalid raft state (" << raft_context_->get_term()
+                << "): " << static_cast<int>(state) << std::endl;
       break;
   }
 }
