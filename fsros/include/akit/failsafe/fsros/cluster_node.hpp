@@ -18,7 +18,9 @@
 #define AKIT_FAILSAFE_FSROS_CLUSTER_NODE_HPP_
 
 #include <rclcpp/callback_group.hpp>
+#include <rclcpp/create_client.hpp>
 #include <rclcpp/create_publisher.hpp>
+#include <rclcpp/create_service.hpp>
 #include <rclcpp/create_subscription.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
@@ -179,6 +181,43 @@ class ClusterNode : public ClusterNodeInterface {
         std::move(callback), this->node_base_->get_context());
     node_timers_->add_timer(timer, group);
     return timer;
+  }
+
+  /// Create and return a Client.
+  /**
+   * \sa rclcpp::Node::create_client
+   */
+  template <typename ServiceT>
+  typename rclcpp::Client<ServiceT>::SharedPtr create_client(
+      const std::string &service_name,
+      const rmw_qos_profile_t &qos_profile = rmw_qos_profile_services_default,
+      rclcpp::CallbackGroup::SharedPtr group = nullptr) {
+    rcl_client_options_t options = rcl_client_get_default_options();
+    options.qos = qos_profile;
+
+    using rclcpp::Client;
+    using rclcpp::ClientBase;
+
+    auto cli = Client<ServiceT>::make_shared(node_base_.get(), node_graph_,
+                                             service_name, options);
+
+    auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
+    node_services_->add_client(cli_base_ptr, group);
+    return cli;
+  }
+
+  /// Create and return a Service.
+  /**
+   * \sa rclcpp::Node::create_service
+   */
+  template <typename ServiceT, typename CallbackT>
+  typename rclcpp::Service<ServiceT>::SharedPtr create_service(
+      const std::string &service_name, CallbackT &&callback,
+      const rmw_qos_profile_t &qos_profile = rmw_qos_profile_services_default,
+      rclcpp::CallbackGroup::SharedPtr group = nullptr) {
+    return rclcpp::create_service<ServiceT, CallbackT>(
+        node_base_, node_services_, service_name,
+        std::forward<CallbackT>(callback), qos_profile, group);
   }
 
   /// Return the Node's internal NodeBaseInterface implementation.
