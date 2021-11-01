@@ -36,9 +36,6 @@ int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
 
   auto options = akit::failsafe::fsros::ClusterNodeOptions();
-  options.election_timeout.max = 1500;
-  options.election_timeout.min = 1000;
-
   auto node = std::make_shared<akit::failsafe::fsros::ClusterNode>(
       id, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4}, options);
 
