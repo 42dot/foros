@@ -27,7 +27,7 @@ enum class StateType {
   kFollower,
   kCandidate,
   kLeader,
-  kUnknown,
+  kStay,
 };
 
 }  // namespace raft

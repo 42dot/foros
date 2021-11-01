@@ -30,6 +30,7 @@ enum class Event {
   kNewTermReceived,
   kElected,
   kTerminated,
+  kBroadcastTimedout,
   kUnknown,
 };
 
