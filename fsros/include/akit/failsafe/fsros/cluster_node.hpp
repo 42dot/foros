@@ -40,6 +40,7 @@
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
 #include "akit/failsafe/fsros/cluster_node_options.hpp"
 #include "akit/failsafe/fsros/cluster_node_publisher.hpp"
+#include "akit/failsafe/fsros/cluster_node_service.hpp"
 #include "akit/failsafe/fsros/common.hpp"
 
 namespace akit {
@@ -130,8 +131,7 @@ class ClusterNode : public ClusterNodeInterface {
         rclcpp::create_publisher<MessageT, AllocatorT,
                                  ClusterNodePublisher<MessageT, AllocatorT>>(
             *this, topic_name, qos, options);
-    add_publisher(pub);
-
+    pub->set_node_interface(this);
     return pub;
   }
 
@@ -211,13 +211,24 @@ class ClusterNode : public ClusterNodeInterface {
    * \sa rclcpp::Node::create_service
    */
   template <typename ServiceT, typename CallbackT>
-  typename rclcpp::Service<ServiceT>::SharedPtr create_service(
+  typename ClusterNodeService<ServiceT>::SharedPtr create_service(
       const std::string &service_name, CallbackT &&callback,
       const rmw_qos_profile_t &qos_profile = rmw_qos_profile_services_default,
       rclcpp::CallbackGroup::SharedPtr group = nullptr) {
-    return rclcpp::create_service<ServiceT, CallbackT>(
-        node_base_, node_services_, service_name,
-        std::forward<CallbackT>(callback), qos_profile, group);
+    rclcpp::AnyServiceCallback<ServiceT> any_service_callback;
+    any_service_callback.set(std::forward<CallbackT>(callback));
+
+    rcl_service_options_t service_options = rcl_service_get_default_options();
+    service_options.qos = qos_profile;
+
+    auto service = ClusterNodeService<ServiceT>::make_shared(
+        node_base_->get_shared_rcl_node_handle(), service_name,
+        any_service_callback, service_options);
+    auto serv_base_ptr =
+        std::dynamic_pointer_cast<rclcpp::ServiceBase>(service);
+    node_services_->add_service(serv_base_ptr, group);
+    service->set_node_interface(this);
+    return service;
   }
 
   /// Return the Node's internal NodeBaseInterface implementation.
@@ -280,10 +291,14 @@ class ClusterNode : public ClusterNodeInterface {
   CLUSTER_NODE_PUBLIC
   void on_standby() override;
 
- private:
-  void add_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
-  void remove_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
+  /// Check whether the node is activated or not
+  /**
+   * \return true if the node is activated, false if not
+   */
+  CLUSTER_NODE_PUBLIC
+  bool is_activated() final;
 
+ private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;

@@ -25,7 +25,6 @@
 #include <utility>
 
 #include "akit/failsafe/fsros/cluster_node_interface.hpp"
-#include "akit/failsafe/fsros/common.hpp"
 
 namespace akit {
 namespace failsafe {
@@ -36,8 +35,7 @@ namespace fsros {
  * Overrides all publisher functions to check for cluster node's state.
  */
 template <typename MessageT, typename Alloc = std::allocator<void>>
-class ClusterNodePublisher : public ClusterNodeInterface,
-                             public rclcpp::Publisher<MessageT, Alloc> {
+class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClusterNodePublisher)
 
@@ -48,31 +46,31 @@ class ClusterNodePublisher : public ClusterNodeInterface,
 
   /// Create a new publisher for cluster node.
   /**
+   * The constructor for a ClsuterNodePublisher is almost never called
+   * directly. Instead, publisher should be instantiated through the function
+   * ClusterNode::craete_publisher()
+   *
    * \param[in] node_base Handle of node base interface
    * \param[in] topic Name of the topic
    * \param[in] qos QoS settings
    * \param[in] options Options of the publisher
    */
-  CLUSTER_NODE_PUBLIC
   ClusterNodePublisher(
       rclcpp::node_interfaces::NodeBaseInterface* node_base,
       const std::string& topic, const rclcpp::QoS& qos,
       const rclcpp::PublisherOptionsWithAllocator<Alloc>& options)
       : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options),
-        state_(ClusterNodeState::kUnknown),
         logger_(rclcpp::get_logger("ClusterNodePublisher")) {}
 
-  CLUSTER_NODE_PUBLIC
   ~ClusterNodePublisher() {}
 
   /// ClusterNodePublisher publish function
   /**
    * The publish function checks whether the node is active or not and forwards
-   * the message to the actual rclcpp Publisher base class
+   * the message to the actual rclcpp::Publisher class
    */
-  CLUSTER_NODE_PUBLIC
   void publish(std::unique_ptr<MessageT, MessageDeleter> msg) override {
-    if (state_ != ClusterNodeState::kActive) {
+    if (node_interface_ != nullptr && !node_interface_->is_activated()) {
       RCLCPP_WARN(logger_,
                   "Trying to publish message on the topic '%s', but the "
                   "publisher is not activated",
@@ -86,11 +84,10 @@ class ClusterNodePublisher : public ClusterNodeInterface,
   /// ClusterNodePublisher publish function
   /**
    * The publish function checks whether the node is active or not and forwards
-   * the message to the actual rclcpp Publisher base class
+   * the message to the actual rclcpp::Publisher class
    */
-  CLUSTER_NODE_PUBLIC
   void publish(const MessageT& msg) override {
-    if (state_ != ClusterNodeState::kActive) {
+    if (node_interface_ != nullptr && !node_interface_->is_activated()) {
       RCLCPP_WARN(logger_,
                   "Trying to publish message on the topic '%s', but the "
                   "publisher is not activated",
@@ -101,28 +98,13 @@ class ClusterNodePublisher : public ClusterNodeInterface,
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  /// Callback function for activate transition
-  CLUSTER_NODE_PUBLIC
-  void on_activated() override { state_ = ClusterNodeState::kActive; }
-
-  /// Callback function for deactivate transition
-  CLUSTER_NODE_PUBLIC
-  void on_deactivated() override { state_ = ClusterNodeState::kInactive; }
-
-  /// Callback function for standby transition
-  CLUSTER_NODE_PUBLIC
-  void on_standby() override { state_ = ClusterNodeState::kStandby; }
-
-  /// Get current state of the publisher
-  /**
-   * \return The current state of the publisher.
-   */
-  CLUSTER_NODE_PUBLIC
-  virtual ClusterNodeState get_current_state() { return state_; }
+  void set_node_interface(ClusterNodeInterface* interface) {
+    node_interface_ = interface;
+  }
 
  private:
-  ClusterNodeState state_ = ClusterNodeState::kInactive;
   rclcpp::Logger logger_;
+  ClusterNodeInterface* node_interface_;
 };
 
 }  // namespace fsros

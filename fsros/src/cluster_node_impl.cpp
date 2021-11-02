@@ -55,32 +55,16 @@ ClusterNodeImpl::~ClusterNodeImpl() {
   raft_fsm_->unsubscribe(this);
 }
 
-void ClusterNodeImpl::visit_publishers(
-    std::function<void(std::shared_ptr<ClusterNodeInterface>)> f) {
-  auto pub = publishers_.begin();
-  while (pub != publishers_.end()) {
-    auto pub_shared = pub->lock();
-    if (pub_shared == nullptr) {
-      pub = publishers_.erase(pub);
-    } else {
-      f(pub_shared);
-    }
-  }
-}
-
 void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
   switch (state) {
     case lifecycle::StateType::kStandby:
       node_interface_.on_standby();
-      visit_publishers([](auto publisher) { publisher->on_standby(); });
       break;
     case lifecycle::StateType::kActive:
       node_interface_.on_activated();
-      visit_publishers([](auto publisher) { publisher->on_activated(); });
       break;
     case lifecycle::StateType::kInactive:
       node_interface_.on_deactivated();
-      visit_publishers([](auto publisher) { publisher->on_deactivated(); });
       break;
     default:
       std::cerr << "Invalid lifecycle state : " << static_cast<int>(state)
@@ -94,18 +78,22 @@ void ClusterNodeImpl::handle(const raft::StateType &state) {
     case raft::StateType::kStandby:
       std::cout << "raft state: Standby (" << raft_context_->get_term() << ")"
                 << std::endl;
+      lifecycle_fsm_->handle(lifecycle::Event::kDeactivate);
       break;
     case raft::StateType::kFollower:
       std::cout << "raft state: Follower (" << raft_context_->get_term() << ")"
                 << std::endl;
+      lifecycle_fsm_->handle(lifecycle::Event::kStandby);
       break;
     case raft::StateType::kCandidate:
       std::cout << "raft state: Candidate (" << raft_context_->get_term() << ")"
                 << std::endl;
+      lifecycle_fsm_->handle(lifecycle::Event::kStandby);
       break;
     case raft::StateType::kLeader:
       std::cout << "raft state: Leader (" << raft_context_->get_term() << ")"
                 << std::endl;
+      lifecycle_fsm_->handle(lifecycle::Event::kActivate);
       break;
     default:
       std::cerr << "Invalid raft state (" << raft_context_->get_term()
@@ -114,20 +102,12 @@ void ClusterNodeImpl::handle(const raft::StateType &state) {
   }
 }
 
-void ClusterNodeImpl::add_publisher(
-    std::shared_ptr<ClusterNodeInterface> publisher) {
-  publishers_.push_back(publisher);
-}
-
-void ClusterNodeImpl::remove_publisher(
-    std::shared_ptr<ClusterNodeInterface> publisher) {
-  auto pub = publishers_.begin();
-  while (pub != publishers_.end()) {
-    auto pub_shared = pub->lock();
-    if (pub_shared == publisher) {
-      pub = publishers_.erase(pub);
-    }
-  }
+bool ClusterNodeImpl::is_activated() {
+  std::cout << "is activated: "
+            << static_cast<int>(lifecycle_fsm_->get_current_state_type())
+            << std::endl;
+  return lifecycle_fsm_->get_current_state_type() ==
+         lifecycle::StateType::kActive;
 }
 
 }  // namespace fsros

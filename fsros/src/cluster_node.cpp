@@ -113,21 +113,13 @@ ClusterNode::get_node_clock_interface() {
   return node_clock_;
 }
 
-void ClusterNode::add_publisher(
-    std::shared_ptr<ClusterNodeInterface> publisher) {
-  impl_->add_publisher(publisher);
-}
-
-void ClusterNode::remove_publisher(
-    std::shared_ptr<ClusterNodeInterface> publisher) {
-  impl_->remove_publisher(publisher);
-}
-
 void ClusterNode::on_activated() {}
 
 void ClusterNode::on_deactivated() {}
 
 void ClusterNode::on_standby() {}
+
+bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
 }  // namespace fsros
 }  // namespace failsafe

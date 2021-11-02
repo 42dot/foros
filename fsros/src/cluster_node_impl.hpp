@@ -58,19 +58,13 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
 
   void handle(const lifecycle::StateType &state) override;
   void handle(const raft::StateType &state) override;
-
-  void add_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
-  void remove_publisher(std::shared_ptr<ClusterNodeInterface> publisher);
+  bool is_activated();
 
  private:
-  void visit_publishers(
-      std::function<void(std::shared_ptr<ClusterNodeInterface>)> f);
-
   std::shared_ptr<raft::Context> raft_context_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
   ClusterNodeInterface &node_interface_;
-  std::list<std::weak_ptr<ClusterNodeInterface>> publishers_;
 };
 
 }  // namespace fsros

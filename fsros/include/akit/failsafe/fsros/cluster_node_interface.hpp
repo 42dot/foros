@@ -43,6 +43,13 @@ class ClusterNodeInterface {
   /// Callback function for standby transition
   CLUSTER_NODE_PUBLIC
   virtual void on_standby() = 0;
+
+  /// Check whether the node is activated or not
+  /**
+   * \return true if the node is activated, false if not
+   */
+  CLUSTER_NODE_PUBLIC
+  virtual bool is_activated() = 0;
 };
 
 }  // namespace fsros
