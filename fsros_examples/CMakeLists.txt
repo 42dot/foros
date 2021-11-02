@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(fsros REQUIRED)
+find_package(std_srvs REQUIRED)
 
 add_executable(clustering src/clustering.cpp)
 ament_target_dependencies(clustering
@@ -17,6 +18,34 @@ ament_target_dependencies(clustering
 
 install(
   TARGETS clustering EXPORT clustering
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+add_executable(cluster_service src/cluster_service.cpp)
+ament_target_dependencies(cluster_service
+  rclcpp
+  fsros
+  std_srvs
+)
+
+install(
+  TARGETS cluster_service EXPORT cluster_service
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+add_executable(cluster_client src/cluster_client.cpp)
+ament_target_dependencies(cluster_client
+  rclcpp
+  fsros
+  std_srvs
+)
+
+install(
+  TARGETS cluster_client EXPORT cluster_client
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
