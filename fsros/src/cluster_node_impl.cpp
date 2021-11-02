@@ -103,9 +103,6 @@ void ClusterNodeImpl::handle(const raft::StateType &state) {
 }
 
 bool ClusterNodeImpl::is_activated() {
-  std::cout << "is activated: "
-            << static_cast<int>(lifecycle_fsm_->get_current_state_type())
-            << std::endl;
   return lifecycle_fsm_->get_current_state_type() ==
          lifecycle::StateType::kActive;
 }

@@ -55,7 +55,7 @@ class ClusterNodeService : public rclcpp::Service<ServiceT> {
                      rcl_service_options_t &service_options)
       : rclcpp::Service<ServiceT>(node_handle, service_name, any_callback,
                                   service_options),
-        logger_(rclcpp::get_logger("ClusterNodePublisher")) {}
+        logger_(rclcpp::get_logger("ClusterNodeService")) {}
 
   ~ClusterNodeService() {}
 
