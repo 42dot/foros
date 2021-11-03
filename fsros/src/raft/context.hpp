@@ -46,7 +46,7 @@ class Context {
   const char *kRequestVoteServiceName = "/request_vote";
 
   Context(
-      const uint32_t node_id,
+      const std::string &cluster_name, const uint32_t node_id,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
@@ -91,6 +91,7 @@ class Context {
   bool update_term(uint64_t term);
   void check_elected();
 
+  const std::string cluster_name_;
   uint32_t node_id_;
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;

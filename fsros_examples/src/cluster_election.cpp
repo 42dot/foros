@@ -25,9 +25,9 @@
 
 class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
  public:
-  MyClusterNode(const uint32_t node_id, const std::string &cluster_name,
+  MyClusterNode(const std::string &cluster_name, const uint32_t node_id,
                 const std::vector<uint32_t> &cluster_node_ids)
-      : akit::failsafe::fsros::ClusterNode(node_id, cluster_name,
+      : akit::failsafe::fsros::ClusterNode(cluster_name, node_id,
                                            cluster_node_ids) {}
 
   void on_activated() override { std::cout << "activated" << std::endl; }
@@ -39,7 +39,7 @@ class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
 
 int main(int argc, char **argv) {
   uint32_t id = 1;
-  const std::string node_name = "test_cluster";
+  const std::string cluster_name = "test_cluster";
   const std::vector<uint32_t> cluster_node_ids = {1, 2, 3, 4};
 
   if (argc >= 2) {
@@ -51,7 +51,8 @@ int main(int argc, char **argv) {
 
   rclcpp::init(argc, argv);
 
-  auto node = std::make_shared<MyClusterNode>(id, node_name, cluster_node_ids);
+  auto node =
+      std::make_shared<MyClusterNode>(cluster_name, id, cluster_node_ids);
 
   rclcpp::spin(node->get_node_base_interface());
   rclcpp::shutdown();

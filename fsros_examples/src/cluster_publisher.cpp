@@ -28,7 +28,7 @@ using namespace std::chrono_literals;
 int main(int argc, char **argv) {
   uint32_t id = 1;
   const std::string kClusterName = "test_cluster";
-  const std::string kTopicName = "/test_cluster_echo";
+  const std::string kTopicName = "test_cluster_echo";
   const std::vector<uint32_t> kClusterNodeIds = {1, 2, 3, 4};
 
   if (argc >= 2) {
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
   rclcpp::init(argc, argv);
 
-  auto node = akit::failsafe::fsros::ClusterNode::make_shared(id, kClusterName,
+  auto node = akit::failsafe::fsros::ClusterNode::make_shared(kClusterName, id,
                                                               kClusterNodeIds);
 
   auto publisher = node->create_publisher<std_msgs::msg::String>(kTopicName, 1);

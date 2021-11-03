@@ -33,7 +33,7 @@ static void on_response(
 
 int main(int argc, char **argv) {
   const std::string kNodeName = "test_cluster_client";
-  const std::string kServiceName = "/test_cluster_get_leader_name";
+  const std::string kServiceName = "test_cluster_get_leader_name";
 
   rclcpp::init(argc, argv);
 

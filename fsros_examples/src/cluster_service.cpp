@@ -29,9 +29,9 @@
 
 class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
  public:
-  MyClusterNode(const uint32_t node_id, const std::string &cluster_name,
+  MyClusterNode(const std::string &cluster_name, const uint32_t node_id,
                 const std::vector<uint32_t> &cluster_node_ids)
-      : akit::failsafe::fsros::ClusterNode(node_id, cluster_name,
+      : akit::failsafe::fsros::ClusterNode(cluster_name, node_id,
                                            cluster_node_ids),
         service_(create_service<std_srvs::srv::Trigger>(
             kServiceName,
@@ -52,7 +52,7 @@ class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
   }
 
  private:
-  const std::string kServiceName = "/test_cluster_get_leader_name";
+  const std::string kServiceName = "test_cluster_get_leader_name";
   akit::failsafe::fsros::ClusterNodeService<std_srvs::srv::Trigger>::SharedPtr
       service_;
 };
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
 
   auto node =
-      std::make_shared<MyClusterNode>(id, kClusterName, kClusterNodeIds);
+      std::make_shared<MyClusterNode>(kClusterName, id, kClusterNodeIds);
 
   rclcpp::spin(node->get_node_base_interface());
   rclcpp::shutdown();

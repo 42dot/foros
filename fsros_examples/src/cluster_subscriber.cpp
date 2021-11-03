@@ -29,7 +29,7 @@ static void on_topic_received(const std_msgs::msg::String::SharedPtr msg) {
 
 int main(int argc, char **argv) {
   const std::string kNodeName = "test_cluster_subscriber";
-  const std::string kTopicName = "/test_cluster_echo";
+  const std::string kTopicName = "test_cluster_echo";
 
   rclcpp::init(argc, argv);
 

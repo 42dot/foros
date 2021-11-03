@@ -36,7 +36,7 @@ class TestNodeCluster : public ::testing::Test {
 TEST_F(TestNodeCluster, TestConstructor) {
   {
     auto cluster_node = std::make_shared<akit::failsafe::fsros::ClusterNode>(
-        1, "test_cluster", std::initializer_list<uint32_t>{1, 2, 3, 4});
+        "test_cluster", 1, std::initializer_list<uint32_t>{1, 2, 3, 4});
   }
 
   {
@@ -44,11 +44,11 @@ TEST_F(TestNodeCluster, TestConstructor) {
         {
           auto cluster_node =
               std::make_shared<akit::failsafe::fsros::ClusterNode>(
-                  1, "invalid_cluster?",
+                  "invalid_cluster?", 1,
                   std::initializer_list<uint32_t>{1, 2, 3, 4});
 
           (void)cluster_node;
         },
-        rclcpp::exceptions::InvalidNamespaceError);
+        rclcpp::exceptions::InvalidNodeNameError);
   }
 }

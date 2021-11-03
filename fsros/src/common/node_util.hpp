@@ -25,15 +25,15 @@ namespace fsros {
 
 class NodeUtil {
  public:
-  static std::string get_node_name(uint32_t node_id) {
-    return "node" + std::to_string(node_id);
+  static std::string get_node_name(const std::string &cluster_name,
+                                   const uint32_t node_id) {
+    return cluster_name + std::to_string(node_id);
   }
 
-  static std::string get_service_name(const char *cluster_name,
-                                      uint32_t node_id,
-                                      const char *service_name) {
-    return std::string(cluster_name) + "/node" + std::to_string(node_id) +
-           service_name;
+  static std::string get_service_name(const std::string &cluster_name,
+                                      const uint32_t node_id,
+                                      const std::string &service_name) {
+    return get_node_name(cluster_name, node_id) + service_name;
   }
 };
 

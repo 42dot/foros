@@ -59,15 +59,17 @@ class ClusterNode : public ClusterNodeInterface {
 
   /// Create a new cluster node with the specified name.
   /**
+   * \param[in] cluster_name Cluster name of the node
    * \param[in] node_id ID of the node
-   * \param[in] cluster_name Cluster name of the node. (name space)
    * \param[in] cluster_node_ids IDs of nodes in the cluster
-   * \param[in] options Additional options to control creation of the node.
+   * \param[in] node_namespace Namespace of the nodo
+   * \param[in] options Additional options to control creation of the node
    */
   CLUSTER_NODE_PUBLIC
   explicit ClusterNode(
-      const uint32_t node_id, const std::string &cluster_name,
+      const std::string &cluster_name, const uint32_t node_id,
       const std::vector<uint32_t> &cluster_node_ids,
+      const std::string &node_namespace = "",
       const ClusterNodeOptions &options = ClusterNodeOptions());
 
   CLUSTER_NODE_PUBLIC

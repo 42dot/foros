@@ -35,14 +35,15 @@ namespace fsros {
 namespace raft {
 
 Context::Context(
-    const uint32_t node_id,
+    const std::string &cluster_name, const uint32_t node_id,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     unsigned int election_timeout_min, unsigned int election_timeout_max)
-    : node_id_(node_id),
+    : cluster_name_(cluster_name),
+      node_id_(node_id),
       node_base_(node_base),
       node_graph_(node_graph),
       node_services_(node_services),
@@ -73,7 +74,7 @@ void Context::initialize_services() {
   append_entries_service_ =
       std::make_shared<rclcpp::Service<fsros_msgs::srv::AppendEntries>>(
           node_base_->get_shared_rcl_node_handle(),
-          NodeUtil::get_service_name(node_base_->get_namespace(), node_id_,
+          NodeUtil::get_service_name(cluster_name_, node_id_,
                                      kAppendEntriesServiceName),
           append_entries_callback_, options);
 
@@ -88,7 +89,7 @@ void Context::initialize_services() {
   request_vote_service_ =
       std::make_shared<rclcpp::Service<fsros_msgs::srv::RequestVote>>(
           node_base_->get_shared_rcl_node_handle(),
-          NodeUtil::get_service_name(node_base_->get_namespace(), node_id_,
+          NodeUtil::get_service_name(cluster_name_, node_id_,
                                      kRequestVoteServiceName),
           request_vote_callback_, options);
 
@@ -110,7 +111,7 @@ void Context::initialize_clients(
     auto append_entries =
         rclcpp::Client<fsros_msgs::srv::AppendEntries>::make_shared(
             node_base_.get(), node_graph_,
-            NodeUtil::get_service_name(node_base_->get_namespace(), id,
+            NodeUtil::get_service_name(cluster_name_, id,
                                        kAppendEntriesServiceName),
             options);
     node_services_->add_client(
@@ -120,7 +121,7 @@ void Context::initialize_clients(
     auto request_vote =
         rclcpp::Client<fsros_msgs::srv::RequestVote>::make_shared(
             node_base_.get(), node_graph_,
-            NodeUtil::get_service_name(node_base_->get_namespace(), id,
+            NodeUtil::get_service_name(cluster_name_, id,
                                        kRequestVoteServiceName),
             options);
     node_services_->add_client(

@@ -35,12 +35,13 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-ClusterNode::ClusterNode(const uint32_t node_id,
-                         const std::string &cluster_name,
+ClusterNode::ClusterNode(const std::string &cluster_name,
+                         const uint32_t node_id,
                          const std::vector<uint32_t> &cluster_node_ids,
+                         const std::string &node_namespace,
                          const ClusterNodeOptions &options)
     : node_base_(new rclcpp::node_interfaces::NodeBase(
-          NodeUtil::get_node_name(node_id), cluster_name,
+          NodeUtil::get_node_name(cluster_name, node_id), node_namespace,
           options.node_options.context(),
           *(options.node_options.get_rcl_node_options()),
           options.node_options.use_intra_process_comms(),
@@ -56,8 +57,8 @@ ClusterNode::ClusterNode(const uint32_t node_id,
           node_base_, node_topics_, node_graph_, node_services_,
           node_logging_)),
       impl_(std::make_unique<ClusterNodeImpl>(
-          node_id, cluster_node_ids, node_base_, node_graph_, node_services_,
-          node_timers_, node_clock_, *this, options)) {}
+          cluster_name, node_id, cluster_node_ids, node_base_, node_graph_,
+          node_services_, node_timers_, node_clock_, *this, options)) {}
 
 ClusterNode::~ClusterNode() {}
 

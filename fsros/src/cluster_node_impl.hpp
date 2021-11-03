@@ -46,7 +46,8 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
                               Observer<raft::StateType> {
  public:
   explicit ClusterNodeImpl(
-      const uint32_t node_id, const std::vector<uint32_t> &cluster_node_ids,
+      const std::string &cluster_name, const uint32_t node_id,
+      const std::vector<uint32_t> &cluster_node_ids,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
