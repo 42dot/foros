@@ -52,7 +52,7 @@ class MyClusterNode : public akit::failsafe::fsros::ClusterNode {
   }
 
  private:
-  const std::string kServiceName = "test_cluster_get_leader_name";
+  const std::string kServiceName = "/test_cluster_get_leader_name";
   akit::failsafe::fsros::ClusterNodeService<std_srvs::srv::Trigger>::SharedPtr
       service_;
 };

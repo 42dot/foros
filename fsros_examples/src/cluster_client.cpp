@@ -28,18 +28,16 @@ static void on_response(
   auto ret = future.get();
   auto response = ret.second;
 
-  std::cout << "response received from " << response->message << " : "
-            << response->success << std::endl;
+  std::cout << "response received from " << response->message << std::endl;
 }
 
 int main(int argc, char **argv) {
-  const std::string kNodeName = "cluster";
-  const std::string kClusterName = "test_cluster";
-  const std::string kServiceName = "test_cluster_get_leader_name";
+  const std::string kNodeName = "test_cluster_client";
+  const std::string kServiceName = "/test_cluster_get_leader_name";
 
   rclcpp::init(argc, argv);
 
-  auto node = rclcpp::Node::make_shared(kNodeName, kClusterName);
+  auto node = rclcpp::Node::make_shared(kNodeName);
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client =
       node->create_client<std_srvs::srv::Trigger>(kServiceName);
 
@@ -47,7 +45,6 @@ int main(int argc, char **argv) {
       rclcpp::create_timer(node, rclcpp::Clock::make_shared(), 1s, [&]() {
         auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
         auto ret = client->async_send_request(request, on_response);
-        std::cout << "timer expired" << std::endl;
       });
 
   rclcpp::spin(node->get_node_base_interface());
