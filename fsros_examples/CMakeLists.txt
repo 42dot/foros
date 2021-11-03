@@ -51,6 +51,34 @@ install(
   RUNTIME DESTINATION bin
 )
 
+add_executable(cluster_publisher src/cluster_publisher.cpp)
+ament_target_dependencies(cluster_publisher
+  rclcpp
+  fsros
+  std_msgs
+)
+
+install(
+  TARGETS cluster_publisher EXPORT cluster_publisher
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+add_executable(cluster_subscriber src/cluster_subscriber.cpp)
+ament_target_dependencies(cluster_subscriber
+  rclcpp
+  fsros
+  std_msgs
+)
+
+install(
+  TARGETS cluster_subscriber EXPORT cluster_subscriber
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_cpplint REQUIRED)
   ament_cpplint(FILTERS "-build/header_guard,-build/include_order")
