@@ -10,14 +10,14 @@ find_package(rclcpp REQUIRED)
 find_package(fsros REQUIRED)
 find_package(std_srvs REQUIRED)
 
-add_executable(clustering src/clustering.cpp)
-ament_target_dependencies(clustering
+add_executable(cluster_election src/cluster_election.cpp)
+ament_target_dependencies(cluster_election
   rclcpp
   fsros
 )
 
 install(
-  TARGETS clustering EXPORT clustering
+  TARGETS cluster_election EXPORT cluster_election
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
