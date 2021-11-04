@@ -40,8 +40,8 @@ ClusterNodeImpl::ClusterNodeImpl(
     ClusterNodeInterface &node_interface, const ClusterNodeOptions &options)
     : raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
-          node_timers, node_clock, options.election_timeout.min,
-          options.election_timeout.max)),
+          node_timers, node_clock, options.election_timeout_min(),
+          options.election_timeout_max())),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
