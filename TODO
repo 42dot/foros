@@ -1,0 +1,3 @@
+fsros
+- implement data get/set/change_notification APIs for data duplication via raft
+- implement test cases for all public APIs
