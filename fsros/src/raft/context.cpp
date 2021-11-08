@@ -75,7 +75,7 @@ void Context::initialize_services() {
       std::make_shared<rclcpp::Service<fsros_msgs::srv::AppendEntries>>(
           node_base_->get_shared_rcl_node_handle(),
           NodeUtil::get_service_name(cluster_name_, node_id_,
-                                     kAppendEntriesServiceName),
+                                     NodeUtil::kAppendEntriesServiceName),
           append_entries_callback_, options);
 
   node_services_->add_service(
@@ -90,7 +90,7 @@ void Context::initialize_services() {
       std::make_shared<rclcpp::Service<fsros_msgs::srv::RequestVote>>(
           node_base_->get_shared_rcl_node_handle(),
           NodeUtil::get_service_name(cluster_name_, node_id_,
-                                     kRequestVoteServiceName),
+                                     NodeUtil::kRequestVoteServiceName),
           request_vote_callback_, options);
 
   node_services_->add_service(
@@ -112,7 +112,7 @@ void Context::initialize_clients(
         rclcpp::Client<fsros_msgs::srv::AppendEntries>::make_shared(
             node_base_.get(), node_graph_,
             NodeUtil::get_service_name(cluster_name_, id,
-                                       kAppendEntriesServiceName),
+                                       NodeUtil::kAppendEntriesServiceName),
             options);
     node_services_->add_client(
         std::dynamic_pointer_cast<rclcpp::ClientBase>(append_entries), nullptr);
@@ -122,7 +122,7 @@ void Context::initialize_clients(
         rclcpp::Client<fsros_msgs::srv::RequestVote>::make_shared(
             node_base_.get(), node_graph_,
             NodeUtil::get_service_name(cluster_name_, id,
-                                       kRequestVoteServiceName),
+                                       NodeUtil::kRequestVoteServiceName),
             options);
     node_services_->add_client(
         std::dynamic_pointer_cast<rclcpp::ClientBase>(request_vote), nullptr);

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILSAFE_FSROS_COMMON_NODE_UTIL_HPP_
-#define AKIT_FAILSAFE_FSROS_COMMON_NODE_UTIL_HPP_
+#include "common/node_util.hpp"
 
 #include <string>
 
@@ -23,21 +22,20 @@ namespace akit {
 namespace failsafe {
 namespace fsros {
 
-class NodeUtil {
- public:
-  static const char *kAppendEntriesServiceName;
-  static const char *kRequestVoteServiceName;
+std::string NodeUtil::get_node_name(const std::string &cluster_name,
+                                    const uint32_t node_id) {
+  return cluster_name + std::to_string(node_id);
+}
 
-  static std::string get_node_name(const std::string &cluster_name,
-                                   const uint32_t node_id);
+std::string NodeUtil::get_service_name(const std::string &cluster_name,
+                                       const uint32_t node_id,
+                                       const std::string &service_name) {
+  return get_node_name(cluster_name, node_id) + service_name;
+}
 
-  static std::string get_service_name(const std::string &cluster_name,
-                                      const uint32_t node_id,
-                                      const std::string &service_name);
-};
+const char *NodeUtil::kAppendEntriesServiceName = "/append_entries";
+const char *NodeUtil::kRequestVoteServiceName = "/request_vote";
 
 }  // namespace fsros
 }  // namespace failsafe
 }  // namespace akit
-
-#endif  // AKIT_FAILSAFE_FSROS_COMMON_NODE_UTIL_HPP_

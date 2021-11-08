@@ -42,9 +42,6 @@ namespace raft {
 
 class Context {
  public:
-  const char *kAppendEntriesServiceName = "/append_entries";
-  const char *kRequestVoteServiceName = "/request_vote";
-
   Context(
       const std::string &cluster_name, const uint32_t node_id,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
