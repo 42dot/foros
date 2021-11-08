@@ -1084,17 +1084,6 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
-  /// Callback function for activate transition
-  CLUSTER_NODE_PUBLIC void on_activated() override;
-
-  /// Callback function for deactivate transition
-  CLUSTER_NODE_PUBLIC
-  void on_deactivated() override;
-
-  /// Callback function for standby transition
-  CLUSTER_NODE_PUBLIC
-  void on_standby() override;
-
   /// Check whether the node is activated or not
   /**
    * \return true if the node is activated, false if not
@@ -1103,6 +1092,15 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   bool is_activated() final;
 
  private:
+  /// Callback function for activate transition
+  void on_activated() override;
+
+  /// Callback function for deactivate transition
+  void on_deactivated() override;
+
+  /// Callback function for standby transition
+  void on_standby() override;
+
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
