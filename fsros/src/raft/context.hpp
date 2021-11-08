@@ -105,24 +105,28 @@ class Context {
 
   std::vector<std::shared_ptr<OtherNode>> other_nodes_ = {};
 
-  uint64_t current_term_;
-  uint32_t voted_for_;
-  bool voted_;
-  unsigned int vote_received_;
-  unsigned int available_candidates_;
+  // Essential fields for RAFT
+  uint64_t current_term_;  // latest election term
+  uint32_t voted_for_;  // candidate node id that received vote in current term
+  bool voted_;          // flag to check whether voted in current term or not
+  unsigned int vote_received_;  // number of received votes in current term
+  unsigned int available_candidates_;  // number of available candidate
 
-  unsigned int election_timeout_min_;
-  unsigned int election_timeout_max_;
-  std::random_device random_device_;
-  std::mt19937 random_generator_;
-  rclcpp::TimerBase::SharedPtr election_timer_;
+  uint64_t commit_index_;  // index of highest data entry known to be committed
+  uint64_t last_applied_;  // index of highest data entry applied to fsm
 
-  unsigned int broadcast_timeout_;
-  rclcpp::TimerBase::SharedPtr broadcast_timer_;
+  unsigned int election_timeout_min_;  // minimum election timeout in msecs
+  unsigned int election_timeout_max_;  // maximum election timeout in msecs
+  std::random_device random_device_;   // random seed for election timeout
+  std::mt19937 random_generator_;      // random generator for election timeout
+  rclcpp::TimerBase::SharedPtr election_timer_;  // election timeout timer
+
+  unsigned int broadcast_timeout_;                // broadcast timeout
+  rclcpp::TimerBase::SharedPtr broadcast_timer_;  // broadcast timer
+  bool broadcast_received_;  // flag to check whether boradcast recevied before
+                             // election timer expired
 
   StateMachineInterface *state_machine_interface_;
-
-  bool broadcast_received_;
 };
 
 }  // namespace raft

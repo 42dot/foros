@@ -48,10 +48,10 @@ class OtherNode {
                     std::function<void(uint64_t, bool)> callback);
 
  private:
-  // index of highest log entry known to be commited
-  uint64_t commit_index_;
-  // index of highest log entry applied to state machine
-  uint64_t last_applied_;
+  // index of the next data entry to send to this node
+  uint64_t next_index_;
+  // index of highest data entry known to be replicated on this node
+  uint64_t match_index_;
   rclcpp::Client<fsros_msgs::srv::AppendEntries>::SharedPtr append_entries_;
   rclcpp::Client<fsros_msgs::srv::RequestVote>::SharedPtr request_vote_;
 };
