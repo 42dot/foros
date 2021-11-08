@@ -33,6 +33,7 @@
 #include <tuple>
 #include <vector>
 
+#include "raft/other_node.hpp"
 #include "raft/state_machine_interface.hpp"
 
 namespace akit {
@@ -60,13 +61,13 @@ class Context {
   void stop_broadcast_timer();
   void reset_broadcast_timer();
   std::string get_node_name();
-  void request_vote();
   void vote_for_me();
   std::tuple<uint64_t, bool> vote(uint64_t term, uint32_t id);
   void reset_vote();
   void increase_term();
   uint64_t get_term();
   void broadcast();
+  void request_vote();
 
  private:
   void initialize_services();
@@ -75,17 +76,13 @@ class Context {
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<fsros_msgs::srv::AppendEntries::Request> request,
       std::shared_ptr<fsros_msgs::srv::AppendEntries::Response> response);
-  void on_append_entries_response(
-      rclcpp::Client<fsros_msgs::srv::AppendEntries>::SharedFutureWithRequest
-          future);
   void on_request_vote_requested(
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<fsros_msgs::srv::RequestVote::Request> request,
       std::shared_ptr<fsros_msgs::srv::RequestVote::Response> response);
-  void on_request_vote_response(
-      rclcpp::Client<fsros_msgs::srv::RequestVote>::SharedFutureWithRequest
-          future);
   bool update_term(uint64_t term);
+  void on_broadcast_response(uint64_t term);
+  void on_request_vote_response(uint64_t term, bool vote_granted);
   void check_elected();
 
   const std::string cluster_name_;
@@ -101,14 +98,12 @@ class Context {
       append_entries_service_;
   rclcpp::AnyServiceCallback<fsros_msgs::srv::AppendEntries>
       append_entries_callback_;
-  std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::AppendEntries>>>
-      append_entries_clients_ = {};
   std::shared_ptr<rclcpp::Service<fsros_msgs::srv::RequestVote>>
       request_vote_service_;
   rclcpp::AnyServiceCallback<fsros_msgs::srv::RequestVote>
       request_vote_callback_;
-  std::vector<std::shared_ptr<rclcpp::Client<fsros_msgs::srv::RequestVote>>>
-      request_vote_clients_ = {};
+
+  std::vector<std::shared_ptr<OtherNode>> other_nodes_ = {};
 
   uint64_t current_term_;
   uint32_t voted_for_;

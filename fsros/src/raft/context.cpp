@@ -108,25 +108,8 @@ void Context::initialize_clients(
       continue;
     }
 
-    auto append_entries =
-        rclcpp::Client<fsros_msgs::srv::AppendEntries>::make_shared(
-            node_base_.get(), node_graph_,
-            NodeUtil::get_service_name(cluster_name_, id,
-                                       NodeUtil::kAppendEntriesServiceName),
-            options);
-    node_services_->add_client(
-        std::dynamic_pointer_cast<rclcpp::ClientBase>(append_entries), nullptr);
-    append_entries_clients_.push_back(append_entries);
-
-    auto request_vote =
-        rclcpp::Client<fsros_msgs::srv::RequestVote>::make_shared(
-            node_base_.get(), node_graph_,
-            NodeUtil::get_service_name(cluster_name_, id,
-                                       NodeUtil::kRequestVoteServiceName),
-            options);
-    node_services_->add_client(
-        std::dynamic_pointer_cast<rclcpp::ClientBase>(request_vote), nullptr);
-    request_vote_clients_.push_back(request_vote);
+    other_nodes_.push_back(std::make_shared<OtherNode>(
+        node_base_, node_graph_, node_services_, cluster_name_, id));
   }
 }
 
@@ -255,22 +238,41 @@ void Context::reset_vote() {
 
 void Context::increase_term() { current_term_++; }
 
+std::string Context::get_node_name() { return node_base_->get_name(); }
+
+uint64_t Context::get_term() { return current_term_; }
+
+void Context::broadcast() {
+  available_candidates_ = 1;
+
+  for (auto node : other_nodes_) {
+    if (node->broadcast(current_term_, node_id_,
+                        std::bind(&Context::on_broadcast_response, this,
+                                  std::placeholders::_1)) == true) {
+      available_candidates_++;
+    }
+  }
+}
+
+void Context::on_broadcast_response(uint64_t term) {
+  if (term < current_term_) {
+    std::cout << "ignore append entries response since term is outdated"
+              << std::endl;
+    return;
+  }
+  update_term(term);
+}
+
 void Context::request_vote() {
   available_candidates_ = 1;
 
-  for (auto client : request_vote_clients_) {
-    if (client->service_is_ready() == false) {
-      continue;
+  for (auto node : other_nodes_) {
+    if (node->request_vote(
+            current_term_, node_id_,
+            std::bind(&Context::on_request_vote_response, this,
+                      std::placeholders::_1, std::placeholders::_2)) == true) {
+      available_candidates_++;
     }
-
-    available_candidates_++;
-
-    auto request = std::make_shared<fsros_msgs::srv::RequestVote::Request>();
-    request->term = current_term_;
-    request->candidate_id = node_id_;
-    auto response = client->async_send_request(
-        request, std::bind(&Context::on_request_vote_response, this,
-                           std::placeholders::_1));
   }
 
   if (available_candidates_ <= 1) {
@@ -278,29 +280,23 @@ void Context::request_vote() {
   }
 }
 
-void Context::on_request_vote_response(
-    rclcpp::Client<fsros_msgs::srv::RequestVote>::SharedFutureWithRequest
-        future) {
-  auto ret = future.get();
-  auto response = ret.second;
-
-  if (response->term < current_term_) {
+void Context::on_request_vote_response(uint64_t term, bool vote_granted) {
+  if (term < current_term_) {
     std::cout << "ignore vote response since term is outdated" << std::endl;
     return;
   }
 
-  if (update_term(response->term) == true) {
+  if (update_term(term) == true) {
     std::cout << "ignore vote response since term is new one" << std::endl;
     return;
   }
 
-  if (response->vote_granted == false) {
+  if (vote_granted == false) {
     std::cout << "vote not granted" << std::endl;
     return;
   }
 
   vote_received_++;
-
   check_elected();
 }
 
@@ -309,44 +305,6 @@ void Context::check_elected() {
   if (vote_received_ < majority) return;
 
   state_machine_interface_->on_elected();
-}
-
-std::string Context::get_node_name() { return node_base_->get_name(); }
-
-uint64_t Context::get_term() { return current_term_; }
-
-void Context::broadcast() {
-  available_candidates_ = 1;
-
-  for (auto client : append_entries_clients_) {
-    if (client->service_is_ready() == false) {
-      continue;
-    }
-
-    available_candidates_++;
-
-    auto request = std::make_shared<fsros_msgs::srv::AppendEntries::Request>();
-    request->term = current_term_;
-    request->leader_id = node_id_;
-    auto response = client->async_send_request(
-        request, std::bind(&Context::on_append_entries_response, this,
-                           std::placeholders::_1));
-  }
-}
-
-void Context::on_append_entries_response(
-    rclcpp::Client<fsros_msgs::srv::AppendEntries>::SharedFutureWithRequest
-        future) {
-  auto ret = future.get();
-  auto response = ret.second;
-
-  if (response->term < current_term_) {
-    std::cout << "ignore append entries response since term is outdated"
-              << std::endl;
-    return;
-  }
-
-  update_term(response->term);
 }
 
 }  // namespace raft
