@@ -1,3 +1,3 @@
-# fsros
+# foros
 
-Failsafe ROS framework prototype
+Failover ROS framework
