@@ -79,6 +79,19 @@ install(
   RUNTIME DESTINATION bin
 )
 
+add_executable(cluster_commit src/cluster_commit.cpp)
+ament_target_dependencies(cluster_commit
+  rclcpp
+  foros
+)
+
+install(
+  TARGETS cluster_commit EXPORT cluster_commit
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_cpplint REQUIRED)
   ament_cpplint(FILTERS "-build/header_guard,-build/include_order")

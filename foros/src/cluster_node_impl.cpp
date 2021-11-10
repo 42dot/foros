@@ -108,9 +108,23 @@ bool ClusterNodeImpl::is_activated() {
          lifecycle::StateType::kActive;
 }
 
-bool ClusterNodeImpl::commit_data(std::vector<uint8_t> &data,
-                                  uint64_t commit_index) {
-  return raft_context_->commit_data(data, commit_index);
+CommitResponseSharedFuture ClusterNodeImpl::commit_data(
+    CommitData::SharedPtr data, CommitResponseCallback callback) {
+  std::unique_lock<std::mutex> lock(pending_commits_mutex_);
+
+  CommitResponseSharedPromise commit_promise =
+      std::make_shared<CommitResponsePromise>();
+  CommitResponseSharedFuture commit_future = commit_promise->get_future();
+
+  // FIXME: for now, send fake response until commit logic is implemented.
+  lock.unlock();
+  auto response = CommitResponse::make_shared();
+  response->commit_id = data->commit_id;
+  response->result = true;
+  commit_promise->set_value(response);
+  callback(commit_future);
+
+  return commit_future;
 }
 
 uint64_t ClusterNodeImpl::get_data_commit_index() {

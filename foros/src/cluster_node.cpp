@@ -335,15 +335,16 @@ void ClusterNode::on_standby() {}
 
 bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
-bool ClusterNode::commit_data(std::vector<uint8_t> &data,
-                              uint64_t commit_index) {}
+CommitResponseSharedFuture ClusterNode::commit_data(
+    CommitData::SharedPtr data, CommitResponseCallback callback) {
+  return impl_->commit_data(data, callback);
+}
 
 uint64_t ClusterNode::get_data_commit_index() {
   return impl_->get_data_commit_index();
 }
 
-void ClusterNode::on_data_updated(std::vector<uint8_t> data,
-                                  uint64_t commit_index) {}
+void ClusterNode::on_data_updated(std::vector<uint8_t>, uint64_t) {}
 
 }  // namespace foros
 }  // namespace failover

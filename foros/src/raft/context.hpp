@@ -33,6 +33,7 @@
 #include <tuple>
 #include <vector>
 
+#include "akit/failover/foros/commit.hpp"
 #include "raft/other_node.hpp"
 #include "raft/state_machine_interface.hpp"
 

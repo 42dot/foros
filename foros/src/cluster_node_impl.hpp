@@ -26,12 +26,15 @@
 
 #include <functional>
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "akit/failover/foros/cluster_node_interface.hpp"
 #include "akit/failover/foros/cluster_node_options.hpp"
+#include "akit/failover/foros/commit.hpp"
 #include "common/observer.hpp"
 #include "lifecycle/state_machine.hpp"
 #include "lifecycle/state_type.hpp"
@@ -60,7 +63,8 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void handle(const lifecycle::StateType &state) override;
   void handle(const raft::StateType &state) override;
   bool is_activated();
-  bool commit_data(std::vector<uint8_t> &data, uint64_t commit_index);
+  CommitResponseSharedFuture commit_data(CommitData::SharedPtr data,
+                                         CommitResponseCallback callback);
   uint64_t get_data_commit_index();
 
  private:
@@ -68,6 +72,11 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
   ClusterNodeInterface &node_interface_;
+  std::map<int64_t,
+           std::tuple<CommitResponseSharedPromise, CommitResponseCallback,
+                      CommitResponseSharedFuture>>
+      pending_commits_;
+  std::mutex pending_commits_mutex_;
 };
 
 }  // namespace foros

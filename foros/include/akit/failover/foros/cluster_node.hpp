@@ -46,6 +46,7 @@
 #include "akit/failover/foros/cluster_node_options.hpp"
 #include "akit/failover/foros/cluster_node_publisher.hpp"
 #include "akit/failover/foros/cluster_node_service.hpp"
+#include "akit/failover/foros/commit.hpp"
 #include "akit/failover/foros/common.hpp"
 
 namespace akit {
@@ -1094,15 +1095,16 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Commit date to duplicate to nodes in a cluster
   /**
    * This function only considers services - not clients.
-   * The returned names are the actual names used and do not have remap rules
-   * applied.
+   * The returned names are the actual names used and do not have remap
+   * rules applied.
    *
-   * \param[in] data data to commit.
-   * \param[in] commit_index commit index of given data
-   * \return true if data is committed, false if not
+   * \param[in] data data to commit
+   * \param[in] callback callback to receive the commit result
+   * \return shared future of commit result
    */
   CLUSTER_NODE_PUBLIC
-  bool commit_data(std::vector<uint8_t> &data, uint64_t commit_index);
+  CommitResponseSharedFuture commit_data(CommitData::SharedPtr data,
+                                         CommitResponseCallback callback);
 
   /// Get the latest data commit index
   /**
