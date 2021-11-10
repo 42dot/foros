@@ -33,15 +33,15 @@ class CommitData {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(CommitData)
 
-  uint64_t commit_id;
-  std::vector<uint8_t> data;
+  uint64_t commit_id_;
+  std::vector<uint8_t> data_;
 };
 
 class CommitResponse {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(CommitResponse)
 
-  uint64_t commit_id;
+  uint64_t commit_id_;
   bool result;
 };
 

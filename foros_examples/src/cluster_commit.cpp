@@ -46,12 +46,12 @@ int main(int argc, char **argv) {
   auto timer_ =
       rclcpp::create_timer(node, rclcpp::Clock::make_shared(), 1s, [&]() {
         auto data = akit::failover::foros::CommitData::make_shared();
-        data->commit_id = commit_id++;
+        data->commit_id_ = commit_id++;
         node->commit_data(
             data,
             [&](akit::failover::foros::CommitResponseSharedFuture future) {
               auto response = future.get();
-              std::cout << "Response: commit_id(" << response->commit_id
+              std::cout << "Response: commit_id(" << response->commit_id_
                         << "), result(" << response->result << ")" << std::endl;
             });
       });

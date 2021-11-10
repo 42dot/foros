@@ -119,7 +119,7 @@ CommitResponseSharedFuture ClusterNodeImpl::commit_data(
   // FIXME: for now, send fake response until commit logic is implemented.
   lock.unlock();
   auto response = CommitResponse::make_shared();
-  response->commit_id = data->commit_id;
+  response->commit_id_ = data->commit_id_;
   response->result = true;
   commit_promise->set_value(response);
   callback(commit_future);
