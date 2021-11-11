@@ -53,7 +53,7 @@ OtherNode::OtherNode(
 }
 
 bool OtherNode::broadcast(uint64_t current_term, uint32_t node_id,
-                          std::function<void(uint64_t)> callback) {
+                          std::function<void(uint64_t, bool)> callback) {
   if (append_entries_->service_is_ready() == false) {
     return false;
   }
@@ -61,16 +61,43 @@ bool OtherNode::broadcast(uint64_t current_term, uint32_t node_id,
   auto request = std::make_shared<foros_msgs::srv::AppendEntries::Request>();
   request->term = current_term;
   request->leader_id = node_id;
+
+  send_append_entreis(request, callback);
+
+  return true;
+}
+
+bool OtherNode::commit(uint64_t current_term, uint32_t node_id,
+                       uint64_t prev_data_index, uint64_t prev_data_term,
+                       Data::SharedPtr data,
+                       std::function<void(uint64_t, bool)> callback) {
+  if (append_entries_->service_is_ready() == false) {
+    return false;
+  }
+
+  auto request = std::make_shared<foros_msgs::srv::AppendEntries::Request>();
+  request->term = current_term;
+  request->leader_id = node_id;
+  request->prev_data_index = prev_data_index;
+  request->prev_data_term = prev_data_term;
+  request->data = data->data_;
+
+  send_append_entreis(request, callback);
+
+  return true;
+}
+
+void OtherNode::send_append_entreis(
+    foros_msgs::srv::AppendEntries::Request::SharedPtr request,
+    std::function<void(uint64_t, bool)> callback) {
   auto response = append_entries_->async_send_request(
       request,
       [=](rclcpp::Client<
           foros_msgs::srv::AppendEntries>::SharedFutureWithRequest future) {
         auto ret = future.get();
         auto response = ret.second;
-        callback(response->term);
+        callback(response->term, response->success);
       });
-
-  return true;
 }
 
 bool OtherNode::request_vote(uint64_t current_term, uint32_t node_id,

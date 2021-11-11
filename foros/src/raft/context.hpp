@@ -27,13 +27,16 @@
 #include <rclcpp/node_interfaces/node_timers_interface.hpp>
 #include <rclcpp/timer.hpp>
 
+#include <map>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include "akit/failover/foros/commit.hpp"
+#include "akit/failover/foros/cluster_node_data_interface.hpp"
+#include "akit/failover/foros/data.hpp"
 #include "raft/other_node.hpp"
 #include "raft/state_machine_interface.hpp"
 
@@ -51,7 +54,8 @@ class Context {
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-      unsigned int election_timeout_min, unsigned int election_timeout_max);
+      unsigned int election_timeout_min, unsigned int election_timeout_max,
+      ClusterNodeDataInterface &data_interface);
 
   void initialize(const std::vector<uint32_t> &cluster_node_ids,
                   StateMachineInterface *state_machine_interface);
@@ -69,8 +73,9 @@ class Context {
   uint64_t get_term();
   void broadcast();
   void request_vote();
-  bool commit_data(std::vector<uint8_t> &data, uint64_t commit_index);
-  uint64_t get_commit_index();
+  DataCommitResponseSharedFuture commit_data(
+      Data::SharedPtr data, DataCommitResponseCallback callback);
+  uint64_t get_data_commit_index();
 
  private:
   void initialize_node();
@@ -84,9 +89,10 @@ class Context {
       const std::shared_ptr<foros_msgs::srv::RequestVote::Request> request,
       std::shared_ptr<foros_msgs::srv::RequestVote::Response> response);
   bool update_term(uint64_t term);
-  void on_broadcast_response(uint64_t term);
+  void on_broadcast_response(uint64_t term, bool success);
   void on_request_vote_response(uint64_t term, bool vote_granted);
   void check_elected();
+  void request_commit(Data::SharedPtr data);
 
   const std::string cluster_name_;
   uint32_t node_id_;
@@ -129,7 +135,14 @@ class Context {
   bool broadcast_received_;  // flag to check whether boradcast recevied before
                              // election timer expired
 
+  std::map<int64_t, std::tuple<DataCommitResponseSharedPromise,
+                               DataCommitResponseCallback,
+                               DataCommitResponseSharedFuture>>
+      pending_commits_;
+  std::mutex pending_commits_mutex_;
+
   StateMachineInterface *state_machine_interface_;
+  ClusterNodeDataInterface &data_interface_;
 };
 
 }  // namespace raft

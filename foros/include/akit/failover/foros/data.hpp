@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILOVER_FOROS_COMMIT_HPP_
-#define AKIT_FAILOVER_FOROS_COMMIT_HPP_
+#ifndef AKIT_FAILOVER_FOROS_DATA_HPP_
+#define AKIT_FAILOVER_FOROS_DATA_HPP_
 
 #include <rclcpp/macros.hpp>
 
@@ -29,30 +29,33 @@ namespace akit {
 namespace failover {
 namespace foros {
 
-class CommitData {
+class Data {
  public:
-  RCLCPP_SMART_PTR_DEFINITIONS(CommitData)
+  RCLCPP_SMART_PTR_DEFINITIONS(Data)
 
   uint64_t commit_id_;
+  uint64_t term;
   std::vector<uint8_t> data_;
 };
 
-class CommitResponse {
+class DataCommitResponse {
  public:
-  RCLCPP_SMART_PTR_DEFINITIONS(CommitResponse)
+  RCLCPP_SMART_PTR_DEFINITIONS(DataCommitResponse)
 
   uint64_t commit_id_;
   bool result;
 };
 
-using CommitResponsePromise = std::promise<CommitResponse::SharedPtr>;
-using CommitResponseSharedPromise = std::shared_ptr<CommitResponsePromise>;
-using CommitResponseSharedFuture =
-    std::shared_future<CommitResponse::SharedPtr>;
-using CommitResponseCallback = std::function<void(CommitResponseSharedFuture)>;
+using DataCommitResponsePromise = std::promise<DataCommitResponse::SharedPtr>;
+using DataCommitResponseSharedPromise =
+    std::shared_ptr<DataCommitResponsePromise>;
+using DataCommitResponseSharedFuture =
+    std::shared_future<DataCommitResponse::SharedPtr>;
+using DataCommitResponseCallback =
+    std::function<void(DataCommitResponseSharedFuture)>;
 
 }  // namespace foros
 }  // namespace failover
 }  // namespace akit
 
-#endif  // AKIT_FAILOVER_FOROS_COMMIT_HPP_
+#endif  // AKIT_FAILOVER_FOROS_DATA_HPP_

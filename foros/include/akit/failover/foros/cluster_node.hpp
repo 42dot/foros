@@ -42,12 +42,13 @@
 #include <utility>
 #include <vector>
 
+#include "akit/failover/foros/cluster_node_data_interface.hpp"
 #include "akit/failover/foros/cluster_node_interface.hpp"
 #include "akit/failover/foros/cluster_node_options.hpp"
 #include "akit/failover/foros/cluster_node_publisher.hpp"
 #include "akit/failover/foros/cluster_node_service.hpp"
-#include "akit/failover/foros/commit.hpp"
 #include "akit/failover/foros/common.hpp"
+#include "akit/failover/foros/data.hpp"
 
 namespace akit {
 namespace failover {
@@ -60,7 +61,8 @@ class ClusterNodeImpl;
  * has cluster node interfaces.
  */
 class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
-                    public ClusterNodeInterface {
+                    public ClusterNodeInterface,
+                    public ClusterNodeDataInterface {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClusterNode)
 
@@ -1103,15 +1105,8 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \return shared future of commit result
    */
   CLUSTER_NODE_PUBLIC
-  CommitResponseSharedFuture commit_data(CommitData::SharedPtr data,
-                                         CommitResponseCallback callback);
-
-  /// Get the latest data commit index
-  /**
-   * \return the latest data commit index
-   */
-  CLUSTER_NODE_PUBLIC
-  uint64_t get_data_commit_index();
+  DataCommitResponseSharedFuture commit_data(
+      Data::SharedPtr data, DataCommitResponseCallback callback);
 
  private:
   /// Callback function for activate transition
@@ -1124,7 +1119,18 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   void on_standby() override;
 
   /// Callback function when data is updated by other nodes in a cluster
-  void on_data_updated(std::vector<uint8_t> data, uint64_t commit_id) override;
+  /**
+   * \param[in] data data to commit
+   * \return true if data is committed, false if not
+   */
+  bool on_data_commit_requested(Data::SharedPtr data) override;
+
+  /// Get data of given commit index
+  /**
+   * \param[in] commit_index commit index
+   * \return data of given commit index, null if data does not exist
+   */
+  Data::SharedPtr get_data(uint64_t commit_index) override;
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;

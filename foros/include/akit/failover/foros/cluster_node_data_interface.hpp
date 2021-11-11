@@ -14,48 +14,37 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILOVER_FOROS_CLUSTER_NODE_INTERFACE_HPP_
-#define AKIT_FAILOVER_FOROS_CLUSTER_NODE_INTERFACE_HPP_
+#ifndef AKIT_FAILOVER_FOROS_CLUSTER_NODE_DATA_INTERFACE_HPP_
+#define AKIT_FAILOVER_FOROS_CLUSTER_NODE_DATA_INTERFACE_HPP_
 
 #include <vector>
 
 #include "akit/failover/foros/common.hpp"
+#include "akit/failover/foros/data.hpp"
 
 namespace akit {
 namespace failover {
 namespace foros {
 
-enum class ClusterNodeState {
-  kActive,
-  kInactive,
-  kStandby,
-  kUnknown,
-};
-
-class ClusterNodeInterface {
+class ClusterNodeDataInterface {
  public:
-  /// Callback function for activate transition
-  CLUSTER_NODE_PUBLIC
-  virtual void on_activated() = 0;
-
-  /// Callback function for deactivate transition
-  CLUSTER_NODE_PUBLIC
-  virtual void on_deactivated() = 0;
-
-  /// Callback function for standby transition
-  CLUSTER_NODE_PUBLIC
-  virtual void on_standby() = 0;
-
-  /// Check whether the node is activated or not
+  /// Callback function when data is updated by other nodes in a cluster
   /**
-   * \return true if the node is activated, false if not
+   * \param[in] data data to commit
+   * \return true if data is committed, false if not
    */
-  CLUSTER_NODE_PUBLIC
-  virtual bool is_activated() = 0;
+  virtual bool on_data_commit_requested(Data::SharedPtr data) = 0;
+
+  /// Get data of given commit index
+  /**
+   * \param[in] commit_index commit index
+   * \return data of given commit index, null if data does not exist
+   */
+  virtual Data::SharedPtr get_data(uint64_t commit_index) = 0;
 };
 
 }  // namespace foros
 }  // namespace failover
 }  // namespace akit
 
-#endif  // AKIT_FAILOVER_FOROS_CLUSTER_NODE_INTERFACE_HPP_
+#endif  // AKIT_FAILOVER_FOROS_CLUSTER_NODE_DATA_INTERFACE_HPP_

@@ -23,6 +23,7 @@
 #include <random>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "common/node_util.hpp"
@@ -41,7 +42,8 @@ Context::Context(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    unsigned int election_timeout_min, unsigned int election_timeout_max)
+    unsigned int election_timeout_min, unsigned int election_timeout_max,
+    ClusterNodeDataInterface &data_interface)
     : cluster_name_(cluster_name),
       node_id_(node_id),
       node_base_(node_base),
@@ -59,7 +61,8 @@ Context::Context(
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()),
       broadcast_timeout_(election_timeout_min_ / 10),
-      broadcast_received_(false) {}
+      broadcast_received_(false),
+      data_interface_(data_interface) {}
 
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
@@ -250,15 +253,16 @@ void Context::broadcast() {
   available_candidates_ = 1;
 
   for (auto node : other_nodes_) {
-    if (node->broadcast(current_term_, node_id_,
-                        std::bind(&Context::on_broadcast_response, this,
-                                  std::placeholders::_1)) == true) {
+    if (node->broadcast(
+            current_term_, node_id_,
+            std::bind(&Context::on_broadcast_response, this,
+                      std::placeholders::_1, std::placeholders::_2)) == true) {
       available_candidates_++;
     }
   }
 }
 
-void Context::on_broadcast_response(uint64_t term) {
+void Context::on_broadcast_response(uint64_t term, bool) {
   if (term < current_term_) {
     std::cout << "ignore append entries response since term is outdated"
               << std::endl;
@@ -311,9 +315,34 @@ void Context::check_elected() {
   state_machine_interface_->on_elected();
 }
 
-bool Context::commit_data(std::vector<uint8_t> &, uint64_t) { return true; }
+DataCommitResponseSharedFuture Context::commit_data(
+    Data::SharedPtr data, DataCommitResponseCallback callback) {
+  DataCommitResponseSharedPromise commit_promise =
+      std::make_shared<DataCommitResponsePromise>();
+  DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
-uint64_t Context::get_commit_index() { return commit_index_; }
+  if (data->commit_id_ < commit_index_) {
+    std::cerr << "out-dated commit index can not be commited" << std::endl;
+    auto response = DataCommitResponse::make_shared();
+    response->commit_id_ = data->commit_id_;
+    response->result = false;
+    commit_promise->set_value(response);
+    callback(commit_future);
+    return commit_future;
+  }
+
+  std::lock_guard<std::mutex> lock(pending_commits_mutex_);
+
+  pending_commits_[commit_index_] = std::make_tuple(
+      commit_promise, std::forward<DataCommitResponseCallback>(callback),
+      commit_future);
+
+  return commit_future;
+}
+
+uint64_t Context::get_data_commit_index() { return commit_index_; }
+
+void Context::request_commit(Data::SharedPtr) {}
 
 }  // namespace raft
 }  // namespace foros

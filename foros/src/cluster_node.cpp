@@ -81,7 +81,7 @@ ClusterNode::ClusterNode(const std::string &cluster_name,
           new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
       impl_(std::make_unique<ClusterNodeImpl>(
           cluster_name, node_id, cluster_node_ids, node_base_, node_graph_,
-          node_services_, node_timers_, node_clock_, *this, options)) {}
+          node_services_, node_timers_, node_clock_, *this, *this, options)) {}
 
 ClusterNode::~ClusterNode() {
   // release sub-interfaces in an order that allows them to consult with
@@ -335,16 +335,14 @@ void ClusterNode::on_standby() {}
 
 bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
-CommitResponseSharedFuture ClusterNode::commit_data(
-    CommitData::SharedPtr data, CommitResponseCallback callback) {
+DataCommitResponseSharedFuture ClusterNode::commit_data(
+    Data::SharedPtr data, DataCommitResponseCallback callback) {
   return impl_->commit_data(data, callback);
 }
 
-uint64_t ClusterNode::get_data_commit_index() {
-  return impl_->get_data_commit_index();
-}
+bool ClusterNode::on_data_commit_requested(Data::SharedPtr) { return false; }
 
-void ClusterNode::on_data_updated(std::vector<uint8_t>, uint64_t) {}
+Data::SharedPtr ClusterNode::get_data(uint64_t) { return nullptr; }
 
 }  // namespace foros
 }  // namespace failover

@@ -37,11 +37,12 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    ClusterNodeInterface &node_interface, const ClusterNodeOptions &options)
+    ClusterNodeInterface &node_interface,
+    ClusterNodeDataInterface &data_interface, const ClusterNodeOptions &options)
     : raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
           node_timers, node_clock, options.election_timeout_min(),
-          options.election_timeout_max())),
+          options.election_timeout_max(), data_interface)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
@@ -108,27 +109,13 @@ bool ClusterNodeImpl::is_activated() {
          lifecycle::StateType::kActive;
 }
 
-CommitResponseSharedFuture ClusterNodeImpl::commit_data(
-    CommitData::SharedPtr data, CommitResponseCallback callback) {
-  std::unique_lock<std::mutex> lock(pending_commits_mutex_);
-
-  CommitResponseSharedPromise commit_promise =
-      std::make_shared<CommitResponsePromise>();
-  CommitResponseSharedFuture commit_future = commit_promise->get_future();
-
-  // FIXME: for now, send fake response until commit logic is implemented.
-  lock.unlock();
-  auto response = CommitResponse::make_shared();
-  response->commit_id_ = data->commit_id_;
-  response->result = true;
-  commit_promise->set_value(response);
-  callback(commit_future);
-
-  return commit_future;
+DataCommitResponseSharedFuture ClusterNodeImpl::commit_data(
+    Data::SharedPtr data, DataCommitResponseCallback callback) {
+  return raft_context_->commit_data(data, callback);
 }
 
 uint64_t ClusterNodeImpl::get_data_commit_index() {
-  return raft_context_->get_commit_index();
+  return raft_context_->get_data_commit_index();
 }
 
 }  // namespace foros

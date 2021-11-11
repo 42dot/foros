@@ -28,6 +28,8 @@
 #include <memory>
 #include <string>
 
+#include "akit/failover/foros/data.hpp"
+
 namespace akit {
 namespace failover {
 namespace foros {
@@ -42,12 +44,20 @@ class OtherNode {
       const std::string& cluster_name, const uint32_t node_id);
 
   bool broadcast(uint64_t current_term, uint32_t node_id,
-                 std::function<void(uint64_t)> callback);
+                 std::function<void(uint64_t, bool)> callback);
+
+  bool commit(uint64_t current_term, uint32_t node_id, uint64_t prev_log_index,
+              uint64_t prev_log_term, Data::SharedPtr data,
+              std::function<void(uint64_t, bool)> callback);
 
   bool request_vote(uint64_t current_term, uint32_t node_id,
                     std::function<void(uint64_t, bool)> callback);
 
  private:
+  void send_append_entreis(
+      foros_msgs::srv::AppendEntries::Request::SharedPtr request,
+      std::function<void(uint64_t, bool)> callback);
+
   // index of the next data entry to send to this node
   uint64_t next_index_;
   // index of highest data entry known to be replicated on this node
