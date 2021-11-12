@@ -32,25 +32,26 @@ enum class ClusterNodeState {
   kUnknown,
 };
 
+/// Lifecycle interface of a clustered node.
+/**
+ * This interface consists of pure virtual methods related with node's
+ * lifecycle.
+ */
 class ClusterNodeInterface {
  public:
-  /// Callback function for activate transition
-  CLUSTER_NODE_PUBLIC
+  /// Callback function for activate transition.
   virtual void on_activated() = 0;
 
-  /// Callback function for deactivate transition
-  CLUSTER_NODE_PUBLIC
+  /// Callback function for deactivate transition.
   virtual void on_deactivated() = 0;
 
-  /// Callback function for standby transition
-  CLUSTER_NODE_PUBLIC
+  /// Callback function for standby transition.
   virtual void on_standby() = 0;
 
-  /// Check whether the node is activated or not
+  /// Check whether the node is activated or not.
   /**
-   * \return true if the node is activated, false if not
+   * \return true if the node is activated, false if not.
    */
-  CLUSTER_NODE_PUBLIC
   virtual bool is_activated() = 0;
 };
 

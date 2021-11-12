@@ -342,7 +342,9 @@ DataCommitResponseSharedFuture ClusterNode::commit_data(
 
 bool ClusterNode::on_data_commit_requested(Data::SharedPtr) { return false; }
 
-Data::SharedPtr ClusterNode::get_data(uint64_t) { return nullptr; }
+Data::SharedPtr ClusterNode::on_get_data_requested(uint64_t) { return nullptr; }
+
+void ClusterNode::on_rollback_data_requested(uint64_t) {}
 
 }  // namespace foros
 }  // namespace failover

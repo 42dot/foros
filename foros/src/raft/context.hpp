@@ -89,10 +89,11 @@ class Context {
       const std::shared_ptr<foros_msgs::srv::RequestVote::Request> request,
       std::shared_ptr<foros_msgs::srv::RequestVote::Response> response);
   bool update_term(uint64_t term);
-  void on_broadcast_response(uint64_t term, bool success);
   void on_request_vote_response(uint64_t term, bool vote_granted);
   void check_elected();
+
   void request_commit(Data::SharedPtr data);
+  void on_commit_response(uint64_t term, bool success);
 
   const std::string cluster_name_;
   uint32_t node_id_;

@@ -25,7 +25,7 @@ namespace akit {
 namespace failover {
 namespace foros {
 
-/// Encapsulation of options for cluster node initialization
+/// Options of a clustered node
 class ClusterNodeOptions : public rclcpp::NodeOptions {
  public:
   /// Create ClusterNodeOptions with default values, optionally specifying the
@@ -62,23 +62,28 @@ class ClusterNodeOptions : public rclcpp::NodeOptions {
   explicit ClusterNodeOptions(
       rcl_allocator_t allocator = rcl_get_default_allocator());
 
-  /// Destructor.
   CLUSTER_NODE_PUBLIC
   virtual ~ClusterNodeOptions() = default;
 
-  /// Return the minimum value of election timeout
+  /// Get the minimum value of election timeout.
+  /**
+   * \return The minimum value of election timeout.
+   */
   CLUSTER_NODE_PUBLIC
   unsigned int election_timeout_min() const;
 
-  /// Set the minimum value of election timeout
+  /// Set the minimum value of election timeout.
   CLUSTER_NODE_PUBLIC
   ClusterNodeOptions &election_timeout_min(unsigned int min);
 
-  /// Return the maximum value of election timeout
+  /// Return the maximum value of election timeout.
+  /**
+   * \return The maximum value of election timeout.
+   */
   CLUSTER_NODE_PUBLIC
   unsigned int election_timeout_max() const;
 
-  /// Set the maximum value of election timeout
+  /// Set the maximum value of election timeout.
   CLUSTER_NODE_PUBLIC
   ClusterNodeOptions &election_timeout_max(unsigned int max);
 

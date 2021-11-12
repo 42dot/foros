@@ -34,6 +34,8 @@ namespace akit {
 namespace failover {
 namespace foros {
 
+// Implementation of templates of ClusterNodes
+
 template <typename MessageT, typename AllocatorT>
 std::shared_ptr<ClusterNodePublisher<MessageT, AllocatorT>>
 ClusterNode::create_publisher(

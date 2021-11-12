@@ -30,9 +30,9 @@ namespace akit {
 namespace failover {
 namespace foros {
 
-/// brief child class of rclcpp Publisher class.
+/// Specialized ROS publisher for a clustered node.
 /**
- * Overrides all publisher functions to check for cluster node's state.
+ * This publisher publishes a message only if the clustered node is active.
  */
 template <typename MessageT, typename Alloc = std::allocator<void>>
 class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
@@ -44,16 +44,16 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
   using MessageDeleter = rclcpp::allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
-  /// Create a new publisher for cluster node.
+  /// Create ClusterNodePublisher.
   /**
    * The constructor for a ClsuterNodePublisher is almost never called
    * directly. Instead, publisher should be instantiated through the function
-   * ClusterNode::craete_publisher()
+   * ClusterNode::craete_publisher().
    *
-   * \param[in] node_base Handle of node base interface
-   * \param[in] topic Name of the topic
-   * \param[in] qos QoS settings
-   * \param[in] options Options of the publisher
+   * \param[in] node_base Handle of node base interface.
+   * \param[in] topic Name of the topic.
+   * \param[in] qos QoS settings.
+   * \param[in] options Options of the publisher.
    */
   ClusterNodePublisher(
       rclcpp::node_interfaces::NodeBaseInterface* node_base,
@@ -64,10 +64,12 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
 
   ~ClusterNodePublisher() {}
 
-  /// ClusterNodePublisher publish function
+  /// Publish a message.
   /**
    * The publish function checks whether the node is active or not and forwards
-   * the message to the actual rclcpp::Publisher class
+   * the message to the actual rclcpp::Publisher class.
+   *
+   * \param[in] msg a message to publish.
    */
   void publish(std::unique_ptr<MessageT, MessageDeleter> msg) override {
     if (node_interface_ != nullptr && !node_interface_->is_activated()) {
@@ -81,10 +83,12 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
     rclcpp::Publisher<MessageT, Alloc>::publish(std::move(msg));
   }
 
-  /// ClusterNodePublisher publish function
+  /// Publish a message.
   /**
    * The publish function checks whether the node is active or not and forwards
-   * the message to the actual rclcpp::Publisher class
+   * the message to the actual rclcpp::Publisher class.
+   *
+   * \param[in] msg a message to publish.
    */
   void publish(const MessageT& msg) override {
     if (node_interface_ != nullptr && !node_interface_->is_activated()) {
@@ -98,6 +102,10 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// Set the node interface to check whether the node is active or not.
+  /**
+   * \param[in] interface node interface.
+   */
   void set_node_interface(ClusterNodeInterface* interface) {
     node_interface_ = interface;
   }

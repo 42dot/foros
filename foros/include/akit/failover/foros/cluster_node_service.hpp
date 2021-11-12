@@ -29,22 +29,23 @@ namespace akit {
 namespace failover {
 namespace foros {
 
-/// brief child class of rclcpp Publisher class.
+/// Specialized ROS service for a clustered node.
 /**
- * Overrides all publisher functions to check for cluster node's state.
+ * This service accepts a request from a client only if the clustered node is
+ * active.
  */
 template <typename ServiceT>
 class ClusterNodeService : public rclcpp::Service<ServiceT> {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClusterNodeService)
 
-  /// Default constructor.
+  /// Create ClusterNodeService.
   /**
    * The constructor for a ClsuterNodeService is almost never called directly.
    * Instead, services should be instantiated through the function
-   * ClusterNode::craete_service()
+   * ClusterNode::craete_service().
    *
-   * \param[in] node_handle NodeBaseInterface pointer
+   * \param[in] node_handle NodeBaseInterface pointer.
    * \param[in] service_name Name of the topic to publish to.
    * \param[in] any_callback Callback to call when a client request is received.
    * \param[in] service_options options for the subscription.
@@ -59,10 +60,13 @@ class ClusterNodeService : public rclcpp::Service<ServiceT> {
 
   ~ClusterNodeService() {}
 
-  /// ClusterNodeService handle request
+  /// Handle a request of service.
   /**
-   * The function checks whether the node is active or not and forwards
-   * the request to the actual rclcpp::Service class
+   * The function checks whether the node is active or not and forwards the
+   * request to the actual rclcpp::Service class.
+   *
+   * \param[in] request_header a header of the request.
+   * \param[in] request a handle of the request.
    */
   void handle_request(std::shared_ptr<rmw_request_id_t> request_header,
                       std::shared_ptr<void> request) override {
@@ -77,6 +81,10 @@ class ClusterNodeService : public rclcpp::Service<ServiceT> {
     rclcpp::Service<ServiceT>::handle_request(request_header, request);
   }
 
+  /// Set the node interface to check whether the node is active or not.
+  /**
+   * \param[in] interface node interface.
+   */
   void set_node_interface(ClusterNodeInterface *interface) {
     node_interface_ = interface;
   }

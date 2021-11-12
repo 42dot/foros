@@ -29,20 +29,27 @@ namespace akit {
 namespace failover {
 namespace foros {
 
+/// Data to commit into the cluster.
 class Data {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(Data)
 
+  /// Commit ID of this data.
   uint64_t commit_id_;
+  // Election term of this data.
   uint64_t term;
+  // Data.
   std::vector<uint8_t> data_;
 };
 
+/// Response of request to commit data into the cluster.
 class DataCommitResponse {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(DataCommitResponse)
 
+  // Commit ID of the requested data.
   uint64_t commit_id_;
+  // Result of the request.
   bool result;
 };
 

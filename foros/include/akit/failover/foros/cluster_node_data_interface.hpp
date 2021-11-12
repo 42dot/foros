@@ -26,21 +26,32 @@ namespace akit {
 namespace failover {
 namespace foros {
 
+/// Data interface of a clustered node.
+/**
+ * This interface consists of pure virtual methods related with data
+ * replication.
+ */
 class ClusterNodeDataInterface {
  public:
-  /// Callback function when data is updated by other nodes in a cluster
+  /// Callback function to handle the request to commit data.
   /**
-   * \param[in] data data to commit
-   * \return true if data is committed, false if not
+   * \param[in] data data to commit.
+   * \return true if data is committed, false if not.
    */
   virtual bool on_data_commit_requested(Data::SharedPtr data) = 0;
 
-  /// Get data of given commit index
+  /// Callback function to handle the request to get data.
   /**
-   * \param[in] commit_index commit index
-   * \return data of given commit index, null if data does not exist
+   * \param[in] commit_index commit index.
+   * \return data of given commit index, null if data does not exist.
    */
-  virtual Data::SharedPtr get_data(uint64_t commit_index) = 0;
+  virtual Data::SharedPtr on_get_data_requested(uint64_t commit_index) = 0;
+
+  /// Callback function to handle the request to rollback data.
+  /**
+   * \param[in] commit_index commit index.
+   */
+  virtual void on_rollback_data_requested(uint64_t commit_index) = 0;
 };
 
 }  // namespace foros

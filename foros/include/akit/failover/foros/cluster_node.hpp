@@ -56,17 +56,14 @@ namespace foros {
 
 class ClusterNodeImpl;
 
-/// ClusterNode for creating a clustered node.
-/**
- * has cluster node interfaces.
- */
+/// A Clustered node.
 class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
                     public ClusterNodeInterface,
                     public ClusterNodeDataInterface {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClusterNode)
 
-  /// Create a new cluster node with the specified cluster name and node id.
+  /// Create a new clustered node with the specified cluster name and node id.
   /**
    * \param[in] cluster_name Cluster name of the node.
    * \param[in] node_id ID of the node.
@@ -79,7 +76,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       const std::vector<uint32_t> &cluster_node_ids,
       const ClusterNodeOptions &options = ClusterNodeOptions());
 
-  /// Create a new cluster node with the specified cluster name and node id.
+  /// Create a new clustered node with the specified cluster name and node id.
   /**
    * \param[in] cluster_name Cluster name of the node.
    * \param[in] node_id ID of the node.
@@ -104,7 +101,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   CLUSTER_NODE_PUBLIC
   const char *get_name() const;
 
-  /// Get the namespace of the node
+  /// Get the namespace of the node.
   /**
    * \return The namespace of the node.
    */
@@ -114,6 +111,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Get the fully-qualified name of the node.
   /**
    * The fully-qualified name includes the local namespace and name of the node.
+   *
    * \return fully-qualified name of the node.
    */
   CLUSTER_NODE_PUBLIC
@@ -126,13 +124,13 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   CLUSTER_NODE_PUBLIC
   rclcpp::Logger get_logger() const;
 
-  /// Create and return a callback group.
+  /// Create a callback group.
   /**
    * \param[in] group_type callback group type to create by this method.
    * \param[in] automatically_add_to_executor_with_node A boolean that
    *   determines whether a callback group is automatically added to an executor
    *   with the node with which it is associated.
-   * \return a callback group
+   * \return a callback group.
    */
   CLUSTER_NODE_PUBLIC
   rclcpp::CallbackGroup::SharedPtr create_callback_group(
@@ -147,7 +145,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &get_callback_groups()
       const;
 
-  /// Create and return a Publisher.
+  /// Create a Publisher.
   /**
    * The rclcpp::QoS has several convenient constructors, including a
    * conversion constructor for size_t, which mimics older API's that
@@ -183,7 +181,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       const rclcpp::PublisherOptionsWithAllocator<AllocatorT> &options =
           (rclcpp::PublisherOptionsWithAllocator<AllocatorT>()));
 
-  /// Create and return a Subscription.
+  /// Create a Subscription.
   /**
    * \param[in] topic_name The topic to subscribe on.
    * \param[in] callback The user-defined callback function.
@@ -220,7 +218,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
       rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /// Create and return a Client.
+  /// Create a Client.
   /**
    * \param[in] service_name The topic to service on.
    * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for
@@ -234,7 +232,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       const rmw_qos_profile_t &qos_profile = rmw_qos_profile_services_default,
       rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /// Create and return a Service.
+  /// Create a Service.
   /**
    * \param[in] service_name The topic to service on.
    * \param[in] callback User-defined callback function.
@@ -567,7 +565,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   CLUSTER_NODE_PUBLIC
   rclcpp::Parameter get_parameter(const std::string &name) const;
 
-  /// Get the value of a parameter by the given name, and return true if it was
+  /// Get the value of a parameter by the given name, true if it was
   /// set.
   /**
    * This method will never throw the
@@ -587,7 +585,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   bool get_parameter(const std::string &name,
                      rclcpp::Parameter &parameter) const;
 
-  /// Get the value of a parameter by the given name, and return true if it was
+  /// Get the value of a parameter by the given name, true if it was
   /// set.
   /**
    * Identical to the non-templated version of this method, except that when
@@ -705,7 +703,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    *   parameter has not been declared and undeclared parameters are not
    *   allowed.
    * \throws std::runtime_error if the number of described parameters is more
-   * than one
+   * than one.
    */
   CLUSTER_NODE_PUBLIC
   rcl_interfaces::msg::ParameterDescriptor describe_parameter(
@@ -729,7 +727,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    *   parameters have not been declared and undeclared parameters are not
    *   allowed.
    * \throws std::runtime_error if the number of described parameters is more
-   * than one
+   * than one.
    */
   CLUSTER_NODE_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
@@ -872,6 +870,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Get the fully-qualified names of all available nodes.
   /**
    * The fully-qualified name includes the local namespace and name of the node.
+   *
    * \return A vector of fully-qualified names of nodes.
    */
   CLUSTER_NODE_PUBLIC
@@ -880,7 +879,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Return a map of existing topic names to list of topic types.
   /**
    * \return a map of existing topic names to list of topic types.
-   * \throws std::runtime_error anything that rcl_error can throw
+   * \throws std::runtime_error anything that rcl_error can throw.
    */
   CLUSTER_NODE_PUBLIC
   std::map<std::string, std::vector<std::string>> get_topic_names_and_types()
@@ -889,7 +888,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Return a map of existing service names to list of service types.
   /**
    * \return a map of existing service names to list of service types.
-   * \throws std::runtime_error anything that rcl_error can throw
+   * \throws std::runtime_error anything that rcl_error can throw.
    */
   CLUSTER_NODE_PUBLIC
   std::map<std::string, std::vector<std::string>> get_service_names_and_types()
@@ -917,7 +916,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] topic_name the actual topic name used; it will not be
    *   automatically remapped.
    * \return number of publishers that have been created for the given topic.
-   * \throws std::runtime_error if publishers could not be counted
+   * \throws std::runtime_error if publishers could not be counted.
    */
   CLUSTER_NODE_PUBLIC
   size_t count_publishers(const std::string &topic_name) const;
@@ -927,7 +926,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] topic_name the actual topic name used; it will not be
    *   automatically remapped.
    * \return number of subscribers that have been created for the given topic.
-   * \throws std::runtime_error if subscribers could not be counted
+   * \throws std::runtime_error if subscribers could not be counted.
    */
   CLUSTER_NODE_PUBLIC
   size_t count_subscribers(const std::string &topic_name) const;
@@ -1005,10 +1004,10 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /**
    * The given Event must be acquire through the get_graph_event() method.
    *
-   * \param[in] event pointer to an Event to wait for
-   * \param[in] timeout nanoseconds to wait for the Event to change the state
+   * \param[in] event pointer to an Event to wait for.
+   * \param[in] timeout nanoseconds to wait for the Event to change the state.
    *
-   * \throws InvalidEventError if the given event is nullptr
+   * \throws InvalidEventError if the given event is nullptr.
    * \throws EventNotRegisteredError if the given event was not acquired with
    *   get_graph_event().
    */
@@ -1087,50 +1086,56 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
-  /// Check whether the node is activated or not
+  /// Check whether the node is activated or not.
   /**
-   * \return true if the node is activated, false if not
+   * \return true if the node is activated, false if not.
    */
   CLUSTER_NODE_PUBLIC
   bool is_activated() final;
 
-  /// Commit date to duplicate to nodes in a cluster
+  /// Commit date to duplicate to nodes in a cluster.
   /**
    * This function only considers services - not clients.
    * The returned names are the actual names used and do not have remap
    * rules applied.
    *
-   * \param[in] data data to commit
-   * \param[in] callback callback to receive the commit result
-   * \return shared future of commit result
+   * \param[in] data data to commit.
+   * \param[in] callback callback to receive the commit result.
+   * \return shared future of commit result.
    */
   CLUSTER_NODE_PUBLIC
   DataCommitResponseSharedFuture commit_data(
       Data::SharedPtr data, DataCommitResponseCallback callback);
 
  private:
-  /// Callback function for activate transition
+  /// Callback function for activate transition.
   void on_activated() override;
 
-  /// Callback function for deactivate transition
+  /// Callback function for deactivate transition.
   void on_deactivated() override;
 
-  /// Callback function for standby transition
+  /// Callback function for standby transition.
   void on_standby() override;
 
-  /// Callback function when data is updated by other nodes in a cluster
+  /// Callback function to handle the request to commit data.
   /**
-   * \param[in] data data to commit
-   * \return true if data is committed, false if not
+   * \param[in] data data to commit.
+   * \return true if data is committed, false if not.
    */
   bool on_data_commit_requested(Data::SharedPtr data) override;
 
-  /// Get data of given commit index
+  /// Callback function to handle the request to get data.
   /**
-   * \param[in] commit_index commit index
-   * \return data of given commit index, null if data does not exist
+   * \param[in] commit_index commit index.
+   * \return data of given commit index, null if data does not exist.
    */
-  Data::SharedPtr get_data(uint64_t commit_index) override;
+  Data::SharedPtr on_get_data_requested(uint64_t commit_index) override;
+
+  /// Callback function to handle the request to rollback data.
+  /**
+   * \param[in] commit_index commit index.
+   */
+  void on_rollback_data_requested(uint64_t commit_index) override;
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;

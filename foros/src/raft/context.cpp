@@ -255,20 +255,11 @@ void Context::broadcast() {
   for (auto node : other_nodes_) {
     if (node->broadcast(
             current_term_, node_id_,
-            std::bind(&Context::on_broadcast_response, this,
-                      std::placeholders::_1, std::placeholders::_2)) == true) {
+            std::bind(&Context::on_commit_response, this, std::placeholders::_1,
+                      std::placeholders::_2)) == true) {
       available_candidates_++;
     }
   }
-}
-
-void Context::on_broadcast_response(uint64_t term, bool) {
-  if (term < current_term_) {
-    std::cout << "ignore append entries response since term is outdated"
-              << std::endl;
-    return;
-  }
-  update_term(term);
 }
 
 void Context::request_vote() {
@@ -333,6 +324,7 @@ DataCommitResponseSharedFuture Context::commit_data(
 
   std::lock_guard<std::mutex> lock(pending_commits_mutex_);
 
+  request_commit(data);
   pending_commits_[commit_index_] = std::make_tuple(
       commit_promise, std::forward<DataCommitResponseCallback>(callback),
       commit_future);
@@ -342,7 +334,27 @@ DataCommitResponseSharedFuture Context::commit_data(
 
 uint64_t Context::get_data_commit_index() { return commit_index_; }
 
-void Context::request_commit(Data::SharedPtr) {}
+void Context::request_commit(Data::SharedPtr data) {
+  available_candidates_ = 1;
+
+  for (auto node : other_nodes_) {
+    if (node->commit(current_term_, node_id_, 0, 0, data,
+                     std::bind(&Context::on_commit_response, this,
+                               std::placeholders::_1, std::placeholders::_2)) ==
+        true) {
+      available_candidates_++;
+    }
+  }
+}
+
+void Context::on_commit_response(uint64_t term, bool) {
+  if (term < current_term_) {
+    std::cout << "ignore append entries response since term is outdated"
+              << std::endl;
+    return;
+  }
+  update_term(term);
+}
 
 }  // namespace raft
 }  // namespace foros
