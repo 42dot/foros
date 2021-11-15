@@ -34,12 +34,17 @@ class Data {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(Data)
 
-  /// Commit ID of this data.
-  uint64_t commit_id_;
+  /// Commit index of this data.
+  uint64_t commit_index_;
   // Election term of this data.
   uint64_t term;
   // Data.
   std::vector<uint8_t> data_;
+
+  /// Previous commit index
+  uint64_t prev_commit_index_;
+  /// Previous term of the data of previous commit
+  uint64_t prev_term_;
 };
 
 /// Response of request to commit data into the cluster.
@@ -47,8 +52,8 @@ class DataCommitResponse {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(DataCommitResponse)
 
-  // Commit ID of the requested data.
-  uint64_t commit_id_;
+  // Commit index of the requested data.
+  uint64_t commit_index_;
   // Result of the request.
   bool result;
 };

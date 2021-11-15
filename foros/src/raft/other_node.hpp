@@ -46,8 +46,7 @@ class OtherNode {
   bool broadcast(uint64_t current_term, uint32_t node_id,
                  std::function<void(uint64_t, bool)> callback);
 
-  bool commit(uint64_t current_term, uint32_t node_id, uint64_t prev_log_index,
-              uint64_t prev_log_term, Data::SharedPtr data,
+  bool commit(uint64_t current_term, uint32_t node_id, Data::SharedPtr data,
               std::function<void(uint64_t, bool)> callback);
 
   bool request_vote(uint64_t current_term, uint32_t node_id,
