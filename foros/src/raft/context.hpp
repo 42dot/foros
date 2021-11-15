@@ -68,7 +68,6 @@ class Context {
   void reset_broadcast_timer();
   std::string get_node_name();
   void vote_for_me();
-  std::tuple<uint64_t, bool> vote(uint64_t term, uint32_t id);
   void reset_vote();
   void increase_term();
   uint64_t get_term();
@@ -92,6 +91,10 @@ class Context {
   bool update_term(uint64_t term);
   void on_request_vote_response(uint64_t term, bool vote_granted);
   void check_elected();
+
+  std::tuple<uint64_t, bool> vote(uint64_t term, uint32_t id,
+                                  uint64_t last_data_index,
+                                  uint64_t last_data_term);
 
   uint32_t request_commit(Data::SharedPtr data);
   void on_commit_response(uint64_t term, bool success);

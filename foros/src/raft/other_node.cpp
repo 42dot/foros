@@ -77,10 +77,10 @@ bool OtherNode::commit(uint64_t current_term, uint32_t node_id,
   auto request = std::make_shared<foros_msgs::srv::AppendEntries::Request>();
   request->term = current_term;
   request->leader_id = node_id;
-  request->prev_data_index = data->prev_commit_index_;
+  request->prev_data_index = data->prev_index_;
   request->prev_data_term = data->prev_term_;
   request->data = data->data_;
-  request->leader_commit = data->commit_index_;
+  request->leader_commit = data->index_;
 
   send_append_entreis(request, callback);
 

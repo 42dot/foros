@@ -124,6 +124,7 @@ bool Context::update_term(uint64_t term) {
   if (term <= current_term_) return false;
 
   current_term_ = term;
+  available_candidates_ = 0;
   reset_vote();
   state_machine_interface_->on_new_term_received();
 
@@ -138,9 +139,19 @@ void Context::on_append_entries_requested(
     response->success = false;
   } else {
     update_term(request->term);
-    response->success = true;
     broadcast_received_ = true;
     state_machine_interface_->on_leader_discovered();
+    auto data = data_interface_.on_get_data_requested(request->prev_data_index);
+    if (data == nullptr) {
+      response->success = false;
+    } else {
+      if (data->term_ != request->prev_data_term) {
+        data_interface_.on_rollback_data_requested(data->index_);
+        response->success = false;
+      } else {
+        response->success = true;
+      }
+    }
   }
 
   response->term = current_term_;
@@ -152,7 +163,8 @@ void Context::on_request_vote_requested(
     std::shared_ptr<foros_msgs::srv::RequestVote::Response> response) {
   update_term(request->term);
   std::tie(response->term, response->vote_granted) =
-      vote(request->term, request->candidate_id);
+      vote(request->term, request->candidate_id, request->last_data_index,
+           request->loat_data_term);
 }
 
 void Context::start_election_timer() {
@@ -223,11 +235,12 @@ void Context::vote_for_me() {
   voted_ = true;
 }
 
-std::tuple<uint64_t, bool> Context::vote(uint64_t term, uint32_t id) {
+std::tuple<uint64_t, bool> Context::vote(uint64_t term, uint32_t id,
+                                         uint64_t last_data_index, uint64_t) {
   bool granted = false;
 
   if (term >= current_term_) {
-    if (voted_ == false) {
+    if (voted_ == false && last_commit_.index_ <= last_data_index) {
       voted_for_ = id;
       voted_ = true;
       granted = true;
@@ -312,11 +325,11 @@ DataCommitResponseSharedFuture Context::commit_data(
       std::make_shared<DataCommitResponsePromise>();
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
-  if (data->commit_index_ <= last_commit_.index_) {
+  if (data->index_ <= last_commit_.index_) {
     std::cerr << "out-dated commit index can not be commited" << std::endl;
     auto response = DataCommitResponse::make_shared();
-    response->commit_index_ = data->commit_index_;
-    response->result = false;
+    response->commit_index_ = data->index_;
+    response->result_ = false;
     commit_promise->set_value(response);
     callback(commit_future);
     return commit_future;
@@ -327,19 +340,18 @@ DataCommitResponseSharedFuture Context::commit_data(
   if (request_count <= 0) {
     std::cerr << "No other node exist to commit" << std::endl;
     auto response = DataCommitResponse::make_shared();
-    response->commit_index_ = data->commit_index_;
-    response->result = true;
+    response->commit_index_ = data->index_;
+    response->result_ = true;
     commit_promise->set_value(response);
     callback(commit_future);
     return commit_future;
   }
 
   std::lock_guard<std::mutex> lock(pending_commits_mutex_);
-  pending_commits_[data->commit_index_] = std::make_tuple(
+  pending_commits_[data->index_] = std::make_tuple(
       commit_promise, std::forward<DataCommitResponseCallback>(callback),
       commit_future,
-      std::make_shared<CommitInfo>(data->commit_index_, current_term_,
-                                   request_count));
+      std::make_shared<CommitInfo>(data->index_, current_term_, request_count));
 
   return commit_future;
 }

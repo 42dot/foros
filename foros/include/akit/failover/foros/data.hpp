@@ -35,14 +35,14 @@ class Data {
   RCLCPP_SMART_PTR_DEFINITIONS(Data)
 
   /// Commit index of this data.
-  uint64_t commit_index_;
+  uint64_t index_;
   // Election term of this data.
-  uint64_t term;
+  uint64_t term_;
   // Data.
   std::vector<uint8_t> data_;
 
   /// Previous commit index
-  uint64_t prev_commit_index_;
+  uint64_t prev_index_;
   /// Previous term of the data of previous commit
   uint64_t prev_term_;
 };
@@ -55,7 +55,7 @@ class DataCommitResponse {
   // Commit index of the requested data.
   uint64_t commit_index_;
   // Result of the request.
-  bool result;
+  bool result_;
 };
 
 using DataCommitResponsePromise = std::promise<DataCommitResponse::SharedPtr>;
