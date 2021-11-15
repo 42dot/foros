@@ -1131,6 +1131,12 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    */
   Data::SharedPtr on_get_data_requested(uint64_t commit_index) override;
 
+  /// Callback function to handle the request to get data.
+  /**
+   * \return data of the latest commit index, null if data does not exist.
+   */
+  Data::SharedPtr on_get_data_requested() override;
+
   /// Callback function to handle the request to rollback data.
   /**
    * \param[in] commit_index commit index.
