@@ -92,7 +92,7 @@ class Context {
   void on_request_vote_response(uint64_t term, bool vote_granted);
   void check_elected();
 
-  void request_commit(Data::SharedPtr data);
+  unsigned int request_commit(Data::SharedPtr data);
   void on_commit_response(uint64_t term, bool success);
 
   const std::string cluster_name_;
@@ -136,9 +136,10 @@ class Context {
   bool broadcast_received_;  // flag to check whether boradcast recevied before
                              // election timer expired
 
-  std::map<int64_t, std::tuple<DataCommitResponseSharedPromise,
-                               DataCommitResponseCallback,
-                               DataCommitResponseSharedFuture>>
+  std::map<
+      int64_t,
+      std::tuple<DataCommitResponseSharedPromise, DataCommitResponseCallback,
+                 DataCommitResponseSharedFuture, uint64_t, unsigned int>>
       pending_commits_;
   std::mutex pending_commits_mutex_;
 

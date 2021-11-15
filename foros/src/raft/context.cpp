@@ -312,7 +312,7 @@ DataCommitResponseSharedFuture Context::commit_data(
       std::make_shared<DataCommitResponsePromise>();
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
-  if (data->commit_id_ < commit_index_) {
+  if (data->commit_id_ <= commit_index_) {
     std::cerr << "out-dated commit index can not be commited" << std::endl;
     auto response = DataCommitResponse::make_shared();
     response->commit_id_ = data->commit_id_;
@@ -322,29 +322,41 @@ DataCommitResponseSharedFuture Context::commit_data(
     return commit_future;
   }
 
-  std::lock_guard<std::mutex> lock(pending_commits_mutex_);
+  auto request_count = request_commit(data);
 
-  request_commit(data);
+  if (request_count <= 0) {
+    std::cerr << "No other node exist to commit" << std::endl;
+    auto response = DataCommitResponse::make_shared();
+    response->commit_id_ = data->commit_id_;
+    response->result = true;
+    commit_promise->set_value(response);
+    callback(commit_future);
+    return commit_future;
+  }
+
+  std::lock_guard<std::mutex> lock(pending_commits_mutex_);
   pending_commits_[commit_index_] = std::make_tuple(
       commit_promise, std::forward<DataCommitResponseCallback>(callback),
-      commit_future);
+      commit_future, current_term_, request_count);
 
   return commit_future;
 }
 
 uint64_t Context::get_data_commit_index() { return commit_index_; }
 
-void Context::request_commit(Data::SharedPtr data) {
-  available_candidates_ = 1;
+unsigned int Context::request_commit(Data::SharedPtr data) {
+  unsigned int request_count = 0;
 
   for (auto node : other_nodes_) {
     if (node->commit(current_term_, node_id_, 0, 0, data,
                      std::bind(&Context::on_commit_response, this,
                                std::placeholders::_1, std::placeholders::_2)) ==
         true) {
-      available_candidates_++;
+      request_count++;
     }
   }
+
+  return request_count;
 }
 
 void Context::on_commit_response(uint64_t term, bool) {
