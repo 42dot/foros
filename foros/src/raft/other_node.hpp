@@ -41,7 +41,8 @@ class OtherNode {
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-      const std::string& cluster_name, const uint32_t node_id);
+      const std::string& cluster_name, const uint32_t node_id,
+      const uint64_t next_index);
 
   bool broadcast(uint64_t current_term, uint32_t node_id,
                  std::function<void(uint64_t, bool)> callback);

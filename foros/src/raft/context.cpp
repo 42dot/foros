@@ -67,6 +67,14 @@ Context::Context(
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
   initialize_node();
+  auto data = data_interface_.on_get_data_requested();
+  if (data != nullptr) {
+    last_commit_.index_ = data->index_;
+    last_commit_.term_ = data->term_;
+    last_applied_.index_ = data->index_;
+    last_applied_.term_ = data->term_;
+  }
+
   initialize_other_nodes(cluster_node_ids);
   state_machine_interface_ = state_machine_interface;
 }
@@ -110,13 +118,16 @@ void Context::initialize_other_nodes(
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
+  int64_t next_index = last_commit_.index_ + 1;
+
   for (auto id : cluster_node_ids) {
     if (id == node_id_) {
       continue;
     }
 
-    other_nodes_.push_back(std::make_shared<OtherNode>(
-        node_base_, node_graph_, node_services_, cluster_name_, id));
+    other_nodes_.push_back(
+        std::make_shared<OtherNode>(node_base_, node_graph_, node_services_,
+                                    cluster_name_, id, next_index));
   }
 }
 

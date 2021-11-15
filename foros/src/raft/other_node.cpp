@@ -30,8 +30,9 @@ OtherNode::OtherNode(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-    const std::string &cluster_name, const uint32_t node_id)
-    : next_index_(0), match_index_(0) {
+    const std::string &cluster_name, const uint32_t node_id,
+    const uint64_t next_index)
+    : next_index_(next_index), match_index_(0) {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
