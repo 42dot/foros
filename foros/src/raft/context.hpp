@@ -37,6 +37,7 @@
 
 #include "akit/failover/foros/cluster_node_data_interface.hpp"
 #include "akit/failover/foros/data.hpp"
+#include "raft/commit_info.hpp"
 #include "raft/other_node.hpp"
 #include "raft/state_machine_interface.hpp"
 
@@ -92,7 +93,7 @@ class Context {
   void on_request_vote_response(uint64_t term, bool vote_granted);
   void check_elected();
 
-  unsigned int request_commit(Data::SharedPtr data);
+  uint32_t request_commit(Data::SharedPtr data);
   void on_commit_response(uint64_t term, bool success);
 
   const std::string cluster_name_;
@@ -122,8 +123,8 @@ class Context {
   unsigned int vote_received_;  // number of received votes in current term
   unsigned int available_candidates_;  // number of available candidate
 
-  uint64_t commit_index_;  // index of highest data entry known to be committed
-  uint64_t last_applied_;  // index of highest data entry applied to fsm
+  CommitInfo last_commit_;  // index of highest data entry known to be committed
+  CommitInfo last_applied_;  // index of highest data entry applied to fsm
 
   unsigned int election_timeout_min_;  // minimum election timeout in msecs
   unsigned int election_timeout_max_;  // maximum election timeout in msecs
@@ -139,7 +140,7 @@ class Context {
   std::map<
       int64_t,
       std::tuple<DataCommitResponseSharedPromise, DataCommitResponseCallback,
-                 DataCommitResponseSharedFuture, uint64_t, unsigned int>>
+                 DataCommitResponseSharedFuture, std::shared_ptr<CommitInfo>>>
       pending_commits_;
   std::mutex pending_commits_mutex_;
 

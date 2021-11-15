@@ -55,8 +55,8 @@ Context::Context(
       voted_(false),
       vote_received_(0),
       available_candidates_(0),
-      commit_index_(0),
-      last_applied_(0),
+      last_commit_(CommitInfo(0, 0)),
+      last_applied_(CommitInfo(0, 0)),
       election_timeout_min_(election_timeout_min),
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()),
@@ -312,10 +312,10 @@ DataCommitResponseSharedFuture Context::commit_data(
       std::make_shared<DataCommitResponsePromise>();
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
-  if (data->commit_id_ <= commit_index_) {
+  if (data->commit_index_ <= last_commit_.index_) {
     std::cerr << "out-dated commit index can not be commited" << std::endl;
     auto response = DataCommitResponse::make_shared();
-    response->commit_id_ = data->commit_id_;
+    response->commit_index_ = data->commit_index_;
     response->result = false;
     commit_promise->set_value(response);
     callback(commit_future);
@@ -327,7 +327,7 @@ DataCommitResponseSharedFuture Context::commit_data(
   if (request_count <= 0) {
     std::cerr << "No other node exist to commit" << std::endl;
     auto response = DataCommitResponse::make_shared();
-    response->commit_id_ = data->commit_id_;
+    response->commit_index_ = data->commit_index_;
     response->result = true;
     commit_promise->set_value(response);
     callback(commit_future);
@@ -335,20 +335,22 @@ DataCommitResponseSharedFuture Context::commit_data(
   }
 
   std::lock_guard<std::mutex> lock(pending_commits_mutex_);
-  pending_commits_[commit_index_] = std::make_tuple(
+  pending_commits_[data->commit_index_] = std::make_tuple(
       commit_promise, std::forward<DataCommitResponseCallback>(callback),
-      commit_future, current_term_, request_count);
+      commit_future,
+      std::make_shared<CommitInfo>(data->commit_index_, current_term_,
+                                   request_count));
 
   return commit_future;
 }
 
-uint64_t Context::get_data_commit_index() { return commit_index_; }
+uint64_t Context::get_data_commit_index() { return last_commit_.index_; }
 
 unsigned int Context::request_commit(Data::SharedPtr data) {
   unsigned int request_count = 0;
 
   for (auto node : other_nodes_) {
-    if (node->commit(current_term_, node_id_, 0, 0, data,
+    if (node->commit(current_term_, node_id_, data,
                      std::bind(&Context::on_commit_response, this,
                                std::placeholders::_1, std::placeholders::_2)) ==
         true) {
