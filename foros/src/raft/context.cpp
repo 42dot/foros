@@ -42,8 +42,8 @@ Context::Context(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    unsigned int election_timeout_min, unsigned int election_timeout_max,
-    ClusterNodeDataInterface &data_interface)
+    ClusterNodeDataInterface::SharedPtr data_interface,
+    unsigned int election_timeout_min, unsigned int election_timeout_max)
     : cluster_name_(cluster_name),
       node_id_(node_id),
       node_base_(node_base),
@@ -56,25 +56,24 @@ Context::Context(
       vote_received_(0),
       available_candidates_(0),
       last_commit_(CommitInfo(0, 0)),
-      last_applied_(CommitInfo(0, 0)),
       election_timeout_min_(election_timeout_min),
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()),
       broadcast_timeout_(election_timeout_min_ / 10),
       broadcast_received_(false),
-      data_interface_(data_interface) {}
+      data_interface_(data_interface),
+      data_replication_enabled_(data_interface_ != nullptr) {}
 
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
-  initialize_node();
-  auto data = data_interface_.on_data_get_requested();
-  if (data != nullptr) {
-    last_commit_.index_ = data->index_;
-    last_commit_.term_ = data->term_;
-    last_applied_.index_ = data->index_;
-    last_applied_.term_ = data->term_;
+  if (data_replication_enabled_) {
+    auto data = data_interface_->on_data_get_requested();
+    if (data != nullptr) {
+      last_commit_.index_ = data->index_;
+      last_commit_.term_ = data->term_;
+    }
   }
-
+  initialize_node();
   initialize_other_nodes(cluster_node_ids);
   state_machine_interface_ = state_machine_interface;
 }
@@ -125,9 +124,9 @@ void Context::initialize_other_nodes(
       continue;
     }
 
-    other_nodes_.push_back(
-        std::make_shared<OtherNode>(node_base_, node_graph_, node_services_,
-                                    cluster_name_, id, next_index));
+    other_nodes_.push_back(std::make_shared<OtherNode>(
+        node_base_, node_graph_, node_services_, cluster_name_, id, next_index,
+        data_interface_));
   }
 }
 
@@ -146,26 +145,65 @@ void Context::on_append_entries_requested(
     const std::shared_ptr<rmw_request_id_t>,
     const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request,
     std::shared_ptr<foros_msgs::srv::AppendEntries::Response> response) {
+  response->term = current_term_;
+
   if (request->term < current_term_) {
     response->success = false;
   } else {
     update_term(request->term);
     broadcast_received_ = true;
     state_machine_interface_->on_leader_discovered();
-    auto data = data_interface_.on_data_get_requested(request->prev_data_index);
-    if (data == nullptr) {
-      response->success = false;
-    } else {
-      if (data->term_ != request->prev_data_term) {
-        data_interface_.on_data_rollback_requested(data->index_);
-        response->success = false;
-      } else {
-        response->success = true;
-      }
-    }
   }
 
-  response->term = current_term_;
+  if (!data_replication_enabled_ || request->data.size() == 0) {
+    response->success = false;
+    return;
+  }
+
+  // commit it since it is first data
+  if (request->prev_data_index == 0) {
+    data_interface_->on_data_rollback_requested(0);
+    response->success = request_local_commit(request);
+    return;
+  }
+
+  auto data = data_interface_->on_data_get_requested(request->prev_data_index);
+  if (data == nullptr) {
+    response->success = false;
+  } else {
+    if (data->term_ != request->prev_data_term) {
+      data_interface_->on_data_rollback_requested(data->index_);
+      response->success = false;
+    } else {
+      response->success = request_local_commit(request);
+    }
+  }
+}
+
+bool Context::request_local_commit(
+    const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request) {
+  if (last_commit_.index_ == request->leader_commit &&
+      last_commit_.term_ == request->term) {
+    return true;
+  }
+
+  auto data = Data::make_shared();
+  data->data_ = request->data;
+  data->index_ = request->leader_commit;
+  data->term_ = request->term;
+  data->prev_index_ = request->prev_data_index;
+  data->prev_term_ = request->prev_data_term;
+  data_interface_->on_data_commit_requested(data);
+  last_commit_.index_ = request->leader_commit;
+  last_commit_.term_ = request->term;
+  return true;
+}
+
+void Context::request_local_rollback(uint64_t commit_index) {
+  data_interface_->on_data_rollback_requested(commit_index);
+  auto data = data_interface_->on_data_get_requested();
+  last_commit_.index_ = data->index_;
+  last_commit_.term_ = data->term_;
 }
 
 void Context::on_request_vote_requested(
@@ -278,7 +316,7 @@ void Context::broadcast() {
 
   for (auto node : other_nodes_) {
     if (node->broadcast(
-            current_term_, node_id_,
+            current_term_, node_id_, last_commit_,
             std::bind(&Context::on_commit_response, this, std::placeholders::_1,
                       std::placeholders::_2)) == true) {
       available_candidates_++;
@@ -346,7 +384,7 @@ DataCommitResponseSharedFuture Context::commit_data(
     return commit_future;
   }
 
-  auto request_count = request_commit(data);
+  auto request_count = request_remote_commit(data);
 
   if (request_count <= 0) {
     std::cerr << "No other node exist to commit" << std::endl;
@@ -369,7 +407,7 @@ DataCommitResponseSharedFuture Context::commit_data(
 
 uint64_t Context::get_data_commit_index() { return last_commit_.index_; }
 
-unsigned int Context::request_commit(Data::SharedPtr data) {
+unsigned int Context::request_remote_commit(Data::SharedPtr data) {
   unsigned int request_count = 0;
 
   for (auto node : other_nodes_) {
@@ -386,8 +424,13 @@ unsigned int Context::request_commit(Data::SharedPtr data) {
 
 void Context::on_commit_response(uint64_t term, bool) {
   if (term < current_term_) {
-    std::cout << "ignore append entries response since term is outdated"
-              << std::endl;
+    return;
+  }
+  update_term(term);
+}
+
+void Context::on_broadcast_response(uint64_t term, bool) {
+  if (term < current_term_) {
     return;
   }
   update_term(term);

@@ -56,7 +56,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-      ClusterNodeDataInterface &data_interface,
+      ClusterNodeDataInterface::SharedPtr data_interface,
       const ClusterNodeOptions &options);
 
   ~ClusterNodeImpl();
@@ -67,11 +67,8 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   DataCommitResponseSharedFuture commit_data(
       Data::SharedPtr data, DataCommitResponseCallback callback);
   uint64_t get_data_commit_index();
-
   void register_on_activated(std::function<void()> callback);
-
   void register_on_deactivated(std::function<void()> callback);
-
   void register_on_standby(std::function<void()> callback);
 
  private:

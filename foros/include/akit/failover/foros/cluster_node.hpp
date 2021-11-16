@@ -58,8 +58,7 @@ class ClusterNodeImpl;
 
 /// A Clustered node.
 class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
-                    public ClusterNodeLifecycleInterface,
-                    public ClusterNodeDataInterface {
+                    public ClusterNodeLifecycleInterface {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClusterNode)
 
@@ -68,12 +67,14 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] cluster_name Cluster name of the node.
    * \param[in] node_id ID of the node.
    * \param[in] cluster_node_ids IDs of nodes in the cluster.
+   * \param[in] data_interface interface for data replication.
    * \param[in] options Additional options to control creation of the node.
    */
   CLUSTER_NODE_PUBLIC
   explicit ClusterNode(
       const std::string &cluster_name, const uint32_t node_id,
       const std::vector<uint32_t> &cluster_node_ids,
+      ClusterNodeDataInterface::SharedPtr data_interface = nullptr,
       const ClusterNodeOptions &options = ClusterNodeOptions());
 
   /// Create a new clustered node with the specified cluster name and node id.
@@ -82,6 +83,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] node_id ID of the node.
    * \param[in] cluster_node_ids IDs of nodes in the cluster.
    * \param[in] node_namespace Namespace of the nodo.
+   * \param[in] data_interface interface for data replication.
    * \param[in] options Additional options to control creation of the node.
    */
   CLUSTER_NODE_PUBLIC
@@ -89,6 +91,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       const std::string &cluster_name, const uint32_t node_id,
       const std::vector<uint32_t> &cluster_node_ids,
       const std::string &node_namespace,
+      ClusterNodeDataInterface::SharedPtr data_interface = nullptr,
       const ClusterNodeOptions &options = ClusterNodeOptions());
 
   CLUSTER_NODE_PUBLIC
@@ -1129,32 +1132,6 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       Data::SharedPtr data, DataCommitResponseCallback callback);
 
  private:
-  /// Callback function to handle the request to commit data.
-  /**
-   * \param[in] data data to commit.
-   * \return true if data is committed, false if not.
-   */
-  bool on_data_commit_requested(Data::SharedPtr data) override;
-
-  /// Callback function to handle the request to get data.
-  /**
-   * \param[in] commit_index commit index.
-   * \return data of given commit index, null if data does not exist.
-   */
-  Data::SharedPtr on_data_get_requested(uint64_t commit_index) override;
-
-  /// Callback function to handle the request to get data.
-  /**
-   * \return data of the latest commit index, null if data does not exist.
-   */
-  Data::SharedPtr on_data_get_requested() override;
-
-  /// Callback function to handle the request to rollback data.
-  /**
-   * \param[in] commit_index commit index.
-   */
-  void on_data_rollback_requested(uint64_t commit_index) override;
-
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;

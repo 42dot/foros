@@ -28,7 +28,9 @@
 #include <memory>
 #include <string>
 
+#include "akit/failover/foros/cluster_node_data_interface.hpp"
 #include "akit/failover/foros/data.hpp"
+#include "raft/commit_info.hpp"
 
 namespace akit {
 namespace failover {
@@ -42,9 +44,11 @@ class OtherNode {
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       const std::string& cluster_name, const uint32_t node_id,
-      const uint64_t next_index);
+      const uint64_t next_index,
+      ClusterNodeDataInterface::SharedPtr data_callbacks);
 
   bool broadcast(uint64_t current_term, uint32_t node_id,
+                 const CommitInfo& last_commit,
                  std::function<void(uint64_t, bool)> callback);
 
   bool commit(uint64_t current_term, uint32_t node_id, Data::SharedPtr data,
@@ -64,6 +68,8 @@ class OtherNode {
   uint64_t match_index_;
   rclcpp::Client<foros_msgs::srv::AppendEntries>::SharedPtr append_entries_;
   rclcpp::Client<foros_msgs::srv::RequestVote>::SharedPtr request_vote_;
+  ClusterNodeDataInterface::SharedPtr data_interface_;
+  bool data_replication_enabled_;
 };
 
 }  // namespace raft

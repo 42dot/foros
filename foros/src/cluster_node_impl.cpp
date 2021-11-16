@@ -37,11 +37,12 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    ClusterNodeDataInterface &data_interface, const ClusterNodeOptions &options)
+    ClusterNodeDataInterface::SharedPtr data_interface,
+    const ClusterNodeOptions &options)
     : raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
-          node_timers, node_clock, options.election_timeout_min(),
-          options.election_timeout_max(), data_interface)),
+          node_timers, node_clock, data_interface,
+          options.election_timeout_min(), options.election_timeout_max())),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()) {

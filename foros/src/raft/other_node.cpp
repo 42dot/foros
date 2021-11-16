@@ -31,8 +31,12 @@ OtherNode::OtherNode(
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const std::string &cluster_name, const uint32_t node_id,
-    const uint64_t next_index)
-    : next_index_(next_index), match_index_(0) {
+    const uint64_t next_index,
+    ClusterNodeDataInterface::SharedPtr data_interface)
+    : next_index_(next_index),
+      match_index_(0),
+      data_interface_(data_interface),
+      data_replication_enabled_(data_interface_ != nullptr) {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
@@ -54,14 +58,33 @@ OtherNode::OtherNode(
 }
 
 bool OtherNode::broadcast(uint64_t current_term, uint32_t node_id,
+                          const CommitInfo &last_commit,
                           std::function<void(uint64_t, bool)> callback) {
   if (append_entries_->service_is_ready() == false) {
     return false;
   }
 
   auto request = std::make_shared<foros_msgs::srv::AppendEntries::Request>();
+
   request->term = current_term;
   request->leader_id = node_id;
+
+  if (data_replication_enabled_) {
+    if (last_commit.index_ >= next_index_) {
+      auto data = data_interface_->on_data_get_requested(next_index_);
+      if (data != nullptr) {
+        request->data = data->data_;
+        request->leader_commit = data->index_;
+        request->term = data->term_;
+      }
+    }
+
+    auto data = data_interface_->on_data_get_requested(next_index_ - 1);
+    if (data != nullptr) {
+      request->prev_data_index = data->index_;
+      request->prev_data_term = data->term_;
+    }
+  }
 
   send_append_entreis(request, callback);
 
@@ -78,8 +101,6 @@ bool OtherNode::commit(uint64_t current_term, uint32_t node_id,
   auto request = std::make_shared<foros_msgs::srv::AppendEntries::Request>();
   request->term = current_term;
   request->leader_id = node_id;
-  request->prev_data_index = data->prev_index_;
-  request->prev_data_term = data->prev_term_;
   request->data = data->data_;
   request->leader_commit = data->index_;
 
@@ -96,7 +117,18 @@ void OtherNode::send_append_entreis(
       [=](rclcpp::Client<
           foros_msgs::srv::AppendEntries>::SharedFutureWithRequest future) {
         auto ret = future.get();
+        auto request = ret.first;
         auto response = ret.second;
+
+        if (response->success) {
+          this->match_index_ = request->leader_commit;
+          this->next_index_ = this->match_index_ + 1;
+        } else {
+          if (this->next_index_ > 0) {
+            this->next_index_--;
+          }
+        }
+
         callback(response->term, response->success);
       });
 }

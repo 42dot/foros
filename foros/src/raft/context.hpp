@@ -55,8 +55,8 @@ class Context {
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-      unsigned int election_timeout_min, unsigned int election_timeout_max,
-      ClusterNodeDataInterface &data_interface);
+      ClusterNodeDataInterface::SharedPtr data_interface,
+      unsigned int election_timeout_min, unsigned int election_timeout_max);
 
   void initialize(const std::vector<uint32_t> &cluster_node_ids,
                   StateMachineInterface *state_machine_interface);
@@ -96,8 +96,12 @@ class Context {
                                   uint64_t last_data_index,
                                   uint64_t last_data_term);
 
-  uint32_t request_commit(Data::SharedPtr data);
+  uint32_t request_remote_commit(Data::SharedPtr data);
+  bool request_local_commit(
+      const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request);
+  void request_local_rollback(uint64_t commit_index);
   void on_commit_response(uint64_t term, bool success);
+  void on_broadcast_response(uint64_t term, bool success);
 
   const std::string cluster_name_;
   uint32_t node_id_;
@@ -127,7 +131,6 @@ class Context {
   unsigned int available_candidates_;  // number of available candidate
 
   CommitInfo last_commit_;  // index of highest data entry known to be committed
-  CommitInfo last_applied_;  // index of highest data entry applied to fsm
 
   unsigned int election_timeout_min_;  // minimum election timeout in msecs
   unsigned int election_timeout_max_;  // maximum election timeout in msecs
@@ -148,7 +151,8 @@ class Context {
   std::mutex pending_commits_mutex_;
 
   StateMachineInterface *state_machine_interface_;
-  ClusterNodeDataInterface &data_interface_;
+  ClusterNodeDataInterface::SharedPtr data_interface_;
+  bool data_replication_enabled_;
 };
 
 }  // namespace raft

@@ -42,6 +42,10 @@ int main(int argc, char **argv) {
 
   auto node = akit::failover::foros::ClusterNode::make_shared(kClusterName, id,
                                                               kClusterNodeIds);
+  node->register_on_activated([]() { std::cout << "activated" << std::endl; });
+  node->register_on_deactivated(
+      []() { std::cout << "deactivated" << std::endl; });
+  node->register_on_standby([]() { std::cout << "standby" << std::endl; });
 
   auto publisher = node->create_publisher<std_msgs::msg::String>(kTopicName, 1);
 

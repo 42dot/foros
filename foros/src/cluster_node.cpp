@@ -42,13 +42,16 @@ namespace foros {
 ClusterNode::ClusterNode(const std::string &cluster_name,
                          const uint32_t node_id,
                          const std::vector<uint32_t> &cluster_node_ids,
+                         ClusterNodeDataInterface::SharedPtr data_interface,
                          const ClusterNodeOptions &options)
-    : ClusterNode(cluster_name, node_id, cluster_node_ids, "", options) {}
+    : ClusterNode(cluster_name, node_id, cluster_node_ids, "", data_interface,
+                  options) {}
 
 ClusterNode::ClusterNode(const std::string &cluster_name,
                          const uint32_t node_id,
                          const std::vector<uint32_t> &cluster_node_ids,
                          const std::string &node_namespace,
+                         ClusterNodeDataInterface::SharedPtr data_interface,
                          const ClusterNodeOptions &options)
     : node_base_(new rclcpp::node_interfaces::NodeBase(
           NodeUtil::get_node_name(cluster_name, node_id), node_namespace,
@@ -81,7 +84,8 @@ ClusterNode::ClusterNode(const std::string &cluster_name,
           new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
       impl_(std::make_unique<ClusterNodeImpl>(
           cluster_name, node_id, cluster_node_ids, node_base_, node_graph_,
-          node_services_, node_timers_, node_clock_, *this, options)) {}
+          node_services_, node_timers_, node_clock_, data_interface, options)) {
+}
 
 ClusterNode::~ClusterNode() {
   // release sub-interfaces in an order that allows them to consult with
@@ -345,14 +349,6 @@ void ClusterNode::register_on_deactivated(std::function<void()> callback) {
 void ClusterNode::register_on_standby(std::function<void()> callback) {
   impl_->register_on_standby(callback);
 }
-
-bool ClusterNode::on_data_commit_requested(Data::SharedPtr) { return false; }
-
-Data::SharedPtr ClusterNode::on_data_get_requested(uint64_t) { return nullptr; }
-
-Data::SharedPtr ClusterNode::on_data_get_requested() { return nullptr; }
-
-void ClusterNode::on_data_rollback_requested(uint64_t) {}
 
 }  // namespace foros
 }  // namespace failover

@@ -33,6 +33,8 @@ namespace foros {
  */
 class ClusterNodeDataInterface {
  public:
+  RCLCPP_SMART_PTR_DEFINITIONS(ClusterNodeDataInterface)
+
   /// Callback function to handle the request to commit data.
   /**
    * \param[in] data data to commit.
