@@ -67,7 +67,7 @@ Context::Context(
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
   initialize_node();
-  auto data = data_interface_.on_get_data_requested();
+  auto data = data_interface_.on_data_get_requested();
   if (data != nullptr) {
     last_commit_.index_ = data->index_;
     last_commit_.term_ = data->term_;
@@ -152,12 +152,12 @@ void Context::on_append_entries_requested(
     update_term(request->term);
     broadcast_received_ = true;
     state_machine_interface_->on_leader_discovered();
-    auto data = data_interface_.on_get_data_requested(request->prev_data_index);
+    auto data = data_interface_.on_data_get_requested(request->prev_data_index);
     if (data == nullptr) {
       response->success = false;
     } else {
       if (data->term_ != request->prev_data_term) {
-        data_interface_.on_rollback_data_requested(data->index_);
+        data_interface_.on_data_rollback_requested(data->index_);
         response->success = false;
       } else {
         response->success = true;

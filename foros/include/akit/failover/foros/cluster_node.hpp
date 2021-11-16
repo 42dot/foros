@@ -1129,19 +1129,19 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] commit_index commit index.
    * \return data of given commit index, null if data does not exist.
    */
-  Data::SharedPtr on_get_data_requested(uint64_t commit_index) override;
+  Data::SharedPtr on_data_get_requested(uint64_t commit_index) override;
 
   /// Callback function to handle the request to get data.
   /**
    * \return data of the latest commit index, null if data does not exist.
    */
-  Data::SharedPtr on_get_data_requested() override;
+  Data::SharedPtr on_data_get_requested() override;
 
   /// Callback function to handle the request to rollback data.
   /**
    * \param[in] commit_index commit index.
    */
-  void on_rollback_data_requested(uint64_t commit_index) override;
+  void on_data_rollback_requested(uint64_t commit_index) override;
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;

@@ -45,19 +45,19 @@ class ClusterNodeDataInterface {
    * \param[in] commit_index commit index.
    * \return data of given commit index, null if data does not exist.
    */
-  virtual Data::SharedPtr on_get_data_requested(uint64_t commit_index) = 0;
+  virtual Data::SharedPtr on_data_get_requested(uint64_t commit_index) = 0;
 
   /// Callback function to handle the request to get data.
   /**
    * \return data of the latest commit index, null if data does not exist.
    */
-  virtual Data::SharedPtr on_get_data_requested() = 0;
+  virtual Data::SharedPtr on_data_get_requested() = 0;
 
   /// Callback function to handle the request to rollback data.
   /**
    * \param[in] commit_index commit index.
    */
-  virtual void on_rollback_data_requested(uint64_t commit_index) = 0;
+  virtual void on_data_rollback_requested(uint64_t commit_index) = 0;
 };
 
 }  // namespace foros
