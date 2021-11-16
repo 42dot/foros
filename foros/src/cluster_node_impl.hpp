@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "akit/failover/foros/cluster_node_data_interface.hpp"
-#include "akit/failover/foros/cluster_node_interface.hpp"
 #include "akit/failover/foros/cluster_node_options.hpp"
 #include "akit/failover/foros/data.hpp"
 #include "common/observer.hpp"
@@ -57,7 +56,6 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-      ClusterNodeInterface &node_interface,
       ClusterNodeDataInterface &data_interface,
       const ClusterNodeOptions &options);
 
@@ -70,11 +68,19 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       Data::SharedPtr data, DataCommitResponseCallback callback);
   uint64_t get_data_commit_index();
 
+  void register_on_activated(std::function<void()> callback);
+
+  void register_on_deactivated(std::function<void()> callback);
+
+  void register_on_standby(std::function<void()> callback);
+
  private:
   std::shared_ptr<raft::Context> raft_context_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;
-  ClusterNodeInterface &node_interface_;
+  std::function<void()> activated_callback_;
+  std::function<void()> deactivated_callback_;
+  std::function<void()> standby_callback_;
 };
 
 }  // namespace foros

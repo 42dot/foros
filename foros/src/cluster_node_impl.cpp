@@ -37,7 +37,6 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    ClusterNodeInterface &node_interface,
     ClusterNodeDataInterface &data_interface, const ClusterNodeOptions &options)
     : raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
@@ -45,8 +44,7 @@ ClusterNodeImpl::ClusterNodeImpl(
           options.election_timeout_max(), data_interface)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_)),
-      lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()),
-      node_interface_(node_interface) {
+      lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()) {
   lifecycle_fsm_->subscribe(this);
   raft_fsm_->subscribe(this);
   raft_fsm_->handle(raft::Event::kStarted);
@@ -60,13 +58,19 @@ ClusterNodeImpl::~ClusterNodeImpl() {
 void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
   switch (state) {
     case lifecycle::StateType::kStandby:
-      node_interface_.on_standby();
+      if (standby_callback_) {
+        standby_callback_();
+      }
       break;
     case lifecycle::StateType::kActive:
-      node_interface_.on_activated();
+      if (activated_callback_) {
+        activated_callback_();
+      }
       break;
     case lifecycle::StateType::kInactive:
-      node_interface_.on_deactivated();
+      if (deactivated_callback_) {
+        deactivated_callback_();
+      }
       break;
     default:
       std::cerr << "Invalid lifecycle state : " << static_cast<int>(state)
@@ -116,6 +120,18 @@ DataCommitResponseSharedFuture ClusterNodeImpl::commit_data(
 
 uint64_t ClusterNodeImpl::get_data_commit_index() {
   return raft_context_->get_data_commit_index();
+}
+
+void ClusterNodeImpl::register_on_activated(std::function<void()> callback) {
+  activated_callback_ = callback;
+}
+
+void ClusterNodeImpl::register_on_deactivated(std::function<void()> callback) {
+  deactivated_callback_ = callback;
+}
+
+void ClusterNodeImpl::register_on_standby(std::function<void()> callback) {
+  standby_callback_ = callback;
 }
 
 }  // namespace foros

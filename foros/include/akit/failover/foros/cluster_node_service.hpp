@@ -23,7 +23,7 @@
 #include <string>
 #include <utility>
 
-#include "cluster_node_interface.hpp"
+#include "cluster_node_lifecycle_interface.hpp"
 
 namespace akit {
 namespace failover {
@@ -70,7 +70,8 @@ class ClusterNodeService : public rclcpp::Service<ServiceT> {
    */
   void handle_request(std::shared_ptr<rmw_request_id_t> request_header,
                       std::shared_ptr<void> request) override {
-    if (node_interface_ != nullptr && !node_interface_->is_activated()) {
+    if (node_lifecycle_interface_ != nullptr &&
+        !node_lifecycle_interface_->is_activated()) {
       RCLCPP_WARN(logger_,
                   "Trying to handle request on the service '%s', but the "
                   "service is not activated",
@@ -81,16 +82,17 @@ class ClusterNodeService : public rclcpp::Service<ServiceT> {
     rclcpp::Service<ServiceT>::handle_request(request_header, request);
   }
 
-  /// Set the node interface to check whether the node is active or not.
+  /// Set the node lifecycle interface to check whether the node is active or
+  /// not.
   /**
    * \param[in] interface node interface.
    */
-  void set_node_interface(ClusterNodeInterface *interface) {
-    node_interface_ = interface;
+  void set_node_lifecycle_interface(ClusterNodeLifecycleInterface *interface) {
+    node_lifecycle_interface_ = interface;
   }
 
  private:
-  ClusterNodeInterface *node_interface_;
+  ClusterNodeLifecycleInterface *node_lifecycle_interface_;
   rclcpp::Logger logger_;
 };
 

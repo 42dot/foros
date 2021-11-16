@@ -24,7 +24,7 @@
 #include <string>
 #include <utility>
 
-#include "akit/failover/foros/cluster_node_interface.hpp"
+#include "akit/failover/foros/cluster_node_lifecycle_interface.hpp"
 
 namespace akit {
 namespace failover {
@@ -72,7 +72,8 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
    * \param[in] msg a message to publish.
    */
   void publish(std::unique_ptr<MessageT, MessageDeleter> msg) override {
-    if (node_interface_ != nullptr && !node_interface_->is_activated()) {
+    if (node_lifecycle_interface_ != nullptr &&
+        !node_lifecycle_interface_->is_activated()) {
       RCLCPP_WARN(logger_,
                   "Trying to publish message on the topic '%s', but the "
                   "publisher is not activated",
@@ -91,7 +92,8 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
    * \param[in] msg a message to publish.
    */
   void publish(const MessageT& msg) override {
-    if (node_interface_ != nullptr && !node_interface_->is_activated()) {
+    if (node_lifecycle_interface_ != nullptr &&
+        !node_lifecycle_interface_->is_activated()) {
       RCLCPP_WARN(logger_,
                   "Trying to publish message on the topic '%s', but the "
                   "publisher is not activated",
@@ -102,17 +104,18 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  /// Set the node interface to check whether the node is active or not.
+  /// Set the node lifecycle interface to check whether the node is active or
+  /// not.
   /**
    * \param[in] interface node interface.
    */
-  void set_node_interface(ClusterNodeInterface* interface) {
-    node_interface_ = interface;
+  void set_node_lifecycle_interface(ClusterNodeLifecycleInterface* interface) {
+    node_lifecycle_interface_ = interface;
   }
 
  private:
   rclcpp::Logger logger_;
-  ClusterNodeInterface* node_interface_;
+  ClusterNodeLifecycleInterface* node_lifecycle_interface_;
 };
 
 }  // namespace foros

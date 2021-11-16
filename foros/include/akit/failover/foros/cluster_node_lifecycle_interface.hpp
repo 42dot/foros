@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILOVER_FOROS_CLUSTER_NODE_INTERFACE_HPP_
-#define AKIT_FAILOVER_FOROS_CLUSTER_NODE_INTERFACE_HPP_
+#ifndef AKIT_FAILOVER_FOROS_CLUSTER_NODE_LIFECYCLE_INTERFACE_HPP_
+#define AKIT_FAILOVER_FOROS_CLUSTER_NODE_LIFECYCLE_INTERFACE_HPP_
 
 #include <vector>
 
@@ -37,17 +37,8 @@ enum class ClusterNodeState {
  * This interface consists of pure virtual methods related with node's
  * lifecycle.
  */
-class ClusterNodeInterface {
+class ClusterNodeLifecycleInterface {
  public:
-  /// Callback function for activate transition.
-  virtual void on_activated() = 0;
-
-  /// Callback function for deactivate transition.
-  virtual void on_deactivated() = 0;
-
-  /// Callback function for standby transition.
-  virtual void on_standby() = 0;
-
   /// Check whether the node is activated or not.
   /**
    * \return true if the node is activated, false if not.
@@ -59,4 +50,4 @@ class ClusterNodeInterface {
 }  // namespace failover
 }  // namespace akit
 
-#endif  // AKIT_FAILOVER_FOROS_CLUSTER_NODE_INTERFACE_HPP_
+#endif  // AKIT_FAILOVER_FOROS_CLUSTER_NODE_LIFECYCLE_INTERFACE_HPP_

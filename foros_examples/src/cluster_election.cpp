@@ -23,24 +23,10 @@
 #include "akit/failover/foros/cluster_node_options.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-class MyClusterNode : public akit::failover::foros::ClusterNode {
- public:
-  MyClusterNode(const std::string &cluster_name, const uint32_t node_id,
-                const std::vector<uint32_t> &cluster_node_ids)
-      : akit::failover::foros::ClusterNode(cluster_name, node_id,
-                                           cluster_node_ids) {}
-
-  void on_activated() override { std::cout << "activated" << std::endl; }
-
-  void on_deactivated() override { std::cout << "deactivated" << std::endl; }
-
-  void on_standby() override { std::cout << "standby" << std::endl; }
-};
-
 int main(int argc, char **argv) {
   uint32_t id = 1;
-  const std::string cluster_name = "test_cluster";
-  const std::vector<uint32_t> cluster_node_ids = {1, 2, 3, 4};
+  const std::string kClusterName = "test_cluster";
+  const std::vector<uint32_t> kClusterNodeIds = {1, 2, 3, 4};
 
   if (argc >= 2) {
     id = std::stoul(argv[1]);
@@ -51,8 +37,13 @@ int main(int argc, char **argv) {
 
   rclcpp::init(argc, argv);
 
-  auto node =
-      std::make_shared<MyClusterNode>(cluster_name, id, cluster_node_ids);
+  auto node = std::make_shared<akit::failover::foros::ClusterNode>(
+      kClusterName, id, kClusterNodeIds);
+
+  node->register_on_activated([]() { std::cout << "activated" << std::endl; });
+  node->register_on_deactivated(
+      []() { std::cout << "deactivated" << std::endl; });
+  node->register_on_standby([]() { std::cout << "standby" << std::endl; });
 
   rclcpp::spin(node->get_node_base_interface());
   rclcpp::shutdown();

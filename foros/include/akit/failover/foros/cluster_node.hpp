@@ -43,7 +43,7 @@
 #include <vector>
 
 #include "akit/failover/foros/cluster_node_data_interface.hpp"
-#include "akit/failover/foros/cluster_node_interface.hpp"
+#include "akit/failover/foros/cluster_node_lifecycle_interface.hpp"
 #include "akit/failover/foros/cluster_node_options.hpp"
 #include "akit/failover/foros/cluster_node_publisher.hpp"
 #include "akit/failover/foros/cluster_node_service.hpp"
@@ -58,7 +58,7 @@ class ClusterNodeImpl;
 
 /// A Clustered node.
 class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
-                    public ClusterNodeInterface,
+                    public ClusterNodeLifecycleInterface,
                     public ClusterNodeDataInterface {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClusterNode)
@@ -1093,6 +1093,27 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   CLUSTER_NODE_PUBLIC
   bool is_activated() final;
 
+  /// Register the acitvated callback
+  /**
+   * \param[in] callback callback function
+   */
+  CLUSTER_NODE_PUBLIC
+  void register_on_activated(std::function<void()> callback);
+
+  /// Register the deacitvated callback
+  /**
+   * \param[in] callback callback function
+   */
+  CLUSTER_NODE_PUBLIC
+  void register_on_deactivated(std::function<void()> callback);
+
+  /// Register the standby callback
+  /**
+   * \param[in] callback callback function
+   */
+  CLUSTER_NODE_PUBLIC
+  void register_on_standby(std::function<void()> callback);
+
   /// Commit date to duplicate to nodes in a cluster.
   /**
    * This function only considers services - not clients.
@@ -1108,15 +1129,6 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       Data::SharedPtr data, DataCommitResponseCallback callback);
 
  private:
-  /// Callback function for activate transition.
-  void on_activated() override;
-
-  /// Callback function for deactivate transition.
-  void on_deactivated() override;
-
-  /// Callback function for standby transition.
-  void on_standby() override;
-
   /// Callback function to handle the request to commit data.
   /**
    * \param[in] data data to commit.

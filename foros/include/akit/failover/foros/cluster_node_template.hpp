@@ -45,7 +45,7 @@ ClusterNode::create_publisher(
       rclcpp::create_publisher<MessageT, AllocatorT,
                                ClusterNodePublisher<MessageT, AllocatorT>>(
           *this, topic_name, qos, options);
-  pub->set_node_interface(this);
+  pub->set_node_lifecycle_interface(this);
   return pub;
 }
 
@@ -94,7 +94,7 @@ typename ClusterNodeService<ServiceT>::SharedPtr ClusterNode::create_service(
       any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<rclcpp::ServiceBase>(service);
   node_services_->add_service(serv_base_ptr, group);
-  service->set_node_interface(this);
+  service->set_node_lifecycle_interface(this);
   return service;
 }
 

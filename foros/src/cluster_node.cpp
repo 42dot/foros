@@ -81,7 +81,7 @@ ClusterNode::ClusterNode(const std::string &cluster_name,
           new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
       impl_(std::make_unique<ClusterNodeImpl>(
           cluster_name, node_id, cluster_node_ids, node_base_, node_graph_,
-          node_services_, node_timers_, node_clock_, *this, *this, options)) {}
+          node_services_, node_timers_, node_clock_, *this, options)) {}
 
 ClusterNode::~ClusterNode() {
   // release sub-interfaces in an order that allows them to consult with
@@ -327,17 +327,23 @@ ClusterNode::get_node_waitables_interface() {
   return node_waitables_;
 }
 
-void ClusterNode::on_activated() {}
-
-void ClusterNode::on_deactivated() {}
-
-void ClusterNode::on_standby() {}
-
 bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
 DataCommitResponseSharedFuture ClusterNode::commit_data(
     Data::SharedPtr data, DataCommitResponseCallback callback) {
   return impl_->commit_data(data, callback);
+}
+
+void ClusterNode::register_on_activated(std::function<void()> callback) {
+  impl_->register_on_activated(callback);
+}
+
+void ClusterNode::register_on_deactivated(std::function<void()> callback) {
+  impl_->register_on_deactivated(callback);
+}
+
+void ClusterNode::register_on_standby(std::function<void()> callback) {
+  impl_->register_on_standby(callback);
 }
 
 bool ClusterNode::on_data_commit_requested(Data::SharedPtr) { return false; }
