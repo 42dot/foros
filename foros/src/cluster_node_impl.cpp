@@ -115,7 +115,7 @@ bool ClusterNodeImpl::is_activated() {
 }
 
 DataCommitResponseSharedFuture ClusterNodeImpl::commit_data(
-    Data::SharedPtr data, DataCommitResponseCallback callback) {
+    const Data::SharedPtr data, DataCommitResponseCallback callback) {
   return raft_context_->commit_data(data, callback);
 }
 

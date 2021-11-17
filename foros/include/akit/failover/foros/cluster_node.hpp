@@ -1129,7 +1129,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    */
   CLUSTER_NODE_PUBLIC
   DataCommitResponseSharedFuture commit_data(
-      Data::SharedPtr data, DataCommitResponseCallback callback);
+      const Data::SharedPtr data, DataCommitResponseCallback callback);
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;

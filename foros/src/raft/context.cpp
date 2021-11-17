@@ -203,7 +203,7 @@ bool Context::request_local_commit(
   return true;
 }
 
-void Context::request_local_rollback(uint64_t commit_index) {
+void Context::request_local_rollback(const uint64_t commit_index) {
   data_interface_->on_data_rollback_requested(commit_index);
   auto data = data_interface_->on_data_get_requested();
   if (data == nullptr) {
@@ -295,8 +295,9 @@ void Context::vote_for_me() {
   voted_ = true;
 }
 
-std::tuple<uint64_t, bool> Context::vote(uint64_t term, uint32_t id,
-                                         uint64_t last_data_index, uint64_t) {
+std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
+                                         const uint64_t last_data_index,
+                                         const uint64_t) {
   bool granted = false;
 
   if (term >= current_term_) {
@@ -352,7 +353,8 @@ void Context::request_vote() {
   }
 }
 
-void Context::on_request_vote_response(uint64_t term, bool vote_granted) {
+void Context::on_request_vote_response(const uint64_t term,
+                                       const bool vote_granted) {
   if (term < current_term_) {
     std::cout << "ignore vote response since term is outdated" << std::endl;
     return;
@@ -384,7 +386,7 @@ void Context::check_elected() {
 }
 
 DataCommitResponseSharedFuture Context::commit_data(
-    Data::SharedPtr data, DataCommitResponseCallback callback) {
+    const Data::SharedPtr data, DataCommitResponseCallback callback) {
   DataCommitResponseSharedPromise commit_promise =
       std::make_shared<DataCommitResponsePromise>();
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
@@ -420,7 +422,7 @@ DataCommitResponseSharedFuture Context::commit_data(
   return commit_future;
 }
 
-unsigned int Context::request_remote_commit(Data::SharedPtr data) {
+unsigned int Context::request_remote_commit(const Data::SharedPtr data) {
   unsigned int request_count = 0;
 
   for (auto node : other_nodes_) {
@@ -435,14 +437,14 @@ unsigned int Context::request_remote_commit(Data::SharedPtr data) {
   return request_count;
 }
 
-void Context::on_commit_response(uint64_t term, bool) {
+void Context::on_commit_response(const uint64_t term, const bool) {
   if (term < current_term_) {
     return;
   }
   update_term(term);
 }
 
-void Context::on_broadcast_response(uint64_t term, bool) {
+void Context::on_broadcast_response(const uint64_t term, const bool) {
   if (term < current_term_) {
     return;
   }

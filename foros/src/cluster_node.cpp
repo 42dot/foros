@@ -334,7 +334,7 @@ ClusterNode::get_node_waitables_interface() {
 bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
 DataCommitResponseSharedFuture ClusterNode::commit_data(
-    Data::SharedPtr data, DataCommitResponseCallback callback) {
+    const Data::SharedPtr data, DataCommitResponseCallback callback) {
   return impl_->commit_data(data, callback);
 }
 

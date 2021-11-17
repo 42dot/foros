@@ -57,9 +57,10 @@ OtherNode::OtherNode(
       std::dynamic_pointer_cast<rclcpp::ClientBase>(request_vote_), nullptr);
 }
 
-bool OtherNode::broadcast(uint64_t current_term, uint32_t node_id,
-                          const CommitInfo &last_commit,
-                          std::function<void(uint64_t, bool)> callback) {
+bool OtherNode::broadcast(
+    const uint64_t current_term, const uint32_t node_id,
+    const CommitInfo &last_commit,
+    std::function<void(const uint64_t, const bool)> callback) {
   if (append_entries_->service_is_ready() == false) {
     return false;
   }
@@ -91,9 +92,10 @@ bool OtherNode::broadcast(uint64_t current_term, uint32_t node_id,
   return true;
 }
 
-bool OtherNode::commit(uint64_t current_term, uint32_t node_id,
-                       Data::SharedPtr data,
-                       std::function<void(uint64_t, bool)> callback) {
+bool OtherNode::commit(
+    const uint64_t current_term, const uint32_t node_id,
+    const Data::SharedPtr data,
+    std::function<void(const uint64_t, const bool)> callback) {
   if (append_entries_->service_is_ready() == false) {
     return false;
   }
@@ -110,8 +112,8 @@ bool OtherNode::commit(uint64_t current_term, uint32_t node_id,
 }
 
 void OtherNode::send_append_entries(
-    foros_msgs::srv::AppendEntries::Request::SharedPtr request,
-    std::function<void(uint64_t, bool)> callback) {
+    const foros_msgs::srv::AppendEntries::Request::SharedPtr request,
+    std::function<void(const uint64_t, const bool)> callback) {
   auto response = append_entries_->async_send_request(
       request,
       [=](rclcpp::Client<
@@ -133,10 +135,10 @@ void OtherNode::send_append_entries(
       });
 }
 
-bool OtherNode::request_vote(const uint64_t current_term,
-                             const uint32_t node_id,
-                             const CommitInfo &last_commit,
-                             std::function<void(uint64_t, bool)> callback) {
+bool OtherNode::request_vote(
+    const uint64_t current_term, const uint32_t node_id,
+    const CommitInfo &last_commit,
+    std::function<void(const uint64_t, const bool)> callback) {
   if (request_vote_->service_is_ready() == false) {
     return false;
   }
@@ -158,7 +160,7 @@ bool OtherNode::request_vote(const uint64_t current_term,
   return true;
 }
 
-void OtherNode::set_match_index(uint64_t match_index) {
+void OtherNode::set_match_index(const uint64_t match_index) {
   match_index_ = match_index;
   next_index_ = match_index_ + 1;
 }

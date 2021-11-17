@@ -74,7 +74,7 @@ class Context {
   void broadcast();
   void request_vote();
   DataCommitResponseSharedFuture commit_data(
-      Data::SharedPtr data, DataCommitResponseCallback callback);
+      const Data::SharedPtr data, DataCommitResponseCallback callback);
 
  private:
   void initialize_node();
@@ -88,19 +88,19 @@ class Context {
       const std::shared_ptr<foros_msgs::srv::RequestVote::Request> request,
       std::shared_ptr<foros_msgs::srv::RequestVote::Response> response);
   bool update_term(uint64_t term);
-  void on_request_vote_response(uint64_t term, bool vote_granted);
+  void on_request_vote_response(const uint64_t term, const bool vote_granted);
   void check_elected();
 
-  std::tuple<uint64_t, bool> vote(uint64_t term, uint32_t id,
-                                  uint64_t last_data_index,
-                                  uint64_t last_data_term);
+  std::tuple<uint64_t, bool> vote(const uint64_t term, const uint32_t id,
+                                  const uint64_t last_data_index,
+                                  const uint64_t last_data_term);
 
-  uint32_t request_remote_commit(Data::SharedPtr data);
+  uint32_t request_remote_commit(const Data::SharedPtr data);
   bool request_local_commit(
       const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request);
-  void request_local_rollback(uint64_t commit_index);
-  void on_commit_response(uint64_t term, bool success);
-  void on_broadcast_response(uint64_t term, bool success);
+  void request_local_rollback(const uint64_t commit_index);
+  void on_commit_response(const uint64_t term, const bool success);
+  void on_broadcast_response(const uint64_t term, const bool success);
 
   const std::string cluster_name_;
   uint32_t node_id_;

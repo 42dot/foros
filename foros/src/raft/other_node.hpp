@@ -47,23 +47,24 @@ class OtherNode {
       const uint64_t next_index,
       ClusterNodeDataInterface::SharedPtr data_callbacks);
 
-  bool broadcast(uint64_t current_term, uint32_t node_id,
+  bool broadcast(const uint64_t current_term, const uint32_t node_id,
                  const CommitInfo &last_commit,
-                 std::function<void(uint64_t, bool)> callback);
+                 std::function<void(const uint64_t, const bool)> callback);
 
-  bool commit(uint64_t current_term, uint32_t node_id, Data::SharedPtr data,
-              std::function<void(uint64_t, bool)> callback);
+  bool commit(const uint64_t current_term, const uint32_t node_id,
+              Data::SharedPtr data,
+              std::function<void(const uint64_t, const bool)> callback);
 
   bool request_vote(const uint64_t current_term, const uint32_t node_id,
                     const CommitInfo &last_commit,
-                    std::function<void(uint64_t, bool)> callback);
+                    std::function<void(const uint64_t, const bool)> callback);
 
-  void set_match_index(uint64_t match_index);
+  void set_match_index(const uint64_t match_index);
 
  private:
   void send_append_entries(
-      foros_msgs::srv::AppendEntries::Request::SharedPtr request,
-      std::function<void(uint64_t, bool)> callback);
+      const foros_msgs::srv::AppendEntries::Request::SharedPtr request,
+      std::function<void(const uint64_t, const bool)> callback);
 
   // index of the next data entry to send to this node
   uint64_t next_index_;
