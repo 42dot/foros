@@ -113,8 +113,6 @@ int main(int argc, char **argv) {
     data->data_.emplace_back(ch++);
     data->index_ = i;
     data->term_ = 0;
-    data->prev_index_ = i == 0 ? 0 : i - 1;
-    data->prev_term_ = 0;
     dataset[i] = data;
   }
 

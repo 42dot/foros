@@ -119,10 +119,6 @@ DataCommitResponseSharedFuture ClusterNodeImpl::commit_data(
   return raft_context_->commit_data(data, callback);
 }
 
-uint64_t ClusterNodeImpl::get_data_commit_index() {
-  return raft_context_->get_data_commit_index();
-}
-
 void ClusterNodeImpl::register_on_activated(std::function<void()> callback) {
   activated_callback_ = callback;
 }

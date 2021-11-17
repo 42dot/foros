@@ -124,9 +124,9 @@ void Context::initialize_other_nodes(
       continue;
     }
 
-    other_nodes_.push_back(std::make_shared<OtherNode>(
+    other_nodes_[id] = std::make_shared<OtherNode>(
         node_base_, node_graph_, node_services_, cluster_name_, id, next_index,
-        data_interface_));
+        data_interface_);
   }
 }
 
@@ -161,8 +161,7 @@ void Context::on_append_entries_requested(
   }
 
   // commit it since it is first data
-  if (request->prev_data_index == 0) {
-    data_interface_->on_data_rollback_requested(0);
+  if (request->leader_commit == 0) {
     response->success = request_local_commit(request);
     return;
   }
@@ -172,7 +171,7 @@ void Context::on_append_entries_requested(
     response->success = false;
   } else {
     if (data->term_ != request->prev_data_term) {
-      data_interface_->on_data_rollback_requested(data->index_);
+      request_local_rollback(data->index_);
       response->success = false;
     } else {
       response->success = request_local_commit(request);
@@ -182,28 +181,40 @@ void Context::on_append_entries_requested(
 
 bool Context::request_local_commit(
     const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request) {
-  if (last_commit_.index_ == request->leader_commit &&
+  if (last_commit_.empty_ == false &&
+      last_commit_.index_ == request->leader_commit &&
       last_commit_.term_ == request->term) {
     return true;
+  }
+
+  if (last_commit_.index_ >= request->leader_commit) {
+    data_interface_->on_data_rollback_requested(request->leader_commit);
   }
 
   auto data = Data::make_shared();
   data->data_ = request->data;
   data->index_ = request->leader_commit;
   data->term_ = request->term;
-  data->prev_index_ = request->prev_data_index;
-  data->prev_term_ = request->prev_data_term;
   data_interface_->on_data_commit_requested(data);
+  last_commit_.empty_ = false;
   last_commit_.index_ = request->leader_commit;
   last_commit_.term_ = request->term;
+
   return true;
 }
 
 void Context::request_local_rollback(uint64_t commit_index) {
   data_interface_->on_data_rollback_requested(commit_index);
   auto data = data_interface_->on_data_get_requested();
-  last_commit_.index_ = data->index_;
-  last_commit_.term_ = data->term_;
+  if (data == nullptr) {
+    last_commit_.index_ = 0;
+    last_commit_.term_ = 0;
+    last_commit_.empty_ = true;
+  } else {
+    last_commit_.index_ = data->index_;
+    last_commit_.term_ = data->term_;
+    last_commit_.empty_ = false;
+  }
 }
 
 void Context::on_request_vote_requested(
@@ -315,7 +326,7 @@ void Context::broadcast() {
   available_candidates_ = 1;
 
   for (auto node : other_nodes_) {
-    if (node->broadcast(
+    if (node.second->broadcast(
             current_term_, node_id_, last_commit_,
             std::bind(&Context::on_commit_response, this, std::placeholders::_1,
                       std::placeholders::_2)) == true) {
@@ -328,7 +339,7 @@ void Context::request_vote() {
   available_candidates_ = 1;
 
   for (auto node : other_nodes_) {
-    if (node->request_vote(
+    if (node.second->request_vote(
             current_term_, node_id_, last_commit_,
             std::bind(&Context::on_request_vote_response, this,
                       std::placeholders::_1, std::placeholders::_2)) == true) {
@@ -364,6 +375,10 @@ void Context::on_request_vote_response(uint64_t term, bool vote_granted) {
 void Context::check_elected() {
   auto majority = (available_candidates_ >> 1) + 1;
   if (vote_received_ < majority) return;
+
+  for (auto node : other_nodes_) {
+    node.second->set_match_index(last_commit_.index_);
+  }
 
   state_machine_interface_->on_elected();
 }
@@ -405,16 +420,14 @@ DataCommitResponseSharedFuture Context::commit_data(
   return commit_future;
 }
 
-uint64_t Context::get_data_commit_index() { return last_commit_.index_; }
-
 unsigned int Context::request_remote_commit(Data::SharedPtr data) {
   unsigned int request_count = 0;
 
   for (auto node : other_nodes_) {
-    if (node->commit(current_term_, node_id_, data,
-                     std::bind(&Context::on_commit_response, this,
-                               std::placeholders::_1, std::placeholders::_2)) ==
-        true) {
+    if (node.second->commit(
+            current_term_, node_id_, data,
+            std::bind(&Context::on_commit_response, this, std::placeholders::_1,
+                      std::placeholders::_2)) == true) {
       request_count++;
     }
   }

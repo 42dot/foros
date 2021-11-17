@@ -66,7 +66,6 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   bool is_activated();
   DataCommitResponseSharedFuture commit_data(
       Data::SharedPtr data, DataCommitResponseCallback callback);
-  uint64_t get_data_commit_index();
   void register_on_activated(std::function<void()> callback);
   void register_on_deactivated(std::function<void()> callback);
   void register_on_standby(std::function<void()> callback);

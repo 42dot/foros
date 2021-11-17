@@ -75,7 +75,6 @@ class Context {
   void request_vote();
   DataCommitResponseSharedFuture commit_data(
       Data::SharedPtr data, DataCommitResponseCallback callback);
-  uint64_t get_data_commit_index();
 
  private:
   void initialize_node();
@@ -121,7 +120,7 @@ class Context {
   rclcpp::AnyServiceCallback<foros_msgs::srv::RequestVote>
       request_vote_callback_;
 
-  std::vector<std::shared_ptr<OtherNode>> other_nodes_ = {};
+  std::map<uint32_t, std::shared_ptr<OtherNode>> other_nodes_;
 
   // Essential fields for RAFT
   uint64_t current_term_;  // latest election term

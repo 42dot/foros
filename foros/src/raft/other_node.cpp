@@ -86,7 +86,7 @@ bool OtherNode::broadcast(uint64_t current_term, uint32_t node_id,
     }
   }
 
-  send_append_entreis(request, callback);
+  send_append_entries(request, callback);
 
   return true;
 }
@@ -104,12 +104,12 @@ bool OtherNode::commit(uint64_t current_term, uint32_t node_id,
   request->data = data->data_;
   request->leader_commit = data->index_;
 
-  send_append_entreis(request, callback);
+  send_append_entries(request, callback);
 
   return true;
 }
 
-void OtherNode::send_append_entreis(
+void OtherNode::send_append_entries(
     foros_msgs::srv::AppendEntries::Request::SharedPtr request,
     std::function<void(uint64_t, bool)> callback) {
   auto response = append_entries_->async_send_request(
@@ -156,6 +156,11 @@ bool OtherNode::request_vote(const uint64_t current_term,
       });
 
   return true;
+}
+
+void OtherNode::set_match_index(uint64_t match_index) {
+  match_index_ = match_index;
+  next_index_ = match_index_ + 1;
 }
 
 }  // namespace raft

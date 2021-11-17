@@ -58,8 +58,10 @@ class OtherNode {
                     const CommitInfo &last_commit,
                     std::function<void(uint64_t, bool)> callback);
 
+  void set_match_index(uint64_t match_index);
+
  private:
-  void send_append_entreis(
+  void send_append_entries(
       foros_msgs::srv::AppendEntries::Request::SharedPtr request,
       std::function<void(uint64_t, bool)> callback);
 

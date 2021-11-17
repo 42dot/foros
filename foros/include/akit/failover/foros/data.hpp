@@ -40,11 +40,6 @@ class Data {
   uint64_t term_;
   // Data.
   std::vector<uint8_t> data_;
-
-  /// Previous commit index
-  uint64_t prev_index_;
-  /// Previous term of the data of previous commit
-  uint64_t prev_term_;
 };
 
 /// Response of request to commit data into the cluster.
