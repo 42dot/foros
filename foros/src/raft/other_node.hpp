@@ -43,18 +43,19 @@ class OtherNode {
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-      const std::string& cluster_name, const uint32_t node_id,
+      const std::string &cluster_name, const uint32_t node_id,
       const uint64_t next_index,
       ClusterNodeDataInterface::SharedPtr data_callbacks);
 
   bool broadcast(uint64_t current_term, uint32_t node_id,
-                 const CommitInfo& last_commit,
+                 const CommitInfo &last_commit,
                  std::function<void(uint64_t, bool)> callback);
 
   bool commit(uint64_t current_term, uint32_t node_id, Data::SharedPtr data,
               std::function<void(uint64_t, bool)> callback);
 
-  bool request_vote(uint64_t current_term, uint32_t node_id,
+  bool request_vote(const uint64_t current_term, const uint32_t node_id,
+                    const CommitInfo &last_commit,
                     std::function<void(uint64_t, bool)> callback);
 
  private:

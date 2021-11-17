@@ -329,7 +329,7 @@ void Context::request_vote() {
 
   for (auto node : other_nodes_) {
     if (node->request_vote(
-            current_term_, node_id_,
+            current_term_, node_id_, last_commit_,
             std::bind(&Context::on_request_vote_response, this,
                       std::placeholders::_1, std::placeholders::_2)) == true) {
       available_candidates_++;

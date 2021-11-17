@@ -133,7 +133,9 @@ void OtherNode::send_append_entreis(
       });
 }
 
-bool OtherNode::request_vote(uint64_t current_term, uint32_t node_id,
+bool OtherNode::request_vote(const uint64_t current_term,
+                             const uint32_t node_id,
+                             const CommitInfo &last_commit,
                              std::function<void(uint64_t, bool)> callback) {
   if (request_vote_->service_is_ready() == false) {
     return false;
@@ -142,6 +144,8 @@ bool OtherNode::request_vote(uint64_t current_term, uint32_t node_id,
   auto request = std::make_shared<foros_msgs::srv::RequestVote::Request>();
   request->term = current_term;
   request->candidate_id = node_id;
+  request->last_data_index = last_commit.index_;
+  request->loat_data_term = last_commit.term_;
   auto response = request_vote_->async_send_request(
       request,
       [=](rclcpp::Client<foros_msgs::srv::RequestVote>::SharedFutureWithRequest
