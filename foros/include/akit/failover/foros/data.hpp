@@ -34,12 +34,23 @@ class Data {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(Data)
 
+  /// Create a new Data.
+  Data();
+
+  /// Create a new data with the specified index, data, and term.
+  /**
+   * \param[in] index Index of the data.
+   * \param[in] data Data in byte vector.
+   * \param[in] term Election term when the data is committed to cluster.
+   */
+  Data(uint64_t index, std::vector<uint8_t> data = {}, uint64_t term = 0);
+
   /// Commit index of this data.
   uint64_t index_;
-  // Election term of this data.
-  uint64_t term_;
   // Data.
   std::vector<uint8_t> data_;
+  // Election term of this data.
+  uint64_t term_;
 };
 
 /// Response of request to commit data into the cluster.

@@ -19,6 +19,7 @@ set(${PROJECT_NAME}_SRCS
   src/cluster_node.cpp
   src/cluster_node_options.cpp
   src/cluster_node_impl.cpp
+  src/data.cpp
   src/common/node_util.cpp
   src/raft/context.cpp
   src/raft/other_node.cpp
