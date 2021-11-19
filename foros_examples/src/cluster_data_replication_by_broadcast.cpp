@@ -32,13 +32,13 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
       : dataset_(dataset), data_cnt_(data_cnt), changed_(true) {}
 
   akit::failover::foros::Data::SharedPtr on_data_get_requested(
-      uint64_t commit_index) override {
-    if (commit_index >= data_cnt_) {
+      uint64_t id) override {
+    if (id >= data_cnt_) {
       return nullptr;
     }
     dump();
 
-    return dataset_[commit_index];
+    return dataset_[id];
   }
 
   akit::failover::foros::Data::SharedPtr on_data_get_requested() override {
@@ -49,16 +49,16 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
     return dataset_[data_cnt_ - 1];
   }
 
-  void on_data_rollback_requested(uint64_t commit_index) override {
-    std::cout << "rollback requested to " << commit_index << std::endl;
-    data_cnt_ = commit_index;
+  void on_data_rollback_requested(uint64_t id) override {
+    std::cout << "rollback requested to " << id << std::endl;
+    data_cnt_ = id;
     changed_ = true;
     dump();
   }
 
   bool on_data_commit_requested(akit::failover::foros::Data::SharedPtr data) {
-    if (data->index_ != data_cnt_) {
-      std::cerr << "Invalid data commit requested: " << data->index_
+    if (data->id() != data_cnt_) {
+      std::cerr << "Invalid data commit requested: " << data->id()
                 << " (latest: " << data_cnt_ << ")" << std::endl;
       return false;
     }
@@ -77,8 +77,8 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
     changed_ = false;
     std::cout << "===== data dump =====" << std::endl;
     for (uint32_t i = 0; i < data_cnt_; i++) {
-      std::cout << dataset_[i]->index_ << ": "
-                << std::string(1, dataset_[i]->data_[0]) << std::endl;
+      std::cout << dataset_[i]->id() << ": "
+                << std::string(1, dataset_[i]->data()[0]) << std::endl;
     }
     std::cout << "=====================" << std::endl;
   }
@@ -109,10 +109,8 @@ int main(int argc, char **argv) {
 
   unsigned char ch = 'a';
   for (uint32_t i = 0; i < data_cnt; i++) {
-    auto data = akit::failover::foros::Data::make_shared();
-    data->data_.emplace_back(ch++);
-    data->index_ = i;
-    data->term_ = 0;
+    auto data = akit::failover::foros::Data::make_shared(
+        i, 0, std::initializer_list<uint8_t>{ch++});
     dataset[i] = data;
   }
 

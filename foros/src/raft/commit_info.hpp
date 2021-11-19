@@ -26,15 +26,11 @@ namespace raft {
 
 class CommitInfo {
  public:
-  explicit CommitInfo(uint64_t index, uint32_t term, uint32_t request_count = 0)
-      : index_(index),
-        term_(term),
-        request_count_(request_count),
-        empty_(true) {}
+  explicit CommitInfo(uint64_t index, uint32_t term)
+      : index_(index), term_(term), empty_(true) {}
 
   uint64_t index_;
   uint32_t term_;
-  uint32_t request_count_;
   bool empty_;
 };
 

@@ -37,29 +37,29 @@ class ClusterNodeDataInterface {
 
   /// Callback function to handle the request to commit data.
   /**
-   * \param[in] data data to commit.
+   * \param[in] data Data to commit.
    * \return true if data is committed, false if not.
    */
   virtual bool on_data_commit_requested(Data::SharedPtr data) = 0;
 
   /// Callback function to handle the request to get data.
   /**
-   * \param[in] commit_index commit index.
-   * \return data of given commit index, null if data does not exist.
+   * \param[in] id ID of the data.
+   * \return Data of given ID, null if data does not exist.
    */
-  virtual Data::SharedPtr on_data_get_requested(uint64_t commit_index) = 0;
+  virtual Data::SharedPtr on_data_get_requested(uint64_t id) = 0;
 
   /// Callback function to handle the request to get data.
   /**
-   * \return data of the latest commit index, null if data does not exist.
+   * \return The last data, null if data does not exist.
    */
   virtual Data::SharedPtr on_data_get_requested() = 0;
 
   /// Callback function to handle the request to rollback data.
   /**
-   * \param[in] commit_index commit index.
+   * \param[in] id ID of the data to rollback.
    */
-  virtual void on_data_rollback_requested(uint64_t commit_index) = 0;
+  virtual void on_data_rollback_requested(uint64_t id) = 0;
 };
 
 }  // namespace foros

@@ -49,11 +49,9 @@ class OtherNode {
 
   bool broadcast(const uint64_t current_term, const uint32_t node_id,
                  const CommitInfo &last_commit,
-                 std::function<void(const uint64_t, const bool)> callback);
-
-  bool commit(const uint64_t current_term, const uint32_t node_id,
-              Data::SharedPtr data,
-              std::function<void(const uint64_t, const bool)> callback);
+                 std::function<void(const uint32_t, const uint64_t,
+                                    const uint64_t, const bool)>
+                     callback);
 
   bool request_vote(const uint64_t current_term, const uint32_t node_id,
                     const CommitInfo &last_commit,
@@ -64,8 +62,11 @@ class OtherNode {
  private:
   void send_append_entries(
       const foros_msgs::srv::AppendEntries::Request::SharedPtr request,
-      std::function<void(const uint64_t, const bool)> callback);
+      std::function<void(const uint32_t, const uint64_t, const uint64_t,
+                         const bool)>
+          callback);
 
+  uint32_t node_id_;
   // index of the next data entry to send to this node
   uint64_t next_index_;
   // index of highest data entry known to be replicated on this node

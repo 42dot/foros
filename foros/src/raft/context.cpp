@@ -69,8 +69,8 @@ void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
   if (data_replication_enabled_) {
     auto data = data_interface_->on_data_get_requested();
     if (data != nullptr) {
-      last_commit_.index_ = data->index_;
-      last_commit_.term_ = data->term_;
+      last_commit_.index_ = data->id();
+      last_commit_.term_ = data->sub_id();
     }
   }
   initialize_node();
@@ -170,8 +170,8 @@ void Context::on_append_entries_requested(
   if (data == nullptr) {
     response->success = false;
   } else {
-    if (data->term_ != request->prev_data_term) {
-      request_local_rollback(data->index_);
+    if (data->sub_id() != request->prev_data_term) {
+      request_local_rollback(data->id());
       response->success = false;
     } else {
       response->success = request_local_commit(request);
@@ -191,10 +191,9 @@ bool Context::request_local_commit(
     data_interface_->on_data_rollback_requested(request->leader_commit);
   }
 
-  auto data = Data::make_shared();
-  data->data_ = request->data;
-  data->index_ = request->leader_commit;
-  data->term_ = request->term;
+  auto data =
+      Data::make_shared(request->leader_commit, request->term, request->data);
+
   data_interface_->on_data_commit_requested(data);
   last_commit_.empty_ = false;
   last_commit_.index_ = request->leader_commit;
@@ -211,8 +210,8 @@ void Context::request_local_rollback(const uint64_t commit_index) {
     last_commit_.term_ = 0;
     last_commit_.empty_ = true;
   } else {
-    last_commit_.index_ = data->index_;
-    last_commit_.term_ = data->term_;
+    last_commit_.index_ = data->id();
+    last_commit_.term_ = data->sub_id();
     last_commit_.empty_ = false;
   }
 }
@@ -329,8 +328,9 @@ void Context::broadcast() {
   for (auto node : other_nodes_) {
     if (node.second->broadcast(
             current_term_, node_id_, last_commit_,
-            std::bind(&Context::on_commit_response, this, std::placeholders::_1,
-                      std::placeholders::_2)) == true) {
+            std::bind(&Context::on_broadcast_response, this,
+                      std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3, std::placeholders::_4)) == true) {
       available_candidates_++;
     }
   }
@@ -385,70 +385,104 @@ void Context::check_elected() {
   state_machine_interface_->on_elected();
 }
 
+DataCommitResponseSharedFuture Context::complete_commit(
+    DataCommitResponseSharedPromise promise,
+    DataCommitResponseSharedFuture future, uint64_t index,
+    DataCommitResponseCallback callback) {
+  auto response = DataCommitResponse::make_shared();
+  response->commit_index_ = index;
+  response->result_ = result;
+  promise->set_value(response);
+  if (callback != nullptr) {
+    callback(future);
+  }
+  return future;
+}
+
 DataCommitResponseSharedFuture Context::commit_data(
-    const Data::SharedPtr data, DataCommitResponseCallback callback) {
+    const uint64_t index, DataCommitResponseCallback callback) {
   DataCommitResponseSharedPromise commit_promise =
       std::make_shared<DataCommitResponsePromise>();
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
-  if (data->index_ <= last_commit_.index_) {
-    std::cerr << "out-dated commit index can not be commited" << std::endl;
-    auto response = DataCommitResponse::make_shared();
-    response->commit_index_ = data->index_;
-    response->result_ = false;
-    commit_promise->set_value(response);
-    callback(commit_future);
-    return commit_future;
+  if (data_interface_ == nullptr) {
+    std::cerr << "no data interface registered" << std::endl;
+    return complete_commit(commit_promise, commit_future, index, false,
+                           callback);
   }
 
-  auto request_count = request_remote_commit(data);
+  if (state_machine_interface_->is_leader() == false) {
+    std::cerr << "can not commit when this node is not leader" << std::endl;
+    return complete_commit(commit_promise, commit_future, index, false,
+                           callback);
+  }
 
-  if (request_count <= 0) {
-    std::cerr << "No other node exist to commit" << std::endl;
-    auto response = DataCommitResponse::make_shared();
-    response->commit_index_ = data->index_;
-    response->result_ = true;
-    commit_promise->set_value(response);
-    callback(commit_future);
-    return commit_future;
+  if (index != last_commit_.index_ + 1) {
+    std::cerr << "commit index must be " << last_commit_.index_
+              << " (the last commit + 1)" << std::endl;
+    return complete_commit(commit_promise, commit_future, index, false,
+                           callback);
+  }
+
+  if (available_candidates_ <= 1) {
+    std::cout << "No other node exist to commit" << std::endl;
+    return complete_commit(commit_promise, commit_future, index, true,
+                           callback);
   }
 
   std::lock_guard<std::mutex> lock(pending_commits_mutex_);
-  pending_commits_[data->index_] = std::make_tuple(
-      commit_promise, std::forward<DataCommitResponseCallback>(callback),
-      commit_future,
-      std::make_shared<CommitInfo>(data->index_, current_term_, request_count));
+  pending_commits_[index] = std::make_shared<PendingCommit>(
+      index, current_term_, commit_promise, commit_future, callback);
+
+  // TODO(wonguk.jeong) : implement separate commit handling.
 
   return commit_future;
 }
 
-unsigned int Context::request_remote_commit(const Data::SharedPtr data) {
-  unsigned int request_count = 0;
+void Context::on_broadcast_response(const uint32_t id,
+                                    const uint64_t commit_index,
+                                    const uint64_t term, const bool success) {
+  if (term >= current_term_) {
+    update_term(term);
+  }
 
-  for (auto node : other_nodes_) {
-    if (node.second->commit(
-            current_term_, node_id_, data,
-            std::bind(&Context::on_commit_response, this, std::placeholders::_1,
-                      std::placeholders::_2)) == true) {
-      request_count++;
+  std::shared_ptr<PendingCommit> commit;
+
+  bool result = false;
+  {
+    std::lock_guard<std::mutex> lock(pending_commits_mutex_);
+    commit = pending_commits_[commit_index];
+    if (commit == nullptr || commit->commit_info_.index_ != commit_index ||
+        commit->commit_info_.term_ != term) {
+      return;
     }
+    commit->result_map_[id] = success;
+
+    unsigned int received = 0;
+    unsigned int success = 0;
+    for (auto node : other_nodes_) {
+      if (commit->result_map_.count(node.first) > 0) {
+        received++;
+        if (commit->result_map_[node.first] == success) {
+          success++;
+        }
+      }
+    }
+
+    auto majority = (available_candidates_ >> 1) + 1;
+    if (success < majority) {
+      if (received < other_nodes_.size()) {
+        return;
+      }
+    } else {
+      result = true;
+    }
+
+    pending_commits_.erase(id);
   }
 
-  return request_count;
-}
-
-void Context::on_commit_response(const uint64_t term, const bool) {
-  if (term < current_term_) {
-    return;
-  }
-  update_term(term);
-}
-
-void Context::on_broadcast_response(const uint64_t term, const bool) {
-  if (term < current_term_) {
-    return;
-  }
-  update_term(term);
+  complete_commit(commit->promise_, commit->future_,
+                  commit->commit_info_.index_, result, commit->callback_);
 }
 
 }  // namespace raft

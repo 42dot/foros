@@ -51,6 +51,10 @@ void StateMachine::on_broadcast_timedout() {
 
 void StateMachine::on_leader_discovered() { handle(Event::kLeaderDiscovered); }
 
+bool StateMachine::is_leader() {
+  return get_current_state_type() == StateType::kLeader;
+}
+
 }  // namespace raft
 }  // namespace foros
 }  // namespace failover

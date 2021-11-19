@@ -65,7 +65,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void handle(const raft::StateType &state) override;
   bool is_activated();
   DataCommitResponseSharedFuture commit_data(
-      const Data::SharedPtr data, DataCommitResponseCallback callback);
+      const uint64_t id, DataCommitResponseCallback callback);
   void register_on_activated(std::function<void()> callback);
   void register_on_deactivated(std::function<void()> callback);
   void register_on_standby(std::function<void()> callback);

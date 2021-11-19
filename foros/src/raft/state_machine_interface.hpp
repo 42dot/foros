@@ -29,6 +29,7 @@ class StateMachineInterface {
   virtual void on_elected() = 0;
   virtual void on_broadcast_timedout() = 0;
   virtual void on_leader_discovered() = 0;
+  virtual bool is_leader() = 0;
 };
 
 }  // namespace raft

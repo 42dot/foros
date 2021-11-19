@@ -51,6 +51,7 @@ class StateMachine : public common::StateMachine<State, StateType, Event>,
   void on_elected() override;
   void on_broadcast_timedout() override;
   void on_leader_discovered() override;
+  bool is_leader() override;
 
   const std::shared_ptr<Context> context_;
 };

@@ -22,10 +22,16 @@ namespace akit {
 namespace failover {
 namespace foros {
 
-Data::Data() {}
+Data::Data(uint64_t id, std::vector<uint8_t> data) : id_(id), data_(data) {}
 
-Data::Data(uint64_t index, std::vector<uint8_t> data, uint64_t term)
-    : index_(index), data_(data), term_(term) {}
+Data::Data(uint64_t id, uint64_t sub_id, std::vector<uint8_t> data)
+    : id_(id), sub_id_(sub_id), data_(data) {}
+
+const uint64_t &Data::id() { return id_; }
+
+const uint64_t &Data::sub_id() { return sub_id_; }
+
+const std::vector<uint8_t> &Data::data() { return data_; }
 
 }  // namespace foros
 }  // namespace failover

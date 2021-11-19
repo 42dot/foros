@@ -79,19 +79,6 @@ install(
   RUNTIME DESTINATION bin
 )
 
-add_executable(cluster_commit src/cluster_commit.cpp)
-ament_target_dependencies(cluster_commit
-  rclcpp
-  foros
-)
-
-install(
-  TARGETS cluster_commit EXPORT cluster_commit
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
 add_executable(cluster_data_replication_by_broadcast src/cluster_data_replication_by_broadcast.cpp)
 ament_target_dependencies(cluster_data_replication_by_broadcast
   rclcpp

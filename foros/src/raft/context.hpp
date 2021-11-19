@@ -39,6 +39,7 @@
 #include "akit/failover/foros/data.hpp"
 #include "raft/commit_info.hpp"
 #include "raft/other_node.hpp"
+#include "raft/pending_commit.hpp"
 #include "raft/state_machine_interface.hpp"
 
 namespace akit {
@@ -74,33 +75,40 @@ class Context {
   void broadcast();
   void request_vote();
   DataCommitResponseSharedFuture commit_data(
-      const Data::SharedPtr data, DataCommitResponseCallback callback);
+      const uint64_t index, DataCommitResponseCallback callback);
 
  private:
   void initialize_node();
   void initialize_other_nodes(const std::vector<uint32_t> &cluster_node_ids);
-  void on_append_entries_requested(
-      const std::shared_ptr<rmw_request_id_t> header,
-      const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request,
-      std::shared_ptr<foros_msgs::srv::AppendEntries::Response> response);
+
+  bool update_term(uint64_t term);
+
+  // Voting methods
+  std::tuple<uint64_t, bool> vote(const uint64_t term, const uint32_t id,
+                                  const uint64_t last_data_index,
+                                  const uint64_t last_data_term);
   void on_request_vote_requested(
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<foros_msgs::srv::RequestVote::Request> request,
       std::shared_ptr<foros_msgs::srv::RequestVote::Response> response);
-  bool update_term(uint64_t term);
   void on_request_vote_response(const uint64_t term, const bool vote_granted);
   void check_elected();
 
-  std::tuple<uint64_t, bool> vote(const uint64_t term, const uint32_t id,
-                                  const uint64_t last_data_index,
-                                  const uint64_t last_data_term);
-
+  // Data replication methods
+  void on_append_entries_requested(
+      const std::shared_ptr<rmw_request_id_t> header,
+      const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request,
+      std::shared_ptr<foros_msgs::srv::AppendEntries::Response> response);
   uint32_t request_remote_commit(const Data::SharedPtr data);
   bool request_local_commit(
       const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request);
   void request_local_rollback(const uint64_t commit_index);
-  void on_commit_response(const uint64_t term, const bool success);
-  void on_broadcast_response(const uint64_t term, const bool success);
+  void on_broadcast_response(const uint32_t id, const uint64_t commit_index,
+                             const uint64_t term, const bool success);
+  DataCommitResponseSharedFuture complete_commit(
+      DataCommitResponseSharedPromise promise,
+      DataCommitResponseSharedFuture future, uint64_t index, bool result,
+      DataCommitResponseCallback callback);
 
   const std::string cluster_name_;
   uint32_t node_id_;
@@ -142,11 +150,7 @@ class Context {
   bool broadcast_received_;  // flag to check whether boradcast recevied before
                              // election timer expired
 
-  std::map<
-      int64_t,
-      std::tuple<DataCommitResponseSharedPromise, DataCommitResponseCallback,
-                 DataCommitResponseSharedFuture, std::shared_ptr<CommitInfo>>>
-      pending_commits_;
+  std::map<int64_t, std::shared_ptr<PendingCommit>> pending_commits_;
   std::mutex pending_commits_mutex_;
 
   StateMachineInterface *state_machine_interface_;
