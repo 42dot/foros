@@ -67,7 +67,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] cluster_name Cluster name of the node.
    * \param[in] node_id ID of the node.
    * \param[in] cluster_node_ids IDs of nodes in the cluster.
-   * \param[in] data_interface interface for data replication.
+   * \param[in] data_interface Interface for data replication.
    * \param[in] options Additional options to control creation of the node.
    */
   CLUSTER_NODE_PUBLIC
@@ -83,7 +83,7 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    * \param[in] node_id ID of the node.
    * \param[in] cluster_node_ids IDs of nodes in the cluster.
    * \param[in] node_namespace Namespace of the nodo.
-   * \param[in] data_interface interface for data replication.
+   * \param[in] data_interface Interface for data replication.
    * \param[in] options Additional options to control creation of the node.
    */
   CLUSTER_NODE_PUBLIC
@@ -1119,17 +1119,15 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
 
   /// Commit date to duplicate to nodes in a cluster.
   /**
-   * This function only considers services - not clients.
-   * The returned names are the actual names used and do not have remap
-   * rules applied.
-   *
+   * \param[in] index index of data to commit.
    * \param[in] data data to commit.
    * \param[in] callback callback to receive the commit result.
    * \return shared future of commit result.
    */
   CLUSTER_NODE_PUBLIC
   DataCommitResponseSharedFuture commit_data(
-      const Data::SharedPtr data, DataCommitResponseCallback callback);
+      uint64_t index, std::vector<uint8_t> data,
+      DataCommitResponseCallback callback);
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
