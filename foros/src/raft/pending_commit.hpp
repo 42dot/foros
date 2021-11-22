@@ -29,16 +29,12 @@ namespace raft {
 
 class PendingCommit {
  public:
-  PendingCommit(int64_t index, uint64_t term,
-                DataCommitResponseSharedPromise promise,
+  PendingCommit(Data::SharedPtr data, DataCommitResponseSharedPromise promise,
                 DataCommitResponseSharedFuture future,
                 DataCommitResponseCallback callback)
-      : commit_info_(index, term),
-        promise_(promise),
-        future_(future),
-        callback_(callback) {}
+      : data_(data), promise_(promise), future_(future), callback_(callback) {}
 
-  CommitInfo commit_info_;
+  Data::SharedPtr data_;
   DataCommitResponseSharedPromise promise_;
   DataCommitResponseSharedFuture future_;
   DataCommitResponseCallback callback_;

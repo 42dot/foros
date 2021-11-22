@@ -92,6 +92,19 @@ install(
   RUNTIME DESTINATION bin
 )
 
+add_executable(cluster_data_replication_by_commit src/cluster_data_replication_by_commit.cpp)
+ament_target_dependencies(cluster_data_replication_by_commit
+  rclcpp
+  foros
+)
+
+install(
+  TARGETS cluster_data_replication_by_commit EXPORT cluster_data_replication_by_commit
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_cpplint REQUIRED)
   ament_cpplint(FILTERS "-build/header_guard,-build/include_order")

@@ -45,7 +45,7 @@ class OtherNode {
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       const std::string &cluster_name, const uint32_t node_id,
       const uint64_t next_index,
-      ClusterNodeDataInterface::SharedPtr data_callbacks);
+      std::function<Data::SharedPtr(uint64_t)> get_data_callback);
 
   bool broadcast(const uint64_t current_term, const uint32_t node_id,
                  const CommitInfo &last_commit,
@@ -73,8 +73,7 @@ class OtherNode {
   uint64_t match_index_;
   rclcpp::Client<foros_msgs::srv::AppendEntries>::SharedPtr append_entries_;
   rclcpp::Client<foros_msgs::srv::RequestVote>::SharedPtr request_vote_;
-  ClusterNodeDataInterface::SharedPtr data_interface_;
-  bool data_replication_enabled_;
+  std::function<Data::SharedPtr(uint64_t)> get_data_callback_;
 };
 
 }  // namespace raft

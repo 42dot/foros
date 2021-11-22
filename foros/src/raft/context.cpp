@@ -124,9 +124,17 @@ void Context::initialize_other_nodes(
       continue;
     }
 
+    std::function<Data::SharedPtr(uint64_t)> get_data_callback;
+    if (data_interface_ == nullptr) {
+      get_data_callback = nullptr;
+    } else {
+      get_data_callback = std::bind(&Context::on_data_get_requested, this,
+                                    std::placeholders::_1);
+    }
+
     other_nodes_[id] = std::make_shared<OtherNode>(
         node_base_, node_graph_, node_services_, cluster_name_, id, next_index,
-        data_interface_);
+        get_data_callback);
   }
 }
 
@@ -325,14 +333,30 @@ uint64_t Context::get_term() { return current_term_; }
 void Context::broadcast() {
   available_candidates_ = 1;
 
+  auto last_commit = CommitInfo(last_commit_);
+
+  auto pending_commit = get_pending_commit();
+  if (pending_commit != nullptr) {
+    last_commit.index_ = pending_commit_->data_->id();
+    last_commit.term_ = pending_commit_->data_->sub_id();
+  }
+
   for (auto node : other_nodes_) {
     if (node.second->broadcast(
-            current_term_, node_id_, last_commit_,
+            current_term_, node_id_, last_commit,
             std::bind(&Context::on_broadcast_response, this,
                       std::placeholders::_1, std::placeholders::_2,
                       std::placeholders::_3, std::placeholders::_4)) == true) {
       available_candidates_++;
     }
+  }
+
+  if (pending_commit != nullptr && available_candidates_ == 1) {
+    last_commit_.index_ = pending_commit->data_->id();
+    last_commit_.term_ = pending_commit->data_->sub_id();
+    complete_commit(pending_commit->promise_, pending_commit->future_,
+                    pending_commit->data_, true, pending_commit->callback_);
+    unset_pending_commit();
   }
 }
 
@@ -387,10 +411,10 @@ void Context::check_elected() {
 
 DataCommitResponseSharedFuture Context::complete_commit(
     DataCommitResponseSharedPromise promise,
-    DataCommitResponseSharedFuture future, uint64_t index, bool result,
+    DataCommitResponseSharedFuture future, Data::SharedPtr data, bool result,
     DataCommitResponseCallback callback) {
   auto response = DataCommitResponse::make_shared();
-  response->commit_index_ = index;
+  response->data_ = data;
   response->result_ = result;
   promise->set_value(response);
   if (callback != nullptr) {
@@ -399,44 +423,123 @@ DataCommitResponseSharedFuture Context::complete_commit(
   return future;
 }
 
+DataCommitResponseSharedFuture Context::cancel_commit(
+    DataCommitResponseSharedPromise promise,
+    DataCommitResponseSharedFuture future,
+    DataCommitResponseCallback callback) {
+  auto response = DataCommitResponse::make_shared();
+  response->data_ = nullptr;
+  response->result_ = false;
+  promise->set_value(response);
+  if (callback != nullptr) {
+    callback(future);
+  }
+  return future;
+}
+
 DataCommitResponseSharedFuture Context::commit_data(
-    const uint64_t index, DataCommitResponseCallback callback) {
+    const uint64_t &id, std::vector<uint8_t> &data,
+    DataCommitResponseCallback callback) {
   DataCommitResponseSharedPromise commit_promise =
       std::make_shared<DataCommitResponsePromise>();
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
   if (data_interface_ == nullptr) {
     std::cerr << "no data interface registered" << std::endl;
-    return complete_commit(commit_promise, commit_future, index, false,
-                           callback);
+    return cancel_commit(commit_promise, commit_future, callback);
   }
 
   if (state_machine_interface_->is_leader() == false) {
     std::cerr << "can not commit when this node is not leader" << std::endl;
-    return complete_commit(commit_promise, commit_future, index, false,
-                           callback);
+    return cancel_commit(commit_promise, commit_future, callback);
   }
 
-  if (index != last_commit_.index_ + 1) {
-    std::cerr << "commit index must be " << last_commit_.index_
-              << " (the last commit + 1)" << std::endl;
-    return complete_commit(commit_promise, commit_future, index, false,
-                           callback);
+  auto commit_data = Data::make_shared(id, current_term_, data);
+
+  if (set_pending_commit(std::make_shared<PendingCommit>(
+          commit_data, commit_promise, commit_future, callback)) == false) {
+    return cancel_commit(commit_promise, commit_future, callback);
   }
-
-  if (available_candidates_ <= 1) {
-    std::cout << "No other node exist to commit" << std::endl;
-    return complete_commit(commit_promise, commit_future, index, true,
-                           callback);
-  }
-
-  std::lock_guard<std::mutex> lock(pending_commits_mutex_);
-  pending_commits_[index] = std::make_shared<PendingCommit>(
-      index, current_term_, commit_promise, commit_future, callback);
-
-  // TODO(wonguk.jeong) : implement separate commit handling.
 
   return commit_future;
+}
+
+std::shared_ptr<PendingCommit> Context::get_pending_commit() {
+  std::lock_guard<std::mutex> lock(pending_commit_lock_);
+  if (pending_commit_ == nullptr) return nullptr;
+  if (pending_commit_->data_->id() != last_commit_.index_ + 1) {
+    pending_commit_ = nullptr;
+    return nullptr;
+  }
+
+  return pending_commit_;
+}
+
+bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
+  if (commit->data_->id() != last_commit_.index_ + 1) {
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(pending_commit_lock_);
+
+  if (pending_commit_ != nullptr) {
+    if (pending_commit_->data_->id() == last_commit_.index_ + 1) {
+      return false;
+    }
+  }
+
+  pending_commit_ = commit;
+
+  return true;
+}
+
+void Context::unset_pending_commit() {
+  std::lock_guard<std::mutex> lock(pending_commit_lock_);
+  pending_commit_ = nullptr;
+}
+
+void Context::handle_pending_commit_response(const uint32_t id,
+                                             const uint64_t commit_index,
+                                             const uint64_t term,
+                                             const bool success) {
+  std::shared_ptr<PendingCommit> commit;
+  bool result = false;
+
+  {
+    std::lock_guard<std::mutex> lock(pending_commit_lock_);
+    commit = pending_commit_;
+    if (commit == nullptr || commit->data_->id() != commit_index ||
+        commit->data_->sub_id() != term) {
+      return;
+    }
+    commit->result_map_[id] = success;
+
+    unsigned int received_count = 1;
+    unsigned int success_count = 1;
+    for (auto node : other_nodes_) {
+      if (commit->result_map_.count(node.first) > 0) {
+        received_count++;
+        if (commit->result_map_[node.first] == success) {
+          success_count++;
+        }
+      }
+    }
+
+    auto majority = (available_candidates_ >> 1) + 1;
+    if (success_count < majority) {
+      if (received_count < available_candidates_) {
+        return;
+      }
+    } else {
+      last_commit_.index_ = commit_index;
+      last_commit_.term_ = term;
+      result = true;
+    }
+    pending_commit_ = nullptr;
+  }
+
+  complete_commit(commit->promise_, commit->future_, commit->data_, result,
+                  commit->callback_);
 }
 
 void Context::on_broadcast_response(const uint32_t id,
@@ -446,43 +549,21 @@ void Context::on_broadcast_response(const uint32_t id,
     update_term(term);
   }
 
-  std::shared_ptr<PendingCommit> commit;
+  handle_pending_commit_response(id, commit_index, term, success);
+}
 
-  bool result = false;
-  {
-    std::lock_guard<std::mutex> lock(pending_commits_mutex_);
-    commit = pending_commits_[commit_index];
-    if (commit == nullptr || commit->commit_info_.index_ != commit_index ||
-        commit->commit_info_.term_ != term) {
-      return;
-    }
-    commit->result_map_[id] = success;
-
-    unsigned int received = 0;
-    unsigned int success = 0;
-    for (auto node : other_nodes_) {
-      if (commit->result_map_.count(node.first) > 0) {
-        received++;
-        if (commit->result_map_[node.first] == success) {
-          success++;
-        }
-      }
-    }
-
-    auto majority = (available_candidates_ >> 1) + 1;
-    if (success < majority) {
-      if (received < other_nodes_.size()) {
-        return;
-      }
-    } else {
-      result = true;
-    }
-
-    pending_commits_.erase(id);
+Data::SharedPtr Context::on_data_get_requested(uint64_t id) {
+  if (data_interface_ == nullptr) {
+    return nullptr;
   }
 
-  complete_commit(commit->promise_, commit->future_,
-                  commit->commit_info_.index_, result, commit->callback_);
+  auto commit = get_pending_commit();
+  if (commit != nullptr && commit->data_ != nullptr &&
+      commit->data_->id() == id) {
+    return commit->data_;
+  }
+
+  return data_interface_->on_data_get_requested(id);
 }
 
 }  // namespace raft

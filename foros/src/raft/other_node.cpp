@@ -32,12 +32,11 @@ OtherNode::OtherNode(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const std::string &cluster_name, const uint32_t node_id,
     const uint64_t next_index,
-    ClusterNodeDataInterface::SharedPtr data_interface)
+    std::function<Data::SharedPtr(uint64_t)> get_data_callback)
     : node_id_(node_id),
       next_index_(next_index),
       match_index_(0),
-      data_interface_(data_interface),
-      data_replication_enabled_(data_interface_ != nullptr) {
+      get_data_callback_(get_data_callback) {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
@@ -72,9 +71,9 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
   request->term = current_term;
   request->leader_id = node_id;
 
-  if (data_replication_enabled_) {
+  if (get_data_callback_ != nullptr) {
     if (last_commit.index_ >= next_index_) {
-      auto data = data_interface_->on_data_get_requested(next_index_);
+      auto data = get_data_callback_(next_index_);
       if (data != nullptr) {
         request->data = data->data();
         request->leader_commit = data->id();
@@ -82,7 +81,7 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
       }
     }
 
-    auto data = data_interface_->on_data_get_requested(next_index_ - 1);
+    auto data = get_data_callback_(next_index_ - 1);
     if (data != nullptr) {
       request->prev_data_index = data->id();
       request->prev_data_term = data->sub_id();

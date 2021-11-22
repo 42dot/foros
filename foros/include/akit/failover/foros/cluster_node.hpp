@@ -1120,12 +1120,14 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Commit date to duplicate to nodes in a cluster.
   /**
    * \param[in] id ID of data to commit.
+   * \param[in] data data to commit.
    * \param[in] callback callback to receive the commit result.
    * \return shared future of commit result.
    */
   CLUSTER_NODE_PUBLIC
   DataCommitResponseSharedFuture commit_data(
-      uint64_t id, DataCommitResponseCallback callback);
+      uint64_t id, std::vector<uint8_t> data,
+      DataCommitResponseCallback callback);
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;

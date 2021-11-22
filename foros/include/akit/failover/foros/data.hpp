@@ -72,8 +72,8 @@ class DataCommitResponse {
  public:
   RCLCPP_SMART_PTR_DEFINITIONS(DataCommitResponse)
 
-  // Commit index of the requested data.
-  uint64_t commit_index_;
+  // Data to commit
+  Data::SharedPtr data_;
   // Result of the request.
   bool result_;
 };

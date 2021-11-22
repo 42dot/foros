@@ -334,8 +334,9 @@ ClusterNode::get_node_waitables_interface() {
 bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
 DataCommitResponseSharedFuture ClusterNode::commit_data(
-    uint64_t id, DataCommitResponseCallback callback) {
-  return impl_->commit_data(id, callback);
+    uint64_t id, std::vector<uint8_t> data,
+    DataCommitResponseCallback callback) {
+  return impl_->commit_data(id, data, callback);
 }
 
 void ClusterNode::register_on_activated(std::function<void()> callback) {

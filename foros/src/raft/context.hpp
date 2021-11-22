@@ -75,7 +75,8 @@ class Context {
   void broadcast();
   void request_vote();
   DataCommitResponseSharedFuture commit_data(
-      const uint64_t index, DataCommitResponseCallback callback);
+      const uint64_t &id, std::vector<uint8_t> &data,
+      DataCommitResponseCallback callback);
 
  private:
   void initialize_node();
@@ -107,8 +108,19 @@ class Context {
                              const uint64_t term, const bool success);
   DataCommitResponseSharedFuture complete_commit(
       DataCommitResponseSharedPromise promise,
-      DataCommitResponseSharedFuture future, uint64_t index, bool result,
+      DataCommitResponseSharedFuture future, Data::SharedPtr data, bool result,
       DataCommitResponseCallback callback);
+  DataCommitResponseSharedFuture cancel_commit(
+      DataCommitResponseSharedPromise promise,
+      DataCommitResponseSharedFuture future,
+      DataCommitResponseCallback callback);
+  std::shared_ptr<PendingCommit> get_pending_commit();
+  bool set_pending_commit(std::shared_ptr<PendingCommit> commit);
+  void unset_pending_commit();
+  void handle_pending_commit_response(const uint32_t id,
+                                      const uint64_t commit_index,
+                                      const uint64_t term, const bool success);
+  Data::SharedPtr on_data_get_requested(uint64_t id);
 
   const std::string cluster_name_;
   uint32_t node_id_;
@@ -150,8 +162,8 @@ class Context {
   bool broadcast_received_;  // flag to check whether boradcast recevied before
                              // election timer expired
 
-  std::map<int64_t, std::shared_ptr<PendingCommit>> pending_commits_;
-  std::mutex pending_commits_mutex_;
+  std::mutex pending_commit_lock_;
+  std::shared_ptr<PendingCommit> pending_commit_;
 
   StateMachineInterface *state_machine_interface_;
   ClusterNodeDataInterface::SharedPtr data_interface_;
