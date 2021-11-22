@@ -387,7 +387,7 @@ void Context::check_elected() {
 
 DataCommitResponseSharedFuture Context::complete_commit(
     DataCommitResponseSharedPromise promise,
-    DataCommitResponseSharedFuture future, uint64_t index,
+    DataCommitResponseSharedFuture future, uint64_t index, bool result,
     DataCommitResponseCallback callback) {
   auto response = DataCommitResponse::make_shared();
   response->commit_index_ = index;
