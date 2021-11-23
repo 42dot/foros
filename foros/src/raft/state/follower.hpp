@@ -34,11 +34,11 @@ namespace raft {
 
 class Follower final : public State {
  public:
-  explicit Follower(std::shared_ptr<Context> context)
+  explicit Follower(std::shared_ptr<Context> context, rclcpp::Logger &logger)
       : State(StateType::kFollower,
               {{Event::kTerminated, StateType::kStandby},
                {Event::kTimedout, StateType::kCandidate}},
-              context) {}
+              context, logger) {}
 
   void on_started() override;
   void on_timedout() override;

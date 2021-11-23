@@ -17,9 +17,11 @@
 #ifndef AKIT_FAILOVER_FOROS_CLUSTER_NODE_IMPL_HPP_
 #define AKIT_FAILOVER_FOROS_CLUSTER_NODE_IMPL_HPP_
 
+#include <rclcpp/logger.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/node_interfaces/node_graph_interface.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/node_interfaces/node_services_interface.hpp>
 #include <rclcpp/node_interfaces/node_timers_interface.hpp>
 #include <rclcpp/node_options.hpp>
@@ -53,6 +55,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       const std::vector<uint32_t> &cluster_node_ids,
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+      rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
@@ -72,6 +75,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void register_on_standby(std::function<void()> callback);
 
  private:
+  rclcpp::Logger logger_;
   std::shared_ptr<raft::Context> raft_context_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;
   std::unique_ptr<lifecycle::StateMachine> lifecycle_fsm_;

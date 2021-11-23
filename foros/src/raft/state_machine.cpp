@@ -28,13 +28,15 @@ namespace foros {
 namespace raft {
 
 StateMachine::StateMachine(const std::vector<uint32_t> &cluster_node_ids,
-                           std::shared_ptr<Context> context)
+                           std::shared_ptr<Context> context,
+                           rclcpp::Logger &logger)
     : common::StateMachine<State, StateType, Event>(
           StateType::kStandby,
-          {{StateType::kStandby, std::make_shared<Standby>(context)},
-           {StateType::kFollower, std::make_shared<Follower>(context)},
-           {StateType::kCandidate, std::make_shared<Candidate>(context)},
-           {StateType::kLeader, std::make_shared<Leader>(context)}}),
+          {{StateType::kStandby, std::make_shared<Standby>(context, logger)},
+           {StateType::kFollower, std::make_shared<Follower>(context, logger)},
+           {StateType::kCandidate,
+            std::make_shared<Candidate>(context, logger)},
+           {StateType::kLeader, std::make_shared<Leader>(context, logger)}}),
       context_(context) {
   context_->initialize(cluster_node_ids, this);
 }

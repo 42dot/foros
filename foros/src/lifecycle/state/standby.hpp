@@ -30,10 +30,11 @@ namespace lifecycle {
 
 class Standby final : public State {
  public:
-  Standby()
+  explicit Standby(rclcpp::Logger &logger)
       : State(StateType::kStandby,
               {{Event::kActivate, StateType::kActive},
-               {Event::kDeactivate, StateType::kInactive}}) {}
+               {Event::kDeactivate, StateType::kInactive}},
+              logger) {}
 
   void on_activated() override;
   void on_deactivated() override;

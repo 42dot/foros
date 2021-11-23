@@ -15,6 +15,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <memory>
 
@@ -30,7 +31,10 @@ class TestLifecycleStateMachine : public ::testing::Test {
 
   static void TearDownTestCase() {}
 
-  void SetUp() { state_machine_ = std::make_shared<lifecycle::StateMachine>(); }
+  void SetUp() {
+    auto logger = rclcpp::get_logger("test_lifecycle_state_machine");
+    state_machine_ = std::make_shared<lifecycle::StateMachine>(logger);
+  }
 
   void TearDown() { state_machine_.reset(); }
 

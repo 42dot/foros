@@ -33,14 +33,14 @@ namespace raft {
 
 class Candidate final : public State {
  public:
-  explicit Candidate(std::shared_ptr<Context> context)
+  explicit Candidate(std::shared_ptr<Context> context, rclcpp::Logger &logger)
       : State(StateType::kCandidate,
               {{Event::kTerminated, StateType::kStandby},
                {Event::kTimedout, StateType::kStay},
                {Event::kElected, StateType::kLeader},
                {Event::kLeaderDiscovered, StateType::kFollower},
                {Event::kNewTermReceived, StateType::kFollower}},
-              context) {}
+              context, logger) {}
 
   void on_started() override;
   void on_timedout() override;

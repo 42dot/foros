@@ -31,10 +31,14 @@ int main(int argc, char **argv) {
   const std::string kTopicName = "test_cluster_echo";
   const std::vector<uint32_t> kClusterNodeIds = {1, 2, 3, 4};
 
+  rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
+  logger.set_level(rclcpp::Logger::Level::Info);
+
   if (argc >= 2) {
     id = std::stoul(argv[1]);
     if (id > 4 || id == 0) {
-      std::cerr << "please use id out of 1, 2, 3, 4" << std::endl;
+      RCLCPP_ERROR(logger, "please use id out of 1, 2, 3, 4");
+      return -1;
     }
   }
 
@@ -42,10 +46,10 @@ int main(int argc, char **argv) {
 
   auto node = akit::failover::foros::ClusterNode::make_shared(kClusterName, id,
                                                               kClusterNodeIds);
-  node->register_on_activated([]() { std::cout << "activated" << std::endl; });
-  node->register_on_deactivated(
-      []() { std::cout << "deactivated" << std::endl; });
-  node->register_on_standby([]() { std::cout << "standby" << std::endl; });
+
+  node->register_on_activated([&]() { RCLCPP_INFO(logger, "activated"); });
+  node->register_on_deactivated([&]() { RCLCPP_INFO(logger, "deactivated"); });
+  node->register_on_standby([&]() { RCLCPP_INFO(logger, "standby"); });
 
   auto publisher = node->create_publisher<std_msgs::msg::String>(kTopicName, 1);
 

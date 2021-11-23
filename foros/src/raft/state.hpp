@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILOVER_FOROS_RAFT_STATE_HPP_
 #define AKIT_FAILOVER_FOROS_RAFT_STATE_HPP_
 
+#include <rclcpp/logger.hpp>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -36,7 +38,7 @@ namespace raft {
 class State {
  public:
   State(StateType type, std::map<Event, StateType> transition_map,
-        std::shared_ptr<Context> context);
+        std::shared_ptr<Context> context, rclcpp::Logger &logger);
   virtual ~State() {}
 
   StateType get_type();
@@ -63,6 +65,7 @@ class State {
   std::shared_ptr<Observable<Event>> event_notifier_;
   std::map<Event, StateType> transition_map_;
   std::map<Event, std::function<void()>> callback_map_;
+  rclcpp::Logger logger_;
 };
 
 }  // namespace raft

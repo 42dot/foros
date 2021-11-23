@@ -16,6 +16,8 @@
 
 #include "lifecycle/state.hpp"
 
+#include <rclcpp/logging.hpp>
+
 #include <iostream>
 #include <map>
 #include <memory>
@@ -27,8 +29,11 @@ namespace failover {
 namespace foros {
 namespace lifecycle {
 
-State::State(StateType type, std::map<Event, StateType> transition_map)
-    : type_(type), transition_map_(transition_map) {}
+State::State(StateType type, std::map<Event, StateType> transition_map,
+             rclcpp::Logger &logger)
+    : type_(type),
+      transition_map_(transition_map),
+      logger_(logger.get_child("lifecycle")) {}
 
 StateType State::get_type() { return type_; }
 
@@ -50,7 +55,7 @@ StateType State::handle(const Event &event) {
       on_standby();
       break;
     default:
-      std::cerr << "Invalid event: " << static_cast<int>(event) << std::endl;
+      RCLCPP_ERROR(logger_, "Invalid event: %d", static_cast<int>(event));
       return type_;
   }
 

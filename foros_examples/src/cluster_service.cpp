@@ -33,10 +33,14 @@ int main(int argc, char **argv) {
   const std::vector<uint32_t> kClusterNodeIds = {1, 2, 3, 4};
   const std::string kServiceName = "test_cluster_get_leader_name";
 
+  rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
+  logger.set_level(rclcpp::Logger::Level::Info);
+
   if (argc >= 2) {
     id = std::stoul(argv[1]);
     if (id > 4 || id == 0) {
-      std::cerr << "please use id out of 1, 2, 3, 4" << std::endl;
+      RCLCPP_ERROR(logger, "please use id out of 1, 2, 3, 4");
+      return -1;
     }
   }
 
@@ -45,16 +49,15 @@ int main(int argc, char **argv) {
   auto node = std::make_shared<akit::failover::foros::ClusterNode>(
       kClusterName, id, kClusterNodeIds);
 
-  node->register_on_activated([]() { std::cout << "activated" << std::endl; });
-  node->register_on_deactivated(
-      []() { std::cout << "deactivated" << std::endl; });
-  node->register_on_standby([]() { std::cout << "standby" << std::endl; });
+  node->register_on_activated([&]() { RCLCPP_INFO(logger, "activated"); });
+  node->register_on_deactivated([&]() { RCLCPP_INFO(logger, "deactivated"); });
+  node->register_on_standby([&]() { RCLCPP_INFO(logger, "standby"); });
 
-  node->create_service<std_srvs::srv::Trigger>(
+  auto service = node->create_service<std_srvs::srv::Trigger>(
       kServiceName,
       [&](const std::shared_ptr<std_srvs::srv::Trigger::Request>,
           std::shared_ptr<std_srvs::srv::Trigger::Response> response) {
-        std::cout << "request received" << std::endl;
+        RCLCPP_INFO(logger, "request received");
         response->message = node->get_name();
         response->success = true;
       });

@@ -32,9 +32,9 @@ namespace raft {
 
 class Standby final : public State {
  public:
-  explicit Standby(std::shared_ptr<Context> context)
+  explicit Standby(std::shared_ptr<Context> context, rclcpp::Logger &logger)
       : State(StateType::kStandby, {{Event::kStarted, StateType::kFollower}},
-              context) {}
+              context, logger) {}
 
   void on_started() override;
   void on_timedout() override;

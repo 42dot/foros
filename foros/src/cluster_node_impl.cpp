@@ -34,18 +34,21 @@ ClusterNodeImpl::ClusterNodeImpl(
     const std::vector<uint32_t> &cluster_node_ids,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     ClusterNodeDataInterface::SharedPtr data_interface,
     const ClusterNodeOptions &options)
-    : raft_context_(std::make_shared<raft::Context>(
+    : logger_(node_logging->get_logger().get_child("cluster_node")),
+      raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
           node_timers, node_clock, data_interface,
-          options.election_timeout_min(), options.election_timeout_max())),
+          options.election_timeout_min(), options.election_timeout_max(),
+          logger_)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
-                                                     raft_context_)),
-      lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>()) {
+                                                     raft_context_, logger_)),
+      lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>(logger_)) {
   lifecycle_fsm_->subscribe(this);
   raft_fsm_->subscribe(this);
   raft_fsm_->handle(raft::Event::kStarted);
@@ -74,8 +77,9 @@ void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
       }
       break;
     default:
-      std::cerr << "Invalid lifecycle state : " << static_cast<int>(state)
-                << std::endl;
+      RCLCPP_ERROR(logger_, "Invalid lifecycle state : %d",
+                   static_cast<int>(state));
+
       break;
   }
 }
@@ -83,28 +87,28 @@ void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
 void ClusterNodeImpl::handle(const raft::StateType &state) {
   switch (state) {
     case raft::StateType::kStandby:
-      std::cout << "raft state: Standby (" << raft_context_->get_term() << ")"
-                << std::endl;
+      RCLCPP_INFO(logger_, "raft state: Standby (%lu)",
+                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kDeactivate);
       break;
     case raft::StateType::kFollower:
-      std::cout << "raft state: Follower (" << raft_context_->get_term() << ")"
-                << std::endl;
+      RCLCPP_INFO(logger_, "raft state: Follower (%lu)",
+                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kStandby);
       break;
     case raft::StateType::kCandidate:
-      std::cout << "raft state: Candidate (" << raft_context_->get_term() << ")"
-                << std::endl;
+      RCLCPP_INFO(logger_, "raft state: Candidate (%lu)",
+                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kStandby);
       break;
     case raft::StateType::kLeader:
-      std::cout << "raft state: Leader (" << raft_context_->get_term() << ")"
-                << std::endl;
+      RCLCPP_INFO(logger_, "raft state: Leader (%lu)",
+                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kActivate);
       break;
     default:
-      std::cerr << "Invalid raft state (" << raft_context_->get_term()
-                << "): " << static_cast<int>(state) << std::endl;
+      RCLCPP_ERROR(logger_, "Invalid raft state (%lu) : %d",
+                   raft_context_->get_term(), static_cast<int>(state));
       break;
   }
 }

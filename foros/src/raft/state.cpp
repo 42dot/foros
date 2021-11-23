@@ -30,8 +30,11 @@ namespace foros {
 namespace raft {
 
 State::State(StateType type, std::map<Event, StateType> transition_map,
-             std::shared_ptr<Context> context)
-    : context_(context), type_(type), transition_map_(transition_map) {
+             std::shared_ptr<Context> context, rclcpp::Logger &logger)
+    : context_(context),
+      type_(type),
+      transition_map_(transition_map),
+      logger_(logger.get_child("raft")) {
   callback_map_ = {
       {Event::kStarted, std::bind(&State::on_started, this)},
       {Event::kTimedout, std::bind(&State::on_timedout, this)},
@@ -54,8 +57,8 @@ StateType State::handle(const Event &event) {
   }
 
   if (callback_map_.count(event) < 1) {
-    std::cerr << "[" << static_cast<int>(type_)
-              << "]: invalid event: " << static_cast<int>(event) << std::endl;
+    RCLCPP_ERROR(logger_, "[%d]: invalid event: %d", static_cast<int>(type_),
+                 static_cast<int>(event));
     return type_;
   }
 

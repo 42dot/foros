@@ -43,7 +43,8 @@ Context::Context(
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     ClusterNodeDataInterface::SharedPtr data_interface,
-    unsigned int election_timeout_min, unsigned int election_timeout_max)
+    unsigned int election_timeout_min, unsigned int election_timeout_max,
+    rclcpp::Logger &logger)
     : cluster_name_(cluster_name),
       node_id_(node_id),
       node_base_(node_base),
@@ -62,7 +63,8 @@ Context::Context(
       broadcast_timeout_(election_timeout_min_ / 10),
       broadcast_received_(false),
       data_interface_(data_interface),
-      data_replication_enabled_(data_interface_ != nullptr) {}
+      data_replication_enabled_(data_interface_ != nullptr),
+      logger_(logger.get_child("raft")) {}
 
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
@@ -380,17 +382,17 @@ void Context::request_vote() {
 void Context::on_request_vote_response(const uint64_t term,
                                        const bool vote_granted) {
   if (term < current_term_) {
-    std::cout << "ignore vote response since term is outdated" << std::endl;
+    RCLCPP_INFO(logger_, "ignore vote response since term is outdated");
     return;
   }
 
   if (update_term(term) == true) {
-    std::cout << "ignore vote response since term is new one" << std::endl;
+    RCLCPP_INFO(logger_, "ignore vote response since term is new one");
     return;
   }
 
   if (vote_granted == false) {
-    std::cout << "vote not granted" << std::endl;
+    RCLCPP_INFO(logger_, "vote not granted");
     return;
   }
 
@@ -445,12 +447,12 @@ DataCommitResponseSharedFuture Context::commit_data(
   DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
 
   if (data_interface_ == nullptr) {
-    std::cerr << "no data interface registered" << std::endl;
+    RCLCPP_ERROR(logger_, "no data interface registered");
     return cancel_commit(commit_promise, commit_future, callback);
   }
 
   if (state_machine_interface_->is_leader() == false) {
-    std::cerr << "can not commit when this node is not leader" << std::endl;
+    RCLCPP_ERROR(logger_, "can not commit when this node is not leader");
     return cancel_commit(commit_promise, commit_future, callback);
   }
 

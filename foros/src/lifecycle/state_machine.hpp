@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILOVER_FOROS_LIFECYCLE_STATE_MACHINE_HPP_
 #define AKIT_FAILOVER_FOROS_LIFECYCLE_STATE_MACHINE_HPP_
 
+#include <rclcpp/logger.hpp>
+
 #include <map>
 #include <memory>
 
@@ -38,12 +40,12 @@ namespace common = akit::failover::foros::common;
 
 class StateMachine : public common::StateMachine<State, StateType, Event> {
  public:
-  StateMachine()
+  explicit StateMachine(rclcpp::Logger &logger)
       : common::StateMachine<State, StateType, Event>(
             StateType::kInactive,
-            {{StateType::kStandby, std::make_shared<Standby>()},
-             {StateType::kActive, std::make_shared<Active>()},
-             {StateType::kInactive, std::make_shared<Inactive>()}}) {}
+            {{StateType::kStandby, std::make_shared<Standby>(logger)},
+             {StateType::kActive, std::make_shared<Active>(logger)},
+             {StateType::kInactive, std::make_shared<Inactive>(logger)}}) {}
 };
 
 }  // namespace lifecycle

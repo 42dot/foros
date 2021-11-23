@@ -20,6 +20,7 @@
 #include <foros_msgs/srv/append_entries.hpp>
 #include <foros_msgs/srv/request_vote.hpp>
 #include <rclcpp/any_service_callback.hpp>
+#include <rclcpp/logger.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/node_interfaces/node_graph_interface.hpp>
@@ -57,7 +58,8 @@ class Context {
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
       ClusterNodeDataInterface::SharedPtr data_interface,
-      unsigned int election_timeout_min, unsigned int election_timeout_max);
+      unsigned int election_timeout_min, unsigned int election_timeout_max,
+      rclcpp::Logger &logger);
 
   void initialize(const std::vector<uint32_t> &cluster_node_ids,
                   StateMachineInterface *state_machine_interface);
@@ -168,6 +170,8 @@ class Context {
   StateMachineInterface *state_machine_interface_;
   ClusterNodeDataInterface::SharedPtr data_interface_;
   bool data_replication_enabled_;
+
+  rclcpp::Logger logger_;
 };
 
 }  // namespace raft

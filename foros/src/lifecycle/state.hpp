@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILOVER_FOROS_LIFECYCLE_STATE_HPP_
 #define AKIT_FAILOVER_FOROS_LIFECYCLE_STATE_HPP_
 
+#include <rclcpp/logger.hpp>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -33,7 +35,8 @@ namespace lifecycle {
 
 class State {
  public:
-  State(StateType type, std::map<Event, StateType> transition_map);
+  State(StateType type, std::map<Event, StateType> transition_map,
+        rclcpp::Logger &logger);
   virtual ~State() {}
 
   StateType get_type();
@@ -52,6 +55,7 @@ class State {
   StateType type_;
   std::shared_ptr<Observable<Event>> event_source_;
   std::map<Event, StateType> transition_map_;
+  rclcpp::Logger logger_;
 };
 
 }  // namespace lifecycle

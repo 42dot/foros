@@ -31,8 +31,11 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
  public:
   explicit MyDataInterface(
       std::map<uint64_t, akit::failover::foros::Data::SharedPtr> &dataset,
-      uint32_t &data_cnt)
-      : dataset_(dataset), data_cnt_(data_cnt), changed_(true) {}
+      uint32_t &data_cnt, rclcpp::Logger &logger)
+      : dataset_(dataset),
+        data_cnt_(data_cnt),
+        changed_(true),
+        logger_(logger) {}
 
   akit::failover::foros::Data::SharedPtr on_data_get_requested(
       uint64_t id) override {
@@ -53,7 +56,7 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
   }
 
   void on_data_rollback_requested(uint64_t id) override {
-    std::cout << "rollback requested to " << id << std::endl;
+    RCLCPP_INFO(logger_, "rollback requested to %ld", id);
     data_cnt_ = id;
     changed_ = true;
     dump();
@@ -61,13 +64,14 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
 
   bool on_data_commit_requested(akit::failover::foros::Data::SharedPtr data) {
     if (data->id() != data_cnt_) {
-      std::cerr << "Invalid data commit requested: " << data->id()
-                << " (latest: " << data_cnt_ << ")" << std::endl;
+      RCLCPP_ERROR(logger_, "Invalid data commit requested: %ld (latest: %d)",
+                   data->id(), data_cnt_);
+
       return false;
     }
 
     dataset_[data_cnt_++] = data;
-    std::cout << "data commited to " << data_cnt_ - 1 << std::endl;
+    RCLCPP_INFO(logger_, "data commited to %d", data_cnt_ - 1);
     changed_ = true;
     dump();
     return true;
@@ -78,18 +82,19 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
       return;
     }
     changed_ = false;
-    std::cout << "===== data dump =====" << std::endl;
+    RCLCPP_INFO(logger_, "===== data dump =====");
     for (uint32_t i = 0; i < data_cnt_; i++) {
-      std::cout << dataset_[i]->id() << ": "
-                << std::string(1, dataset_[i]->data()[0]) << std::endl;
+      RCLCPP_INFO(logger_, "%ld: %c", dataset_[i]->id(),
+                  dataset_[i]->data()[0]);
     }
-    std::cout << "=====================" << std::endl;
+    RCLCPP_INFO(logger_, "=====================");
   }
 
   void commit(akit::failover::foros::Data::SharedPtr data) {
     if (data->id() != data_cnt_) {
-      std::cerr << "Invalid data commit (by consensus): " << data->id()
-                << " (latest: " << data_cnt_ << ")" << std::endl;
+      RCLCPP_ERROR(logger_,
+                   "Invalid data commit (by consensus): %ld (latest: %d)",
+                   data->id(), data_cnt_);
       return;
     }
     changed_ = true;
@@ -101,6 +106,7 @@ class MyDataInterface : public akit::failover::foros::ClusterNodeDataInterface {
   std::map<uint64_t, akit::failover::foros::Data::SharedPtr> &dataset_;
   uint32_t &data_cnt_;
   bool changed_;
+  rclcpp::Logger logger_;
 };
 
 int main(int argc, char **argv) {
@@ -108,15 +114,21 @@ int main(int argc, char **argv) {
   const std::vector<uint32_t> kClusterNodeIds = {1, 2, 3, 4};
   std::map<uint64_t, akit::failover::foros::Data::SharedPtr> dataset;
 
+  rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
+  logger.set_level(rclcpp::Logger::Level::Info);
+
   if (argc < 3) {
-    std::cerr << "Usage: " << argv[0]
-              << " {node ID out of 1, 2, 3, 4} {number of data}" << std::endl;
+    RCLCPP_ERROR(logger,
+                 "Usage : %s {node ID out of 1, 2, 3, 4} {number of data}",
+                 argv[0]);
+
     return -1;
   }
 
   uint32_t id = std::stoul(argv[1]);
   if (id > 4 || id == 0) {
-    std::cerr << "please use id out of 1, 2, 3, 4" << std::endl;
+    RCLCPP_ERROR(logger, "please use id out of 1, 2, 3, 4");
+    return -1;
   }
 
   uint32_t data_cnt = std::stoul(argv[2]);
@@ -134,14 +146,14 @@ int main(int argc, char **argv) {
   options.election_timeout_max(2000);
   options.election_timeout_min(1500);
 
-  auto data_interface = std::make_shared<MyDataInterface>(dataset, data_cnt);
+  auto data_interface =
+      std::make_shared<MyDataInterface>(dataset, data_cnt, logger);
   auto node = akit::failover::foros::ClusterNode::make_shared(
       kClusterName, id, kClusterNodeIds, data_interface, options);
 
-  node->register_on_activated([]() { std::cout << "activated" << std::endl; });
-  node->register_on_deactivated(
-      []() { std::cout << "deactivated" << std::endl; });
-  node->register_on_standby([]() { std::cout << "standby" << std::endl; });
+  node->register_on_activated([&]() { RCLCPP_INFO(logger, "activated"); });
+  node->register_on_deactivated([&]() { RCLCPP_INFO(logger, "deactivated"); });
+  node->register_on_standby([&]() { RCLCPP_INFO(logger, "standby"); });
 
   auto timer_ =
       rclcpp::create_timer(node, rclcpp::Clock::make_shared(), 2s, [&]() {

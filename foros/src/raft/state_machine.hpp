@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILOVER_FOROS_RAFT_STATE_MACHINE_HPP_
 #define AKIT_FAILOVER_FOROS_RAFT_STATE_MACHINE_HPP_
 
+#include <rclcpp/logger.hpp>
+
 #include <memory>
 #include <vector>
 
@@ -43,7 +45,8 @@ class StateMachine : public common::StateMachine<State, StateType, Event>,
                      public StateMachineInterface {
  public:
   explicit StateMachine(const std::vector<uint32_t> &cluster_node_ids,
-                        std::shared_ptr<Context> context);
+                        std::shared_ptr<Context> context,
+                        rclcpp::Logger &logger);
 
  private:
   void on_election_timedout() override;

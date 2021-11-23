@@ -84,8 +84,8 @@ ClusterNode::ClusterNode(const std::string &cluster_name,
           new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
       impl_(std::make_unique<ClusterNodeImpl>(
           cluster_name, node_id, cluster_node_ids, node_base_, node_graph_,
-          node_services_, node_timers_, node_clock_, data_interface, options)) {
-}
+          node_logging_, node_services_, node_timers_, node_clock_,
+          data_interface, options)) {}
 
 ClusterNode::~ClusterNode() {
   // release sub-interfaces in an order that allows them to consult with

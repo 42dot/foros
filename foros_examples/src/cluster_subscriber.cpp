@@ -21,20 +21,20 @@
 
 using namespace std::chrono_literals;
 
-static void on_topic_received(const std_msgs::msg::String::SharedPtr msg) {
-  std::cout << "topic received from " << msg->data << std::endl;
-}
-
 int main(int argc, char **argv) {
   const std::string kNodeName = "test_cluster_subscriber";
   const std::string kTopicName = "test_cluster_echo";
 
   rclcpp::init(argc, argv);
-
   auto node = rclcpp::Node::make_shared(kNodeName);
 
+  rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
+  logger.set_level(rclcpp::Logger::Level::Info);
+
   auto subscription = node->create_subscription<std_msgs::msg::String>(
-      kTopicName, 10, on_topic_received);
+      kTopicName, 10, [&](const std_msgs::msg::String::SharedPtr msg) {
+        RCLCPP_INFO(logger, "topic received from %s", msg->data.c_str());
+      });
 
   rclcpp::spin(node->get_node_base_interface());
   rclcpp::shutdown();
