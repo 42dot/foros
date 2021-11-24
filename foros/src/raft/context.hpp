@@ -86,6 +86,7 @@ class Context {
   void initialize_other_nodes(const std::vector<uint32_t> &cluster_node_ids);
 
   bool update_term(uint64_t term);
+  bool is_valid_node(uint32_t id);
 
   // Voting methods
   std::tuple<uint64_t, bool> vote(const uint64_t term, const uint32_t id,

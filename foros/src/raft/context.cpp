@@ -154,6 +154,11 @@ void Context::on_append_entries_requested(
     const std::shared_ptr<rmw_request_id_t>,
     const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request,
     std::shared_ptr<foros_msgs::srv::AppendEntries::Response> response) {
+  if (is_valid_node(request->leader_id) == false) {
+    response->success = false;
+    return;
+  }
+
   response->term = current_term_;
 
   if (request->term < current_term_) {
@@ -229,6 +234,10 @@ void Context::on_request_vote_requested(
     const std::shared_ptr<rmw_request_id_t>,
     const std::shared_ptr<foros_msgs::srv::RequestVote::Request> request,
     std::shared_ptr<foros_msgs::srv::RequestVote::Response> response) {
+  if (is_valid_node(request->candidate_id) == false) {
+    return;
+  }
+
   update_term(request->term);
   std::tie(response->term, response->vote_granted) =
       vote(request->term, request->candidate_id, request->last_data_index,
@@ -382,9 +391,7 @@ void Context::on_request_vote_response(const uint64_t term,
 }
 
 void Context::check_elected() {
-  auto majority = (other_nodes_.size() >> 1) + 2;
-
-  if (vote_received_ < majority) return;
+  if (vote_received_ < majority_) return;
 
   for (auto node : other_nodes_) {
     node.second->set_match_index(last_commit_.index_);
@@ -555,6 +562,8 @@ Data::SharedPtr Context::on_data_get_requested(uint64_t id) {
 
   return data_interface_->on_data_get_requested(id);
 }
+
+bool Context::is_valid_node(uint32_t id) { return other_nodes_.count(id) != 0; }
 
 }  // namespace raft
 }  // namespace foros
