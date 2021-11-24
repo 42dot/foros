@@ -39,7 +39,10 @@ void Leader::on_terminated() {}
 
 void Leader::entry() { context_->start_broadcast_timer(); }
 
-void Leader::exit() { context_->stop_broadcast_timer(); }
+void Leader::exit() {
+  context_->stop_broadcast_timer();
+  context_->cancel_pending_commit();
+}
 
 }  // namespace raft
 }  // namespace foros

@@ -55,7 +55,6 @@ Context::Context(
       current_term_(0),
       voted_(false),
       vote_received_(0),
-      available_candidates_(0),
       last_commit_(CommitInfo(0, 0)),
       election_timeout_min_(election_timeout_min),
       election_timeout_max_(election_timeout_max),
@@ -76,6 +75,7 @@ void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
     }
   }
   initialize_node();
+  majority_ = (cluster_node_ids.size() >> 1) + 1;
   initialize_other_nodes(cluster_node_ids);
   state_machine_interface_ = state_machine_interface;
 }
@@ -144,7 +144,6 @@ bool Context::update_term(uint64_t term) {
   if (term <= current_term_) return false;
 
   current_term_ = term;
-  available_candidates_ = 0;
   reset_vote();
   state_machine_interface_->on_new_term_received();
 
@@ -333,8 +332,6 @@ std::string Context::get_node_name() { return node_base_->get_name(); }
 uint64_t Context::get_term() { return current_term_; }
 
 void Context::broadcast() {
-  available_candidates_ = 1;
-
   auto last_commit = CommitInfo(last_commit_);
 
   auto pending_commit = get_pending_commit();
@@ -349,33 +346,17 @@ void Context::broadcast() {
             std::bind(&Context::on_broadcast_response, this,
                       std::placeholders::_1, std::placeholders::_2,
                       std::placeholders::_3, std::placeholders::_4)) == true) {
-      available_candidates_++;
     }
-  }
-
-  if (pending_commit != nullptr && available_candidates_ == 1) {
-    last_commit_.index_ = pending_commit->data_->id();
-    last_commit_.term_ = pending_commit->data_->sub_id();
-    complete_commit(pending_commit->promise_, pending_commit->future_,
-                    pending_commit->data_, true, pending_commit->callback_);
-    unset_pending_commit();
   }
 }
 
 void Context::request_vote() {
-  available_candidates_ = 1;
-
   for (auto node : other_nodes_) {
     if (node.second->request_vote(
             current_term_, node_id_, last_commit_,
             std::bind(&Context::on_request_vote_response, this,
                       std::placeholders::_1, std::placeholders::_2)) == true) {
-      available_candidates_++;
     }
-  }
-
-  if (available_candidates_ <= 1) {
-    check_elected();
   }
 }
 
@@ -401,7 +382,8 @@ void Context::on_request_vote_response(const uint64_t term,
 }
 
 void Context::check_elected() {
-  auto majority = (available_candidates_ >> 1) + 1;
+  auto majority = (other_nodes_.size() >> 1) + 2;
+
   if (vote_received_ < majority) return;
 
   for (auto node : other_nodes_) {
@@ -495,9 +477,18 @@ bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
   return true;
 }
 
-void Context::unset_pending_commit() {
-  std::lock_guard<std::mutex> lock(pending_commit_lock_);
-  pending_commit_ = nullptr;
+void Context::cancel_pending_commit() {
+  std::shared_ptr<PendingCommit> commit;
+  {
+    std::lock_guard<std::mutex> lock(pending_commit_lock_);
+    commit = pending_commit_;
+    pending_commit_ = nullptr;
+  }
+
+  if (commit != nullptr) {
+    complete_commit(commit->promise_, commit->future_, commit->data_, false,
+                    commit->callback_);
+  }
 }
 
 void Context::handle_pending_commit_response(const uint32_t id,
@@ -527,16 +518,13 @@ void Context::handle_pending_commit_response(const uint32_t id,
       }
     }
 
-    auto majority = (available_candidates_ >> 1) + 1;
-    if (success_count < majority) {
-      if (received_count < available_candidates_) {
-        return;
-      }
-    } else {
-      last_commit_.index_ = commit_index;
-      last_commit_.term_ = term;
-      result = true;
+    if (success_count < majority_) {
+      return;
     }
+
+    last_commit_.index_ = commit_index;
+    last_commit_.term_ = term;
+    result = true;
     pending_commit_ = nullptr;
   }
 

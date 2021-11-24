@@ -79,6 +79,7 @@ class Context {
   DataCommitResponseSharedFuture commit_data(
       const uint64_t &id, std::vector<uint8_t> &data,
       DataCommitResponseCallback callback);
+  void cancel_pending_commit();
 
  private:
   void initialize_node();
@@ -118,7 +119,6 @@ class Context {
       DataCommitResponseCallback callback);
   std::shared_ptr<PendingCommit> get_pending_commit();
   bool set_pending_commit(std::shared_ptr<PendingCommit> commit);
-  void unset_pending_commit();
   void handle_pending_commit_response(const uint32_t id,
                                       const uint64_t commit_index,
                                       const uint64_t term, const bool success);
@@ -149,7 +149,7 @@ class Context {
   uint32_t voted_for_;  // candidate node id that received vote in current term
   bool voted_;          // flag to check whether voted in current term or not
   unsigned int vote_received_;  // number of received votes in current term
-  unsigned int available_candidates_;  // number of available candidate
+  unsigned int majority_;       // number of majority of the full cluster
 
   CommitInfo last_commit_;  // index of highest data entry known to be committed
 
