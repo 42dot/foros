@@ -28,26 +28,34 @@
 #include "akit/failover/foros/cluster_node_service.hpp"
 
 int main(int argc, char **argv) {
-  uint32_t id = 1;
   const std::string kClusterName = "test_cluster";
-  const std::vector<uint32_t> kClusterNodeIds = {1, 2, 3, 4};
   const std::string kServiceName = "test_cluster_get_leader_name";
 
   rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
   logger.set_level(rclcpp::Logger::Level::Info);
 
-  if (argc >= 2) {
-    id = std::stoul(argv[1]);
-    if (id > 4 || id == 0) {
-      RCLCPP_ERROR(logger, "please use id out of 1, 2, 3, 4");
-      return -1;
-    }
+  if (argc < 3) {
+    RCLCPP_ERROR(logger, "Usage : %s {node ID} {size of cluster}", argv[0]);
+    return -1;
+  }
+
+  uint32_t id = std::stoul(argv[1]);
+  uint32_t cluster_size = std::stoul(argv[2]);
+  std::vector<uint32_t> cluster_node_ids;
+
+  if (id >= cluster_size) {
+    RCLCPP_ERROR(logger, "ID must be less than cluster size");
+    return -1;
+  }
+
+  for (uint32_t i = 0; i < cluster_size; i++) {
+    cluster_node_ids.push_back(i);
   }
 
   rclcpp::init(argc, argv);
 
   auto node = std::make_shared<akit::failover::foros::ClusterNode>(
-      kClusterName, id, kClusterNodeIds);
+      kClusterName, id, cluster_node_ids);
 
   node->register_on_activated([&]() { RCLCPP_INFO(logger, "activated"); });
   node->register_on_deactivated([&]() { RCLCPP_INFO(logger, "deactivated"); });
