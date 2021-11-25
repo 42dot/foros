@@ -16,6 +16,10 @@
 
 #include "akit/failover/foros/cluster_node_options.hpp"
 
+#include <filesystem>
+
+#include "akit/failover/foros/common.hpp"
+
 namespace akit {
 namespace failover {
 namespace foros {
@@ -23,7 +27,8 @@ namespace foros {
 ClusterNodeOptions::ClusterNodeOptions(rcl_allocator_t allocator)
     : NodeOptions(allocator),
       election_timeout_min_(150),
-      election_timeout_max_(300) {}
+      election_timeout_max_(300),
+      temp_directory_(std::filesystem::temp_directory_path()) {}
 
 unsigned int ClusterNodeOptions::election_timeout_min() const {
   return election_timeout_min_;
@@ -40,6 +45,15 @@ unsigned int ClusterNodeOptions::election_timeout_max() const {
 
 ClusterNodeOptions &ClusterNodeOptions::election_timeout_max(unsigned int max) {
   election_timeout_max_ = max;
+  return *this;
+}
+
+std::string ClusterNodeOptions::temp_directory() const {
+  return temp_directory_;
+}
+
+ClusterNodeOptions &ClusterNodeOptions::temp_directory(std::string &directory) {
+  temp_directory_ = directory;
   return *this;
 }
 

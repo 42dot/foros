@@ -43,7 +43,8 @@ Context::Context(
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     ClusterNodeDataInterface::SharedPtr data_interface,
-    unsigned int election_timeout_min, unsigned int election_timeout_max,
+    const unsigned int election_timeout_min,
+    const unsigned int election_timeout_max, const std::string &temp_directory,
     rclcpp::Logger &logger)
     : cluster_name_(cluster_name),
       node_id_(node_id),
@@ -52,8 +53,6 @@ Context::Context(
       node_services_(node_services),
       node_timers_(node_timers),
       node_clock_(node_clock),
-      current_term_(0),
-      voted_(false),
       vote_received_(0),
       last_commit_(CommitInfo(0, 0)),
       election_timeout_min_(election_timeout_min),
@@ -63,7 +62,10 @@ Context::Context(
       broadcast_received_(false),
       data_interface_(data_interface),
       data_replication_enabled_(data_interface_ != nullptr),
-      logger_(logger.get_child("raft")) {}
+      logger_(logger.get_child("raft")) {
+  auto db_file = temp_directory + "/foros/" + node_base_->get_name();
+  store_ = std::make_unique<ContextStore>(db_file, logger_);
+}
 
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
@@ -74,6 +76,7 @@ void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
       last_commit_.term_ = data->sub_id();
     }
   }
+
   initialize_node();
   majority_ = (cluster_node_ids.size() >> 1) + 1;
   initialize_other_nodes(cluster_node_ids);
@@ -140,12 +143,17 @@ void Context::initialize_other_nodes(
   }
 }
 
-bool Context::update_term(uint64_t term) {
-  if (term <= current_term_) return false;
+bool Context::update_term(uint64_t term, bool self) {
+  if (term <= store_->current_term()) {
+    return false;
+  }
 
-  current_term_ = term;
+  store_->current_term(term);
+
   reset_vote();
-  state_machine_interface_->on_new_term_received();
+  if (self == false) {
+    state_machine_interface_->on_new_term_received();
+  }
 
   return true;
 }
@@ -159,9 +167,9 @@ void Context::on_append_entries_requested(
     return;
   }
 
-  response->term = current_term_;
+  response->term = store_->current_term();
 
-  if (request->term < current_term_) {
+  if (request->term < store_->current_term()) {
     response->success = false;
   } else {
     update_term(request->term);
@@ -307,9 +315,9 @@ void Context::reset_broadcast_timer() {
 }
 
 void Context::vote_for_me() {
-  voted_for_ = node_id_;
+  store_->voted_for(node_id_);
+  store_->voted(true);
   vote_received_ = 1;
-  voted_ = true;
 }
 
 std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
@@ -317,28 +325,28 @@ std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
                                          const uint64_t) {
   bool granted = false;
 
-  if (term >= current_term_) {
-    if (voted_ == false && last_commit_.index_ <= last_data_index) {
-      voted_for_ = id;
-      voted_ = true;
+  if (term >= store_->current_term()) {
+    if (store_->voted() == false && last_commit_.index_ <= last_data_index) {
+      store_->voted_for(id);
+      store_->voted(true);
       granted = true;
     }
   }
 
-  return std::make_tuple(current_term_, granted);
+  return std::make_tuple(store_->current_term(), granted);
 }
 
 void Context::reset_vote() {
-  voted_for_ = 0;
+  store_->voted_for(0);
   vote_received_ = 0;
-  voted_ = false;
+  store_->voted(false);
 }
 
-void Context::increase_term() { current_term_++; }
+void Context::increase_term() { update_term(store_->current_term() + 1, true); }
 
 std::string Context::get_node_name() { return node_base_->get_name(); }
 
-uint64_t Context::get_term() { return current_term_; }
+uint64_t Context::get_term() { return store_->current_term(); }
 
 void Context::broadcast() {
   auto last_commit = CommitInfo(last_commit_);
@@ -351,7 +359,7 @@ void Context::broadcast() {
 
   for (auto node : other_nodes_) {
     if (node.second->broadcast(
-            current_term_, node_id_, last_commit,
+            store_->current_term(), node_id_, last_commit,
             std::bind(&Context::on_broadcast_response, this,
                       std::placeholders::_1, std::placeholders::_2,
                       std::placeholders::_3, std::placeholders::_4)) == true) {
@@ -362,7 +370,7 @@ void Context::broadcast() {
 void Context::request_vote() {
   for (auto node : other_nodes_) {
     if (node.second->request_vote(
-            current_term_, node_id_, last_commit_,
+            store_->current_term(), node_id_, last_commit_,
             std::bind(&Context::on_request_vote_response, this,
                       std::placeholders::_1, std::placeholders::_2)) == true) {
     }
@@ -371,7 +379,7 @@ void Context::request_vote() {
 
 void Context::on_request_vote_response(const uint64_t term,
                                        const bool vote_granted) {
-  if (term < current_term_) {
+  if (term < store_->current_term()) {
     RCLCPP_INFO(logger_, "ignore vote response since term is outdated");
     return;
   }
@@ -445,7 +453,7 @@ DataCommitResponseSharedFuture Context::commit_data(
     return cancel_commit(commit_promise, commit_future, callback);
   }
 
-  auto commit_data = Data::make_shared(id, current_term_, data);
+  auto commit_data = Data::make_shared(id, store_->current_term(), data);
 
   if (set_pending_commit(std::make_shared<PendingCommit>(
           commit_data, commit_promise, commit_future, callback)) == false) {
@@ -542,7 +550,7 @@ void Context::handle_pending_commit_response(const uint32_t id,
 void Context::on_broadcast_response(const uint32_t id,
                                     const uint64_t commit_index,
                                     const uint64_t term, const bool success) {
-  if (term >= current_term_) {
+  if (term >= store_->current_term()) {
     update_term(term);
   }
 

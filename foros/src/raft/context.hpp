@@ -39,6 +39,7 @@
 #include "akit/failover/foros/cluster_node_data_interface.hpp"
 #include "akit/failover/foros/data.hpp"
 #include "raft/commit_info.hpp"
+#include "raft/context_store.hpp"
 #include "raft/other_node.hpp"
 #include "raft/pending_commit.hpp"
 #include "raft/state_machine_interface.hpp"
@@ -58,8 +59,9 @@ class Context {
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
       ClusterNodeDataInterface::SharedPtr data_interface,
-      unsigned int election_timeout_min, unsigned int election_timeout_max,
-      rclcpp::Logger &logger);
+      const unsigned int election_timeout_min,
+      const unsigned int election_timeout_max,
+      const std::string &temp_directory, rclcpp::Logger &logger);
 
   void initialize(const std::vector<uint32_t> &cluster_node_ids,
                   StateMachineInterface *state_machine_interface);
@@ -85,7 +87,7 @@ class Context {
   void initialize_node();
   void initialize_other_nodes(const std::vector<uint32_t> &cluster_node_ids);
 
-  bool update_term(uint64_t term);
+  bool update_term(uint64_t term, bool self = false);
   bool is_valid_node(uint32_t id);
 
   // Voting methods
@@ -98,6 +100,7 @@ class Context {
       std::shared_ptr<foros_msgs::srv::RequestVote::Response> response);
   void on_request_vote_response(const uint64_t term, const bool vote_granted);
   void check_elected();
+  void set_voted_for(uint32_t id);
 
   // Data replication methods
   void on_append_entries_requested(
@@ -145,10 +148,11 @@ class Context {
 
   std::map<uint32_t, std::shared_ptr<OtherNode>> other_nodes_;
 
-  // Essential fields for RAFT
-  uint64_t current_term_;  // latest election term
-  uint32_t voted_for_;  // candidate node id that received vote in current term
-  bool voted_;          // flag to check whether voted in current term or not
+  // persistent data
+  std::unique_ptr<ContextStore> store_;  // Persistent data store
+
+  // volatile data
+
   unsigned int vote_received_;  // number of received votes in current term
   unsigned int majority_;       // number of majority of the full cluster
 
@@ -162,8 +166,8 @@ class Context {
 
   unsigned int broadcast_timeout_;                // broadcast timeout
   rclcpp::TimerBase::SharedPtr broadcast_timer_;  // broadcast timer
-  bool broadcast_received_;  // flag to check whether boradcast recevied before
-                             // election timer expired
+  bool broadcast_received_;  // flag to check whether boradcast recevied
+                             // before election timer expired
 
   std::mutex pending_commit_lock_;
   std::shared_ptr<PendingCommit> pending_commit_;

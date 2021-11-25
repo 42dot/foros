@@ -45,7 +45,7 @@ ClusterNodeImpl::ClusterNodeImpl(
           cluster_name, node_id, node_base, node_graph, node_services,
           node_timers, node_clock, data_interface,
           options.election_timeout_min(), options.election_timeout_max(),
-          logger_)),
+          options.temp_directory(), logger_)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_, logger_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>(logger_)) {

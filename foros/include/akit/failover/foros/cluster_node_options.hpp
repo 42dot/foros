@@ -73,6 +73,10 @@ class ClusterNodeOptions : public rclcpp::NodeOptions {
   unsigned int election_timeout_min() const;
 
   /// Set the minimum value of election timeout.
+  /**
+   * \param min the minimum value of election timeout.
+   * \return The reference of this instance
+   */
   CLUSTER_NODE_PUBLIC
   ClusterNodeOptions &election_timeout_min(unsigned int min);
 
@@ -84,12 +88,30 @@ class ClusterNodeOptions : public rclcpp::NodeOptions {
   unsigned int election_timeout_max() const;
 
   /// Set the maximum value of election timeout.
+  /**
+   * \param max the maximum value of election timeout.
+   * \return The reference of this instance.
+   */
   CLUSTER_NODE_PUBLIC
   ClusterNodeOptions &election_timeout_max(unsigned int max);
+
+  /// Return the temp directory. the files in the temp directory must be cleared
+  /// every boot. ex) /tmp in linux.
+  CLUSTER_NODE_PUBLIC
+  std::string temp_directory() const;
+
+  /// Set the temp directory.
+  /**
+   * \param directory the share directory.
+   * \return The reference of this instance.
+   */
+  CLUSTER_NODE_PUBLIC
+  ClusterNodeOptions &temp_directory(std::string &directory);
 
  private:
   unsigned int election_timeout_min_;
   unsigned int election_timeout_max_;
+  std::string temp_directory_;
 };
 
 }  // namespace foros

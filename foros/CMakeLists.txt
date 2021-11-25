@@ -12,6 +12,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(foros_msgs REQUIRED)
+find_package(leveldb REQUIRED)
 
 include_directories(src)
 
@@ -22,6 +23,7 @@ set(${PROJECT_NAME}_SRCS
   src/data.cpp
   src/common/node_util.cpp
   src/raft/context.cpp
+  src/raft/context_store.cpp
   src/raft/other_node.cpp
   src/raft/state.cpp
   src/raft/state_machine.cpp
@@ -45,12 +47,16 @@ target_include_directories(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   foros_msgs
+  leveldb
 )
+
+# why shoud I put it as well?? need to check
+target_link_libraries(${PROJECT_NAME} leveldb)
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(${PROJECT_NAME})
-ament_export_dependencies(rclcpp foros_msgs)
+ament_export_dependencies(rclcpp foros_msgs leveldb)
 
 install(
   DIRECTORY include/
