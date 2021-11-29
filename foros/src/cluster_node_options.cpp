@@ -17,6 +17,7 @@
 #include "akit/failover/foros/cluster_node_options.hpp"
 
 #include <filesystem>
+#include <string>
 
 #include "akit/failover/foros/common.hpp"
 

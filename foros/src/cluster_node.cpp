@@ -42,16 +42,13 @@ namespace foros {
 ClusterNode::ClusterNode(const std::string &cluster_name,
                          const uint32_t node_id,
                          const std::vector<uint32_t> &cluster_node_ids,
-                         ClusterNodeDataInterface::SharedPtr data_interface,
                          const ClusterNodeOptions &options)
-    : ClusterNode(cluster_name, node_id, cluster_node_ids, "", data_interface,
-                  options) {}
+    : ClusterNode(cluster_name, node_id, cluster_node_ids, "", options) {}
 
 ClusterNode::ClusterNode(const std::string &cluster_name,
                          const uint32_t node_id,
                          const std::vector<uint32_t> &cluster_node_ids,
                          const std::string &node_namespace,
-                         ClusterNodeDataInterface::SharedPtr data_interface,
                          const ClusterNodeOptions &options)
     : node_base_(new rclcpp::node_interfaces::NodeBase(
           NodeUtil::get_node_name(cluster_name, node_id), node_namespace,
@@ -84,8 +81,7 @@ ClusterNode::ClusterNode(const std::string &cluster_name,
           new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
       impl_(std::make_unique<ClusterNodeImpl>(
           cluster_name, node_id, cluster_node_ids, node_base_, node_graph_,
-          node_logging_, node_services_, node_timers_, node_clock_,
-          data_interface, options)) {}
+          node_logging_, node_services_, node_timers_, node_clock_, options)) {}
 
 ClusterNode::~ClusterNode() {
   // release sub-interfaces in an order that allows them to consult with
@@ -333,12 +329,6 @@ ClusterNode::get_node_waitables_interface() {
 
 bool ClusterNode::is_activated() { return impl_->is_activated(); }
 
-DataCommitResponseSharedFuture ClusterNode::commit_data(
-    uint64_t id, std::vector<uint8_t> data,
-    DataCommitResponseCallback callback) {
-  return impl_->commit_data(id, data, callback);
-}
-
 void ClusterNode::register_on_activated(std::function<void()> callback) {
   impl_->register_on_activated(callback);
 }
@@ -349,6 +339,26 @@ void ClusterNode::register_on_deactivated(std::function<void()> callback) {
 
 void ClusterNode::register_on_standby(std::function<void()> callback) {
   impl_->register_on_standby(callback);
+}
+
+CommandCommitResponseSharedFuture ClusterNode::commit_command(
+    Command::SharedPtr command, CommandCommitResponseCallback callback) {
+  return impl_->commit_command(command, callback);
+}
+
+uint64_t ClusterNode::get_commands_size() { return impl_->get_commands_size(); }
+
+Command::SharedPtr ClusterNode::get_command(uint64_t id) {
+  return impl_->get_command(id);
+}
+
+void ClusterNode::register_on_committed(
+    std::function<void(uint64_t, Command::SharedPtr)> callback) {
+  impl_->register_on_committed(callback);
+}
+
+void ClusterNode::register_on_reverted(std::function<void(uint64_t)> callback) {
+  impl_->register_on_reverted(callback);
 }
 
 }  // namespace foros

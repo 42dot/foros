@@ -32,11 +32,12 @@ OtherNode::OtherNode(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const std::string &cluster_name, const uint32_t node_id,
     const uint64_t next_index,
-    std::function<Data::SharedPtr(uint64_t)> get_data_callback)
+    std::function<const std::shared_ptr<LogEntry>(uint64_t)>
+        get_log_entry_callback)
     : node_id_(node_id),
       next_index_(next_index),
       match_index_(0),
-      get_data_callback_(get_data_callback) {
+      get_log_entry_callback_(get_log_entry_callback) {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
@@ -58,7 +59,7 @@ OtherNode::OtherNode(
 }
 
 bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
-                          const CommitInfo &last_commit,
+                          const LogEntry::SharedPtr log,
                           std::function<void(const uint32_t, const uint64_t,
                                              const uint64_t, const bool)>
                               callback) {
@@ -71,20 +72,22 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
   request->term = current_term;
   request->leader_id = node_id;
 
-  if (get_data_callback_ != nullptr) {
-    if (last_commit.index_ >= next_index_) {
-      auto data = get_data_callback_(next_index_);
-      if (data != nullptr) {
-        request->data = data->data();
-        request->leader_commit = data->id();
-        request->term = data->sub_id();
+  if (get_log_entry_callback_ != nullptr) {
+    if (log != nullptr && log->id_ >= next_index_) {
+      auto entry = get_log_entry_callback_(next_index_);
+      if (entry != nullptr) {
+        request->data = entry->command_->data();
+        request->leader_commit = entry->id_;
+        request->term = entry->term_;
       }
     }
 
-    auto data = get_data_callback_(next_index_ - 1);
-    if (data != nullptr) {
-      request->prev_data_index = data->id();
-      request->prev_data_term = data->sub_id();
+    if (next_index_ > 0) {
+      auto entry = get_log_entry_callback_(next_index_ - 1);
+      if (entry != nullptr) {
+        request->prev_data_index = entry->id_;
+        request->prev_data_term = entry->term_;
+      }
     }
   }
 
@@ -122,7 +125,7 @@ void OtherNode::send_append_entries(
 
 bool OtherNode::request_vote(
     const uint64_t current_term, const uint32_t node_id,
-    const CommitInfo &last_commit,
+    const LogEntry::SharedPtr log,
     std::function<void(const uint64_t, const bool)> callback) {
   if (request_vote_->service_is_ready() == false) {
     return false;
@@ -131,8 +134,8 @@ bool OtherNode::request_vote(
   auto request = std::make_shared<foros_msgs::srv::RequestVote::Request>();
   request->term = current_term;
   request->candidate_id = node_id;
-  request->last_data_index = last_commit.index_;
-  request->loat_data_term = last_commit.term_;
+  request->last_data_index = log == nullptr ? 0 : log->id_;
+  request->loat_data_term = log == nullptr ? 0 : log->term_;
   auto response = request_vote_->async_send_request(
       request,
       [=](rclcpp::Client<foros_msgs::srv::RequestVote>::SharedFutureWithRequest

@@ -28,9 +28,8 @@
 #include <memory>
 #include <string>
 
-#include "akit/failover/foros/cluster_node_data_interface.hpp"
-#include "akit/failover/foros/data.hpp"
 #include "raft/commit_info.hpp"
+#include "raft/log_entry.hpp"
 
 namespace akit {
 namespace failover {
@@ -45,16 +44,17 @@ class OtherNode {
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       const std::string &cluster_name, const uint32_t node_id,
       const uint64_t next_index,
-      std::function<Data::SharedPtr(uint64_t)> get_data_callback);
+      std::function<const std::shared_ptr<LogEntry>(uint64_t)>
+          get_log_entry_callback);
 
   bool broadcast(const uint64_t current_term, const uint32_t node_id,
-                 const CommitInfo &last_commit,
+                 const LogEntry::SharedPtr log,
                  std::function<void(const uint32_t, const uint64_t,
                                     const uint64_t, const bool)>
                      callback);
 
   bool request_vote(const uint64_t current_term, const uint32_t node_id,
-                    const CommitInfo &last_commit,
+                    const LogEntry::SharedPtr log,
                     std::function<void(const uint64_t, const bool)> callback);
 
   void set_match_index(const uint64_t match_index);
@@ -67,13 +67,14 @@ class OtherNode {
           callback);
 
   uint32_t node_id_;
-  // index of the next data entry to send to this node
+  // index of the next log entry to send to this node
   uint64_t next_index_;
-  // index of highest data entry known to be replicated on this node
+  // index of highest log entry known to be replicated on this node
   uint64_t match_index_;
   rclcpp::Client<foros_msgs::srv::AppendEntries>::SharedPtr append_entries_;
   rclcpp::Client<foros_msgs::srv::RequestVote>::SharedPtr request_vote_;
-  std::function<Data::SharedPtr(uint64_t)> get_data_callback_;
+  std::function<const std::shared_ptr<LogEntry>(uint64_t)>
+      get_log_entry_callback_;
 };
 
 }  // namespace raft

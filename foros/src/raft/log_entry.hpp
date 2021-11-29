@@ -14,32 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILOVER_FOROS_RAFT_PENDING_COMMIT_HPP_
-#define AKIT_FAILOVER_FOROS_RAFT_PENDING_COMMIT_HPP_
+#ifndef AKIT_FAILOVER_FOROS_RAFT_LOG_ENTRY_HPP_
+#define AKIT_FAILOVER_FOROS_RAFT_LOG_ENTRY_HPP_
 
-#include <map>
+#include <rclcpp/macros.hpp>
 
-#include "raft/commit_info.hpp"
-#include "raft/log_entry.hpp"
+#include "akit/failover/foros/command.hpp"
 
 namespace akit {
 namespace failover {
 namespace foros {
 namespace raft {
 
-class PendingCommit {
+class LogEntry {
  public:
-  PendingCommit(LogEntry::SharedPtr log,
-                CommandCommitResponseSharedPromise promise,
-                CommandCommitResponseSharedFuture future,
-                CommandCommitResponseCallback callback)
-      : log_(log), promise_(promise), future_(future), callback_(callback) {}
+  RCLCPP_SMART_PTR_DEFINITIONS(LogEntry)
 
-  const LogEntry::SharedPtr log_;
-  CommandCommitResponseSharedPromise promise_;
-  CommandCommitResponseSharedFuture future_;
-  CommandCommitResponseCallback callback_;
-  std::map<uint32_t, bool> result_map_;
+  LogEntry(uint64_t id, uint64_t term, Command::SharedPtr command)
+      : id_(id), term_(term), command_(command) {}
+
+  const uint64_t id_;
+  const uint64_t term_;
+  const Command::SharedPtr command_;
 };
 
 }  // namespace raft
@@ -47,4 +43,4 @@ class PendingCommit {
 }  // namespace failover
 }  // namespace akit
 
-#endif  // AKIT_FAILOVER_FOROS_RAFT_PENDING_COMMIT_HPP_
+#endif  // AKIT_FAILOVER_FOROS_RAFT_LOG_ENTRY_HPP_

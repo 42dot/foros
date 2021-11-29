@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "akit/failover/foros/data.hpp"
+#include "akit/failover/foros/command.hpp"
 
 #include <vector>
 
@@ -22,16 +22,24 @@ namespace akit {
 namespace failover {
 namespace foros {
 
-Data::Data(uint64_t id, std::vector<uint8_t> data) : id_(id), data_(data) {}
+Command::Command(std::vector<uint8_t> data) : data_(data) {}
 
-Data::Data(uint64_t id, uint64_t sub_id, std::vector<uint8_t> data)
-    : id_(id), sub_id_(sub_id), data_(data) {}
+Command::Command(const char *data, uint64_t size) : data_(data, data + size) {}
 
-const uint64_t &Data::id() { return id_; }
+const std::vector<uint8_t> &Command::data() const { return data_; }
 
-const uint64_t &Data::sub_id() { return sub_id_; }
+CommandCommitResponse::CommandCommitResponse(uint64_t id,
+                                             Command::SharedPtr command,
+                                             bool result)
+    : id_(id), command_(command), result_(result) {}
 
-const std::vector<uint8_t> &Data::data() { return data_; }
+uint64_t CommandCommitResponse::id() const { return id_; }
+
+const Command::SharedPtr CommandCommitResponse::command() const {
+  return command_;
+}
+
+bool CommandCommitResponse::result() const { return result_; }
 
 }  // namespace foros
 }  // namespace failover

@@ -34,9 +34,8 @@
 #include <tuple>
 #include <vector>
 
-#include "akit/failover/foros/cluster_node_data_interface.hpp"
 #include "akit/failover/foros/cluster_node_options.hpp"
-#include "akit/failover/foros/data.hpp"
+#include "akit/failover/foros/command.hpp"
 #include "common/observer.hpp"
 #include "lifecycle/state_machine.hpp"
 #include "lifecycle/state_type.hpp"
@@ -59,7 +58,6 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-      ClusterNodeDataInterface::SharedPtr data_interface,
       const ClusterNodeOptions &options);
 
   ~ClusterNodeImpl();
@@ -67,12 +65,16 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void handle(const lifecycle::StateType &state) override;
   void handle(const raft::StateType &state) override;
   bool is_activated();
-  DataCommitResponseSharedFuture commit_data(
-      const uint64_t &id, std::vector<uint8_t> &data,
-      DataCommitResponseCallback &callback);
   void register_on_activated(std::function<void()> callback);
   void register_on_deactivated(std::function<void()> callback);
   void register_on_standby(std::function<void()> callback);
+  CommandCommitResponseSharedFuture commit_command(
+      Command::SharedPtr command, CommandCommitResponseCallback &callback);
+  uint64_t get_commands_size();
+  Command::SharedPtr get_command(uint64_t id);
+  void register_on_committed(
+      std::function<void(uint64_t, Command::SharedPtr)> callback);
+  void register_on_reverted(std::function<void(uint64_t)> callback);
 
  private:
   rclcpp::Logger logger_;

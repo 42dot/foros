@@ -19,6 +19,8 @@
 
 #include <rclcpp/node_options.hpp>
 
+#include <string>
+
 #include "akit/failover/foros/common.hpp"
 
 namespace akit {

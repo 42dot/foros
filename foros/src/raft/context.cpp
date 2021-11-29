@@ -42,7 +42,6 @@ Context::Context(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    ClusterNodeDataInterface::SharedPtr data_interface,
     const unsigned int election_timeout_min,
     const unsigned int election_timeout_max, const std::string &temp_directory,
     rclcpp::Logger &logger)
@@ -54,31 +53,21 @@ Context::Context(
       node_timers_(node_timers),
       node_clock_(node_clock),
       vote_received_(0),
-      last_commit_(CommitInfo(0, 0)),
       election_timeout_min_(election_timeout_min),
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()),
       broadcast_timeout_(election_timeout_min_ / 10),
       broadcast_received_(false),
-      data_interface_(data_interface),
-      data_replication_enabled_(data_interface_ != nullptr),
       logger_(logger.get_child("raft")) {
-  auto db_file = temp_directory + "/foros/" + node_base_->get_name();
+  auto db_file = temp_directory + "/foros_" + node_base_->get_name();
   store_ = std::make_unique<ContextStore>(db_file, logger_);
 }
 
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
-  if (data_replication_enabled_) {
-    auto data = data_interface_->on_data_get_requested();
-    if (data != nullptr) {
-      last_commit_.index_ = data->id();
-      last_commit_.term_ = data->sub_id();
-    }
-  }
-
   initialize_node();
-  majority_ = (cluster_node_ids.size() >> 1) + 1;
+  cluster_size_ = cluster_node_ids.size();
+  majority_ = (cluster_size_ >> 1) + 1;
   initialize_other_nodes(cluster_node_ids);
   state_machine_interface_ = state_machine_interface;
 }
@@ -122,24 +111,16 @@ void Context::initialize_other_nodes(
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = rmw_qos_profile_services_default;
 
-  int64_t next_index = last_commit_.index_ + 1;
+  int64_t next_index = store_->logs_size();
 
   for (auto id : cluster_node_ids) {
     if (id == node_id_) {
       continue;
     }
 
-    std::function<Data::SharedPtr(uint64_t)> get_data_callback;
-    if (data_interface_ == nullptr) {
-      get_data_callback = nullptr;
-    } else {
-      get_data_callback = std::bind(&Context::on_data_get_requested, this,
-                                    std::placeholders::_1);
-    }
-
     other_nodes_[id] = std::make_shared<OtherNode>(
         node_base_, node_graph_, node_services_, cluster_name_, id, next_index,
-        get_data_callback);
+        std::bind(&Context::on_log_get_request, this, std::placeholders::_1));
   }
 }
 
@@ -177,7 +158,7 @@ void Context::on_append_entries_requested(
     state_machine_interface_->on_leader_discovered();
   }
 
-  if (!data_replication_enabled_ || request->data.size() == 0) {
+  if (request->data.size() == 0) {
     response->success = false;
     return;
   }
@@ -188,12 +169,12 @@ void Context::on_append_entries_requested(
     return;
   }
 
-  auto data = data_interface_->on_data_get_requested(request->prev_data_index);
-  if (data == nullptr) {
+  auto log = store_->log(request->prev_data_index);
+  if (log == nullptr) {
     response->success = false;
   } else {
-    if (data->sub_id() != request->prev_data_term) {
-      request_local_rollback(data->id());
+    if (log->term_ != request->prev_data_term) {
+      request_local_rollback(log->id_);
       response->success = false;
     } else {
       response->success = request_local_commit(request);
@@ -203,39 +184,38 @@ void Context::on_append_entries_requested(
 
 bool Context::request_local_commit(
     const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request) {
-  if (last_commit_.empty_ == false &&
-      last_commit_.index_ == request->leader_commit &&
-      last_commit_.term_ == request->term) {
-    return true;
+  auto log = store_->log();
+
+  if (log != nullptr) {
+    if (log->command_ != nullptr && log->id_ == request->leader_commit &&
+        log->term_ == request->term) {
+      return true;
+    }
+
+    if (log->id_ >= request->leader_commit) {
+      store_->revert_log(request->leader_commit);
+      if (revert_callback_ != nullptr) {
+        revert_callback_(request->leader_commit);
+      }
+    }
   }
 
-  if (last_commit_.index_ >= request->leader_commit) {
-    data_interface_->on_data_rollback_requested(request->leader_commit);
+  log = LogEntry::make_shared(request->leader_commit, request->term,
+                              Command::make_shared(request->data));
+
+  if (store_->push_log(log) == false) {
+    return false;
   }
 
-  auto data =
-      Data::make_shared(request->leader_commit, request->term, request->data);
-
-  data_interface_->on_data_commit_requested(data);
-  last_commit_.empty_ = false;
-  last_commit_.index_ = request->leader_commit;
-  last_commit_.term_ = request->term;
+  if (commit_callback_ != nullptr) {
+    commit_callback_(log->id_, log->command_);
+  }
 
   return true;
 }
 
 void Context::request_local_rollback(const uint64_t commit_index) {
-  data_interface_->on_data_rollback_requested(commit_index);
-  auto data = data_interface_->on_data_get_requested();
-  if (data == nullptr) {
-    last_commit_.index_ = 0;
-    last_commit_.term_ = 0;
-    last_commit_.empty_ = true;
-  } else {
-    last_commit_.index_ = data->id();
-    last_commit_.term_ = data->sub_id();
-    last_commit_.empty_ = false;
-  }
+  store_->revert_log(commit_index);
 }
 
 void Context::on_request_vote_requested(
@@ -324,9 +304,11 @@ std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
                                          const uint64_t last_data_index,
                                          const uint64_t) {
   bool granted = false;
+  auto log = store_->log();
 
   if (term >= store_->current_term()) {
-    if (store_->voted() == false && last_commit_.index_ <= last_data_index) {
+    if (store_->voted() == false &&
+        (log == nullptr || log->id_ <= last_data_index)) {
       store_->voted_for(id);
       store_->voted(true);
       granted = true;
@@ -349,32 +331,32 @@ std::string Context::get_node_name() { return node_base_->get_name(); }
 uint64_t Context::get_term() { return store_->current_term(); }
 
 void Context::broadcast() {
-  auto last_commit = CommitInfo(last_commit_);
+  LogEntry::SharedPtr log;
 
   auto pending_commit = get_pending_commit();
-  if (pending_commit != nullptr) {
-    last_commit.index_ = pending_commit_->data_->id();
-    last_commit.term_ = pending_commit_->data_->sub_id();
+  if (pending_commit != nullptr && pending_commit->log_ != nullptr) {
+    log = pending_commit->log_;
+  } else {
+    log = store_->log();
   }
 
   for (auto node : other_nodes_) {
-    if (node.second->broadcast(
-            store_->current_term(), node_id_, last_commit,
-            std::bind(&Context::on_broadcast_response, this,
-                      std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3, std::placeholders::_4)) == true) {
-    }
+    node.second->broadcast(
+        store_->current_term(), node_id_, log,
+        std::bind(&Context::on_broadcast_response, this, std::placeholders::_1,
+                  std::placeholders::_2, std::placeholders::_3,
+                  std::placeholders::_4));
   }
 }
 
 void Context::request_vote() {
   for (auto node : other_nodes_) {
-    if (node.second->request_vote(
-            store_->current_term(), node_id_, last_commit_,
-            std::bind(&Context::on_request_vote_response, this,
-                      std::placeholders::_1, std::placeholders::_2)) == true) {
-    }
+    node.second->request_vote(
+        store_->current_term(), node_id_, store_->log(),
+        std::bind(&Context::on_request_vote_response, this,
+                  std::placeholders::_1, std::placeholders::_2));
   }
+  check_elected();
 }
 
 void Context::on_request_vote_response(const uint64_t term,
@@ -401,20 +383,35 @@ void Context::on_request_vote_response(const uint64_t term,
 void Context::check_elected() {
   if (vote_received_ < majority_) return;
 
+  uint64_t id;
+  auto log = store_->log();
+  if (log == nullptr) {
+    id = 0;
+  } else {
+    id = log->id_;
+  }
+
   for (auto node : other_nodes_) {
-    node.second->set_match_index(last_commit_.index_);
+    node.second->set_match_index(id);
   }
 
   state_machine_interface_->on_elected();
 }
 
-DataCommitResponseSharedFuture Context::complete_commit(
-    DataCommitResponseSharedPromise promise,
-    DataCommitResponseSharedFuture future, Data::SharedPtr data, bool result,
-    DataCommitResponseCallback callback) {
-  auto response = DataCommitResponse::make_shared();
-  response->data_ = data;
-  response->result_ = result;
+CommandCommitResponseSharedFuture Context::complete_commit(
+    CommandCommitResponseSharedPromise promise,
+    CommandCommitResponseSharedFuture future, LogEntry::SharedPtr log,
+    bool result, CommandCommitResponseCallback callback) {
+  if (result == true) {
+    store_->push_log(log);
+
+    if (commit_callback_ != nullptr) {
+      commit_callback_(log->id_, log->command_);
+    }
+  }
+
+  auto response =
+      CommandCommitResponse::make_shared(log->id_, log->command_, result);
   promise->set_value(response);
   if (callback != nullptr) {
     callback(future);
@@ -422,13 +419,11 @@ DataCommitResponseSharedFuture Context::complete_commit(
   return future;
 }
 
-DataCommitResponseSharedFuture Context::cancel_commit(
-    DataCommitResponseSharedPromise promise,
-    DataCommitResponseSharedFuture future,
-    DataCommitResponseCallback callback) {
-  auto response = DataCommitResponse::make_shared();
-  response->data_ = nullptr;
-  response->result_ = false;
+CommandCommitResponseSharedFuture Context::cancel_commit(
+    CommandCommitResponseSharedPromise promise,
+    CommandCommitResponseSharedFuture future, uint64_t id,
+    CommandCommitResponseCallback callback) {
+  auto response = CommandCommitResponse::make_shared(id, nullptr, false);
   promise->set_value(response);
   if (callback != nullptr) {
     callback(future);
@@ -436,28 +431,28 @@ DataCommitResponseSharedFuture Context::cancel_commit(
   return future;
 }
 
-DataCommitResponseSharedFuture Context::commit_data(
-    const uint64_t &id, std::vector<uint8_t> &data,
-    DataCommitResponseCallback callback) {
-  DataCommitResponseSharedPromise commit_promise =
-      std::make_shared<DataCommitResponsePromise>();
-  DataCommitResponseSharedFuture commit_future = commit_promise->get_future();
-
-  if (data_interface_ == nullptr) {
-    RCLCPP_ERROR(logger_, "no data interface registered");
-    return cancel_commit(commit_promise, commit_future, callback);
-  }
-
+CommandCommitResponseSharedFuture Context::commit_command(
+    Command::SharedPtr command, CommandCommitResponseCallback &callback) {
+  CommandCommitResponseSharedPromise commit_promise =
+      std::make_shared<CommandCommitResponsePromise>();
+  CommandCommitResponseSharedFuture commit_future =
+      commit_promise->get_future();
   if (state_machine_interface_->is_leader() == false) {
-    RCLCPP_ERROR(logger_, "can not commit when this node is not leader");
-    return cancel_commit(commit_promise, commit_future, callback);
+    RCLCPP_ERROR(logger_, "can not commit since this node is not leader");
+    return cancel_commit(commit_promise, commit_future, store_->logs_size(),
+                         callback);
   }
 
-  auto commit_data = Data::make_shared(id, store_->current_term(), data);
+  auto log = LogEntry::make_shared(store_->logs_size(), store_->current_term(),
+                                   command);
+
+  if (cluster_size_ <= 1) {
+    return complete_commit(commit_promise, commit_future, log, true, callback);
+  }
 
   if (set_pending_commit(std::make_shared<PendingCommit>(
-          commit_data, commit_promise, commit_future, callback)) == false) {
-    return cancel_commit(commit_promise, commit_future, callback);
+          log, commit_promise, commit_future, callback)) == false) {
+    return cancel_commit(commit_promise, commit_future, log->id_, callback);
   }
 
   return commit_future;
@@ -465,8 +460,11 @@ DataCommitResponseSharedFuture Context::commit_data(
 
 std::shared_ptr<PendingCommit> Context::get_pending_commit() {
   std::lock_guard<std::mutex> lock(pending_commit_lock_);
-  if (pending_commit_ == nullptr) return nullptr;
-  if (pending_commit_->data_->id() != last_commit_.index_ + 1) {
+  if (pending_commit_ == nullptr || pending_commit_->log_ == nullptr) {
+    return nullptr;
+  }
+
+  if (pending_commit_->log_->id_ != store_->logs_size()) {
     pending_commit_ = nullptr;
     return nullptr;
   }
@@ -475,14 +473,14 @@ std::shared_ptr<PendingCommit> Context::get_pending_commit() {
 }
 
 bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
-  if (commit->data_->id() != last_commit_.index_ + 1) {
+  if (commit->log_->id_ != store_->logs_size()) {
     return false;
   }
 
   std::lock_guard<std::mutex> lock(pending_commit_lock_);
 
-  if (pending_commit_ != nullptr) {
-    if (pending_commit_->data_->id() == last_commit_.index_ + 1) {
+  if (pending_commit_ != nullptr && pending_commit_->log_ != nullptr) {
+    if (pending_commit_->log_->id_ == store_->logs_size()) {
       return false;
     }
   }
@@ -493,6 +491,7 @@ bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
 }
 
 void Context::cancel_pending_commit() {
+  RCLCPP_ERROR(logger_, "cancel pending commit");
   std::shared_ptr<PendingCommit> commit;
   {
     std::lock_guard<std::mutex> lock(pending_commit_lock_);
@@ -500,8 +499,8 @@ void Context::cancel_pending_commit() {
     pending_commit_ = nullptr;
   }
 
-  if (commit != nullptr) {
-    complete_commit(commit->promise_, commit->future_, commit->data_, false,
+  if (commit != nullptr && commit->log_ != nullptr) {
+    complete_commit(commit->promise_, commit->future_, commit->log_, false,
                     commit->callback_);
   }
 }
@@ -516,8 +515,8 @@ void Context::handle_pending_commit_response(const uint32_t id,
   {
     std::lock_guard<std::mutex> lock(pending_commit_lock_);
     commit = pending_commit_;
-    if (commit == nullptr || commit->data_->id() != commit_index ||
-        commit->data_->sub_id() != term) {
+    if (commit == nullptr || commit->log_ == nullptr ||
+        commit->log_->id_ != commit_index || commit->log_->term_ != term) {
       return;
     }
     commit->result_map_[id] = success;
@@ -537,13 +536,11 @@ void Context::handle_pending_commit_response(const uint32_t id,
       return;
     }
 
-    last_commit_.index_ = commit_index;
-    last_commit_.term_ = term;
     result = true;
     pending_commit_ = nullptr;
   }
 
-  complete_commit(commit->promise_, commit->future_, commit->data_, result,
+  complete_commit(commit->promise_, commit->future_, commit->log_, result,
                   commit->callback_);
 }
 
@@ -557,21 +554,36 @@ void Context::on_broadcast_response(const uint32_t id,
   handle_pending_commit_response(id, commit_index, term, success);
 }
 
-Data::SharedPtr Context::on_data_get_requested(uint64_t id) {
-  if (data_interface_ == nullptr) {
-    return nullptr;
-  }
-
+const std::shared_ptr<LogEntry> Context::on_log_get_request(uint64_t id) {
   auto commit = get_pending_commit();
-  if (commit != nullptr && commit->data_ != nullptr &&
-      commit->data_->id() == id) {
-    return commit->data_;
+  if (commit != nullptr && commit->log_ != nullptr && commit->log_->id_ == id) {
+    return commit->log_;
   }
 
-  return data_interface_->on_data_get_requested(id);
+  return store_->log(id);
 }
 
 bool Context::is_valid_node(uint32_t id) { return other_nodes_.count(id) != 0; }
+
+uint64_t Context::get_commands_size() { return store_->logs_size(); }
+
+Command::SharedPtr Context::get_command(uint64_t id) {
+  auto log = store_->log(id);
+  if (log == nullptr) {
+    return nullptr;
+  }
+
+  return log->command_;
+}
+
+void Context::register_on_committed(
+    std::function<void(uint64_t, Command::SharedPtr)> callback) {
+  commit_callback_ = callback;
+}
+
+void Context::register_on_reverted(std::function<void(uint64_t)> callback) {
+  revert_callback_ = callback;
+}
 
 }  // namespace raft
 }  // namespace foros

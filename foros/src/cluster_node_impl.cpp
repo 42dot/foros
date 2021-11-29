@@ -38,14 +38,12 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    ClusterNodeDataInterface::SharedPtr data_interface,
     const ClusterNodeOptions &options)
     : logger_(node_logging->get_logger().get_child("cluster_node")),
       raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
-          node_timers, node_clock, data_interface,
-          options.election_timeout_min(), options.election_timeout_max(),
-          options.temp_directory(), logger_)),
+          node_timers, node_clock, options.election_timeout_min(),
+          options.election_timeout_max(), options.temp_directory(), logger_)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_, logger_)),
       lifecycle_fsm_(std::make_unique<lifecycle::StateMachine>(logger_)) {
@@ -118,10 +116,9 @@ bool ClusterNodeImpl::is_activated() {
          lifecycle::StateType::kActive;
 }
 
-DataCommitResponseSharedFuture ClusterNodeImpl::commit_data(
-    const uint64_t &id, std::vector<uint8_t> &data,
-    DataCommitResponseCallback &callback) {
-  return raft_context_->commit_data(id, data, callback);
+CommandCommitResponseSharedFuture ClusterNodeImpl::commit_command(
+    Command::SharedPtr command, CommandCommitResponseCallback &callback) {
+  return raft_context_->commit_command(command, callback);
 }
 
 void ClusterNodeImpl::register_on_activated(std::function<void()> callback) {
@@ -134,6 +131,24 @@ void ClusterNodeImpl::register_on_deactivated(std::function<void()> callback) {
 
 void ClusterNodeImpl::register_on_standby(std::function<void()> callback) {
   standby_callback_ = callback;
+}
+
+uint64_t ClusterNodeImpl::get_commands_size() {
+  return raft_context_->get_commands_size();
+}
+
+Command::SharedPtr ClusterNodeImpl::get_command(uint64_t id) {
+  return raft_context_->get_command(id);
+}
+
+void ClusterNodeImpl::register_on_committed(
+    std::function<void(uint64_t, Command::SharedPtr)> callback) {
+  raft_context_->register_on_committed(callback);
+}
+
+void ClusterNodeImpl::register_on_reverted(
+    std::function<void(uint64_t)> callback) {
+  raft_context_->register_on_reverted(callback);
 }
 
 }  // namespace foros

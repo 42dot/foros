@@ -36,8 +36,7 @@
 #include <tuple>
 #include <vector>
 
-#include "akit/failover/foros/cluster_node_data_interface.hpp"
-#include "akit/failover/foros/data.hpp"
+#include "akit/failover/foros/command.hpp"
 #include "raft/commit_info.hpp"
 #include "raft/context_store.hpp"
 #include "raft/other_node.hpp"
@@ -58,7 +57,6 @@ class Context {
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-      ClusterNodeDataInterface::SharedPtr data_interface,
       const unsigned int election_timeout_min,
       const unsigned int election_timeout_max,
       const std::string &temp_directory, rclcpp::Logger &logger);
@@ -78,10 +76,14 @@ class Context {
   uint64_t get_term();
   void broadcast();
   void request_vote();
-  DataCommitResponseSharedFuture commit_data(
-      const uint64_t &id, std::vector<uint8_t> &data,
-      DataCommitResponseCallback callback);
+  CommandCommitResponseSharedFuture commit_command(
+      Command::SharedPtr command, CommandCommitResponseCallback &callback);
   void cancel_pending_commit();
+  uint64_t get_commands_size();
+  Command::SharedPtr get_command(uint64_t id);
+  void register_on_committed(
+      std::function<void(uint64_t, Command::SharedPtr)> callback);
+  void register_on_reverted(std::function<void(uint64_t)> callback);
 
  private:
   void initialize_node();
@@ -92,8 +94,8 @@ class Context {
 
   // Voting methods
   std::tuple<uint64_t, bool> vote(const uint64_t term, const uint32_t id,
-                                  const uint64_t last_data_index,
-                                  const uint64_t last_data_term);
+                                  const uint64_t last_command_index,
+                                  const uint64_t last_command_term);
   void on_request_vote_requested(
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<foros_msgs::srv::RequestVote::Request> request,
@@ -107,26 +109,26 @@ class Context {
       const std::shared_ptr<rmw_request_id_t> header,
       const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request,
       std::shared_ptr<foros_msgs::srv::AppendEntries::Response> response);
-  uint32_t request_remote_commit(const Data::SharedPtr data);
+  uint32_t request_remote_commit(const Command::SharedPtr command);
   bool request_local_commit(
       const std::shared_ptr<foros_msgs::srv::AppendEntries::Request> request);
   void request_local_rollback(const uint64_t commit_index);
   void on_broadcast_response(const uint32_t id, const uint64_t commit_index,
                              const uint64_t term, const bool success);
-  DataCommitResponseSharedFuture complete_commit(
-      DataCommitResponseSharedPromise promise,
-      DataCommitResponseSharedFuture future, Data::SharedPtr data, bool result,
-      DataCommitResponseCallback callback);
-  DataCommitResponseSharedFuture cancel_commit(
-      DataCommitResponseSharedPromise promise,
-      DataCommitResponseSharedFuture future,
-      DataCommitResponseCallback callback);
+  CommandCommitResponseSharedFuture complete_commit(
+      CommandCommitResponseSharedPromise promise,
+      CommandCommitResponseSharedFuture future, LogEntry::SharedPtr log,
+      bool result, CommandCommitResponseCallback callback);
+  CommandCommitResponseSharedFuture cancel_commit(
+      CommandCommitResponseSharedPromise promise,
+      CommandCommitResponseSharedFuture future, uint64_t id,
+      CommandCommitResponseCallback callback);
   std::shared_ptr<PendingCommit> get_pending_commit();
   bool set_pending_commit(std::shared_ptr<PendingCommit> commit);
   void handle_pending_commit_response(const uint32_t id,
                                       const uint64_t commit_index,
                                       const uint64_t term, const bool success);
-  Data::SharedPtr on_data_get_requested(uint64_t id);
+  const std::shared_ptr<LogEntry> on_log_get_request(uint64_t id);
 
   const std::string cluster_name_;
   uint32_t node_id_;
@@ -152,11 +154,9 @@ class Context {
   std::unique_ptr<ContextStore> store_;  // Persistent data store
 
   // volatile data
-
   unsigned int vote_received_;  // number of received votes in current term
-  unsigned int majority_;       // number of majority of the full cluster
-
-  CommitInfo last_commit_;  // index of highest data entry known to be committed
+  uint32_t majority_;           // number of majority of the full cluster
+  uint32_t cluster_size_;       // number of nodes in the cluster
 
   unsigned int election_timeout_min_;  // minimum election timeout in msecs
   unsigned int election_timeout_max_;  // maximum election timeout in msecs
@@ -171,10 +171,10 @@ class Context {
 
   std::mutex pending_commit_lock_;
   std::shared_ptr<PendingCommit> pending_commit_;
+  std::function<void(uint64_t, Command::SharedPtr)> commit_callback_;
+  std::function<void(uint64_t)> revert_callback_;
 
   StateMachineInterface *state_machine_interface_;
-  ClusterNodeDataInterface::SharedPtr data_interface_;
-  bool data_replication_enabled_;
 
   rclcpp::Logger logger_;
 };
