@@ -158,7 +158,7 @@ void Context::on_append_entries_requested(
     state_machine_interface_->on_leader_discovered();
   }
 
-  if (request->data.size() == 0) {
+  if (request->entries.size() == 0) {
     response->success = false;
     return;
   }
@@ -169,11 +169,11 @@ void Context::on_append_entries_requested(
     return;
   }
 
-  auto log = store_->log(request->prev_data_index);
+  auto log = store_->log(request->prev_log_index);
   if (log == nullptr) {
     response->success = false;
   } else {
-    if (log->term_ != request->prev_data_term) {
+    if (log->term_ != request->prev_log_term) {
       request_local_rollback(log->id_);
       response->success = false;
     } else {
@@ -201,7 +201,7 @@ bool Context::request_local_commit(
   }
 
   log = LogEntry::make_shared(request->leader_commit, request->term,
-                              Command::make_shared(request->data));
+                              Command::make_shared(request->entries));
 
   if (store_->push_log(log) == false) {
     return false;

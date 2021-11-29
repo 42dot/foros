@@ -1,8 +1,8 @@
 uint64 term              # leader's term
 uint32 leader_id         # so followers can redirect clients
-uint64 prev_data_index   # index of data entry immediately preceeding new ones
-uint64 prev_data_term    # term of prev_data_index
-byte[] data              # data entry to store
+uint64 prev_log_index    # index of log entry immediately preceeding new ones
+uint64 prev_log_term     # term of prev_log_index
+byte[] entries           # log entries to store (empty for heartbeat)
 uint64 leader_commit     # leader's commitIndex
 ---
 uint64 term              # current term, for leader to update itself

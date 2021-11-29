@@ -76,7 +76,7 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
     if (log != nullptr && log->id_ >= next_index_) {
       auto entry = get_log_entry_callback_(next_index_);
       if (entry != nullptr) {
-        request->data = entry->command_->data();
+        request->entries = entry->command_->data();
         request->leader_commit = entry->id_;
         request->term = entry->term_;
       }
@@ -85,8 +85,8 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
     if (next_index_ > 0) {
       auto entry = get_log_entry_callback_(next_index_ - 1);
       if (entry != nullptr) {
-        request->prev_data_index = entry->id_;
-        request->prev_data_term = entry->term_;
+        request->prev_log_index = entry->id_;
+        request->prev_log_term = entry->term_;
       }
     }
   }
