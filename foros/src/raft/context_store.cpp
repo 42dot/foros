@@ -300,7 +300,7 @@ bool ContextStore::set_log_data(const uint64_t id, std::vector<uint8_t> data) {
   }
 
   std::string buffer(data.begin(), data.end());
-  leveldb::Slice value(buffer.c_str(), sizeof(uint64_t));
+  leveldb::Slice value(buffer.c_str(), data.size());
   auto status = db_->Put(leveldb::WriteOptions(), get_log_data_key(id), value);
   if (status.ok() == false) {
     RCLCPP_ERROR(logger_, "logs term for %lu set failed: %s", id,
@@ -353,6 +353,10 @@ bool ContextStore::push_log(LogEntry::SharedPtr log) {
 }
 
 bool ContextStore::revert_log(const uint64_t id) {
+  if (id >= logs_.size()) {
+    RCLCPP_ERROR(logger_, "invalid id to revert: %lu", id);
+    return false;
+  }
   logs_.resize(id);
   set_logs_size(id);
   return true;
