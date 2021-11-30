@@ -73,8 +73,8 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   uint64_t get_commands_size();
   Command::SharedPtr get_command(uint64_t id);
   void register_on_committed(
-      std::function<void(uint64_t, Command::SharedPtr)> callback);
-  void register_on_reverted(std::function<void(uint64_t)> callback);
+      std::function<void(const uint64_t, Command::SharedPtr)> callback);
+  void register_on_reverted(std::function<void(const uint64_t)> callback);
 
  private:
   rclcpp::Logger logger_;

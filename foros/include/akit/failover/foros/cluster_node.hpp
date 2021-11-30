@@ -1141,14 +1141,14 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    */
   CLUSTER_NODE_PUBLIC
   void register_on_committed(
-      std::function<void(uint64_t, Command::SharedPtr)> callback);
+      std::function<void(const uint64_t, Command::SharedPtr)> callback);
 
   /// Register the reverted callback
   /**
    * \param[in] callback The callback to register
    */
   CLUSTER_NODE_PUBLIC
-  void register_on_reverted(std::function<void(uint64_t)> callback);
+  void register_on_reverted(std::function<void(const uint64_t)> callback);
 
  private:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;

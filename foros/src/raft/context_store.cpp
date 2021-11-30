@@ -28,8 +28,11 @@ namespace failover {
 namespace foros {
 namespace raft {
 
-ContextStore::ContextStore(std::string &path, rclcpp::Logger &logger)
-    : logger_(logger.get_child("raft")) {
+ContextStore::ContextStore(const std::string &path, rclcpp::Logger &logger)
+    : current_term_(0),
+      voted_for_(0),
+      voted_(false),
+      logger_(logger.get_child("raft")) {
   leveldb::Options options;
   options.create_if_missing = true;
 

@@ -35,7 +35,7 @@ namespace raft {
 
 class ContextStore final {
  public:
-  explicit ContextStore(std::string &path, rclcpp::Logger &logger);
+  explicit ContextStore(const std::string &path, rclcpp::Logger &logger);
   ~ContextStore();
 
   bool current_term(const uint64_t term);
@@ -75,7 +75,6 @@ class ContextStore final {
   const char *kLogSizeKey = "log_size";
 
   leveldb::DB *db_;
-  rclcpp::Logger logger_;
 
   uint64_t current_term_;
   uint32_t voted_for_;
@@ -83,6 +82,8 @@ class ContextStore final {
 
   std::vector<LogEntry::SharedPtr> logs_;
   uint64_t log_size_;
+
+  rclcpp::Logger logger_;
 };
 
 }  // namespace raft

@@ -77,13 +77,13 @@ class Context {
   void broadcast();
   void request_vote();
   CommandCommitResponseSharedFuture commit_command(
-      Command::SharedPtr command, CommandCommitResponseCallback &callback);
+      Command::SharedPtr command, CommandCommitResponseCallback callback);
   void cancel_pending_commit();
   uint64_t get_commands_size();
   Command::SharedPtr get_command(uint64_t id);
   void register_on_committed(
-      std::function<void(uint64_t, Command::SharedPtr)> callback);
-  void register_on_reverted(std::function<void(uint64_t)> callback);
+      std::function<void(const uint64_t, Command::SharedPtr)> callback);
+  void register_on_reverted(std::function<void(const uint64_t)> callback);
 
  private:
   void initialize_node();

@@ -142,12 +142,12 @@ Command::SharedPtr ClusterNodeImpl::get_command(uint64_t id) {
 }
 
 void ClusterNodeImpl::register_on_committed(
-    std::function<void(uint64_t, Command::SharedPtr)> callback) {
+    std::function<void(const uint64_t, Command::SharedPtr)> callback) {
   raft_context_->register_on_committed(callback);
 }
 
 void ClusterNodeImpl::register_on_reverted(
-    std::function<void(uint64_t)> callback) {
+    std::function<void(const uint64_t)> callback) {
   raft_context_->register_on_reverted(callback);
 }
 

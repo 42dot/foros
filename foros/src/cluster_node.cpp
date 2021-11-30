@@ -353,11 +353,12 @@ Command::SharedPtr ClusterNode::get_command(uint64_t id) {
 }
 
 void ClusterNode::register_on_committed(
-    std::function<void(uint64_t, Command::SharedPtr)> callback) {
+    std::function<void(const uint64_t, Command::SharedPtr)> callback) {
   impl_->register_on_committed(callback);
 }
 
-void ClusterNode::register_on_reverted(std::function<void(uint64_t)> callback) {
+void ClusterNode::register_on_reverted(
+    std::function<void(const uint64_t)> callback) {
   impl_->register_on_reverted(callback);
 }
 

@@ -432,7 +432,7 @@ CommandCommitResponseSharedFuture Context::cancel_commit(
 }
 
 CommandCommitResponseSharedFuture Context::commit_command(
-    Command::SharedPtr command, CommandCommitResponseCallback &callback) {
+    Command::SharedPtr command, CommandCommitResponseCallback callback) {
   CommandCommitResponseSharedPromise commit_promise =
       std::make_shared<CommandCommitResponsePromise>();
   CommandCommitResponseSharedFuture commit_future =
