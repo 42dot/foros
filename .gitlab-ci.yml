@@ -34,7 +34,7 @@ test-job:
       - test-result
       - coverage
     reports:
-      cobertura: coverage/index.html
+      cobertura: coverage/report.html
 
 deploy-job:      # TBD
   stage: deploy
