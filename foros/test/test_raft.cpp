@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <chrono>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "akit/failover/foros/cluster_node.hpp"
+#include "common/node_util.hpp"
 #include "raft/context.hpp"
 #include "raft/context_store.hpp"
 #include "raft/state_machine_interface.hpp"
+
+using namespace std::chrono_literals;
 
 class TestRaft : public ::testing::Test {
  protected:
@@ -33,26 +39,85 @@ class TestRaft : public ::testing::Test {
 
   static void TearDownTestCase() { rclcpp::shutdown(); }
 
-  std::string kTempPath = "/tmp";
-  std::string kStorePath = "/tmp/foros_test_cluster0";
-  const uint32_t kNodeId = 0;
+  const std::string kTempPath = "/tmp";
+  const std::string kStorePath = "/tmp/foros_test_cluster0";
+  const std::string kInvalidStorePath = "@/3kj1;tmp/abc/def/adf01-_";
   const char* kClusterName = "test_cluster";
+  const uint32_t kNodeId = 0;
+  const uint32_t kOtherNodeId = 1;
+  const std::vector<uint32_t> kClusterIds = std::initializer_list<uint32_t>{0};
+  const std::vector<uint32_t> kClusterIds2 =
+      std::initializer_list<uint32_t>{0, 1};
+  const uint8_t kTestData = 'a';
+  const uint64_t kCurrentTerm = 10;
+  const uint32_t kVotedFor = 1;
+  const uint64_t kMaxCommitSize = 3;
+  const unsigned int kElectionTimeoutMin = 15000;
+  const unsigned int kElectionTimeoutMax = 20000;
   rclcpp::Logger logger_ = rclcpp::get_logger("test_raft");
-  std::vector<uint32_t> kClusterIds = std::initializer_list<uint32_t>{0};
 };
 
-class TestStateMachine
+// state machine interface
+class MockStateMachineInterface
     : public akit::failover::foros::raft::StateMachineInterface {
  public:
-  void on_election_timedout() override {}
-  void on_new_term_received() override {}
-  void on_elected() override {}
-  void on_broadcast_timedout() override {}
-  void on_leader_discovered() override {}
-  bool is_leader() override { return true; };
+  MOCK_METHOD(void, on_election_timedout, (), (override));
+  MOCK_METHOD(void, on_new_term_received, (), (override));
+  MOCK_METHOD(void, on_elected, (), (override));
+  MOCK_METHOD(void, on_broadcast_timedout, (), (override));
+  MOCK_METHOD(void, on_leader_discovered, (), (override));
+  MOCK_METHOD(bool, is_leader, (), (override));
+};
+
+class TestContext : public akit::failover::foros::raft::Context {
+ public:
+  TestContext(const std::string& cluster_name, const uint32_t node_id,
+              rclcpp::Node::SharedPtr node,
+              const unsigned int election_timeout_min,
+              const unsigned int election_timeout_max,
+              const std::string& temp_directory, rclcpp::Logger& logger)
+      : akit::failover::foros::raft::Context(
+            cluster_name, node_id, node->get_node_base_interface(),
+            node->get_node_graph_interface(),
+            node->get_node_services_interface(),
+            node->get_node_timers_interface(), node->get_node_clock_interface(),
+            election_timeout_min, election_timeout_max, temp_directory,
+            logger) {
+    rcl_client_options_t options = rcl_client_get_default_options();
+    options.qos = rmw_qos_profile_services_default;
+    append_entries_ =
+        rclcpp::Client<foros_msgs::srv::AppendEntries>::make_shared(
+            node->get_node_base_interface().get(),
+            node->get_node_graph_interface(),
+            akit::failover::foros::NodeUtil::get_service_name(
+                cluster_name, node_id,
+                akit::failover::foros::NodeUtil::kAppendEntriesServiceName),
+            options);
+  }
+
+  std::shared_future<std::shared_ptr<foros_msgs::srv::AppendEntries_Response>>
+  send_on_append_entries_requested(uint64_t current_term, uint32_t leader_id,
+                                   uint64_t leader_commit,
+                                   uint64_t prev_log_index,
+                                   uint64_t prev_log_term,
+                                   std::vector<uint8_t> data) {
+    auto request = std::make_shared<foros_msgs::srv::AppendEntries::Request>();
+    request->term = current_term;
+    request->leader_id = leader_id;
+    request->leader_commit = leader_commit;
+    request->prev_log_index = prev_log_index;
+    request->prev_log_term = prev_log_term;
+    request->entries = data;
+
+    return append_entries_->async_send_request(request);
+  }
+
+ private:
+  rclcpp::Client<foros_msgs::srv::AppendEntries>::SharedPtr append_entries_;
 };
 
 TEST_F(TestRaft, TestContextStore) {
+  // Clear temp directory to store logs
   try {
     std::filesystem::remove_all(kStorePath);
   } catch (const std::filesystem::filesystem_error& err) {
@@ -61,57 +126,90 @@ TEST_F(TestRaft, TestContextStore) {
 
   auto store = akit::failover::foros::raft::ContextStore(kStorePath, logger_);
 
+  // test current term
   EXPECT_EQ(store.current_term(), (uint64_t)0);
-  EXPECT_EQ(store.current_term(1), true);
-  EXPECT_EQ(store.current_term(), (uint64_t)1);
+  EXPECT_EQ(store.current_term(kCurrentTerm), true);
+  EXPECT_EQ(store.current_term(), kCurrentTerm);
 
+  // test voted
   EXPECT_EQ(store.voted(), false);
   EXPECT_EQ(store.voted(true), true);
   EXPECT_EQ(store.voted(), true);
 
+  // test voted_for
   EXPECT_EQ(store.voted_for(), (uint32_t)0);
-  EXPECT_EQ(store.voted_for(1), true);
-  EXPECT_EQ(store.voted_for(), (uint32_t)1);
+  EXPECT_EQ(store.voted_for(kVotedFor), true);
+  EXPECT_EQ(store.voted_for(), kVotedFor);
 
+  // test logs
   EXPECT_EQ(store.logs_size(), (uint64_t)0);
   auto command = akit::failover::foros::Command::make_shared(
-      std::initializer_list<uint8_t>{'a'});
+      std::initializer_list<uint8_t>{kTestData});
   EXPECT_EQ(store.push_log(akit::failover::foros::raft::LogEntry::make_shared(
-                0, 10, command)),
+                0, kCurrentTerm, command)),
             true);
-
   EXPECT_EQ(store.logs_size(), (uint64_t)1);
+
   auto log = store.log(0);
   EXPECT_EQ(log, store.log());
   EXPECT_EQ(log->id_, (uint64_t)0);
   EXPECT_EQ(log->term_, (uint64_t)10);
-  EXPECT_EQ(log->command_->data()[0], 'a');
+  EXPECT_EQ(log->command_->data()[0], kTestData);
   EXPECT_EQ(log->command_->data().size(), (std::size_t)1);
+
   EXPECT_EQ(store.revert_log(1), false);
   EXPECT_EQ(store.revert_log(0), true);
   EXPECT_EQ(store.logs_size(), (uint64_t)0);
+
+  uint64_t i;
+  for (i = 0; i < kMaxCommitSize; i++) {
+    EXPECT_EQ(store.push_log(akit::failover::foros::raft::LogEntry::make_shared(
+                  i, kCurrentTerm, command)),
+              true);
+  }
+  // push log with invalid ID
   EXPECT_EQ(store.push_log(akit::failover::foros::raft::LogEntry::make_shared(
-                0, 10, command)),
-            true);
+                i + 1, kCurrentTerm, command)),
+            false);
 }
 
 TEST_F(TestRaft, TestContextStoreWithInitialData) {
   auto store = akit::failover::foros::raft::ContextStore(kStorePath, logger_);
 
-  EXPECT_EQ(store.current_term(), (uint64_t)1);
+  EXPECT_EQ(store.current_term(), kCurrentTerm);
   EXPECT_EQ(store.voted(), true);
-  EXPECT_EQ(store.voted_for(), (uint32_t)1);
+  EXPECT_EQ(store.voted_for(), kVotedFor);
 
-  EXPECT_EQ(store.logs_size(), (uint64_t)1);
-  auto log = store.log(0);
+  EXPECT_EQ(store.logs_size(), kMaxCommitSize);
+  auto log = store.log(kMaxCommitSize - 1);
   EXPECT_EQ(log, store.log());
-  EXPECT_EQ(log->id_, (uint64_t)0);
-  EXPECT_EQ(log->term_, (uint64_t)10);
-  EXPECT_EQ(log->command_->data()[0], 'a');
-  EXPECT_EQ(log->command_->data().size(), sizeof(uint8_t));
+  EXPECT_EQ(log->id_, kMaxCommitSize - 1);
+  EXPECT_EQ(log->term_, kCurrentTerm);
+  EXPECT_EQ(log->command_->data()[0], kTestData);
+  EXPECT_EQ(log->command_->data().size(), sizeof(kTestData));
 }
 
-TEST_F(TestRaft, TestContext) {
+TEST_F(TestRaft, TestContextStoreWithInvalidPath) {
+  auto store =
+      akit::failover::foros::raft::ContextStore(kInvalidStorePath, logger_);
+
+  // test current term
+  EXPECT_EQ(store.current_term(), (uint64_t)0);
+  EXPECT_EQ(store.current_term(kCurrentTerm), false);
+  EXPECT_EQ(store.current_term(), kCurrentTerm);
+
+  // test voted
+  EXPECT_EQ(store.voted(), false);
+  EXPECT_EQ(store.voted(true), false);
+  EXPECT_EQ(store.voted(), true);
+
+  // test voted_for
+  EXPECT_EQ(store.voted_for(), (uint32_t)0);
+  EXPECT_EQ(store.voted_for(kVotedFor), false);
+  EXPECT_EQ(store.voted_for(), kVotedFor);
+}
+
+TEST_F(TestRaft, TestContextTermMethods) {
   try {
     std::filesystem::remove_all(kStorePath);
   } catch (const std::filesystem::filesystem_error& err) {
@@ -122,9 +220,11 @@ TEST_F(TestRaft, TestContext) {
   auto context = akit::failover::foros::raft::Context(
       kClusterName, kNodeId, node.get_node_base_interface(),
       node.get_node_graph_interface(), node.get_node_services_interface(),
-      node.get_node_timers_interface(), node.get_node_clock_interface(), 15000,
-      20000, kTempPath, logger_);
-  TestStateMachine state_machine;
+      node.get_node_timers_interface(), node.get_node_clock_interface(),
+      kElectionTimeoutMin, kElectionTimeoutMax, kTempPath, logger_);
+
+  MockStateMachineInterface state_machine;
+  ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(true));
   context.initialize(kClusterIds, &state_machine);
 
   EXPECT_EQ(context.get_node_name(),
@@ -133,22 +233,193 @@ TEST_F(TestRaft, TestContext) {
   auto term = context.get_term();
   context.increase_term();
   EXPECT_EQ(context.get_term(), term + 1);
+}
+
+TEST_F(TestRaft, TestContextLeaderCommandCommit) {
+  try {
+    std::filesystem::remove_all(kStorePath);
+  } catch (const std::filesystem::filesystem_error& err) {
+    RCLCPP_ERROR(logger_, "failed to remove file %s", err.what());
+  }
+
+  auto context = TestContext(
+      kClusterName, kNodeId,
+      rclcpp::Node::make_shared(kClusterName + std::to_string(kNodeId)),
+      kElectionTimeoutMin, kElectionTimeoutMax, kTempPath, logger_);
+
+  MockStateMachineInterface state_machine;
+  ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(true));
+  context.initialize(kClusterIds, &state_machine);
+
+  testing::MockFunction<void(const uint64_t,
+                             akit::failover::foros::Command::SharedPtr)>
+      on_committed_callback;
+  testing::MockFunction<void(const uint64_t)> on_reverted_callback;
+  testing::MockFunction<void(
+      akit::failover::foros::CommandCommitResponseSharedFuture)>
+      on_commit_response;
+
+  auto next_id = context.get_commands_size();
+  EXPECT_EQ(next_id, uint64_t(0));
+
+  EXPECT_CALL(on_commit_response, Call(testing::_)).WillOnce(testing::Return());
+  EXPECT_CALL(on_committed_callback, Call(next_id, testing::_))
+      .WillOnce(testing::Return());
+  EXPECT_CALL(on_reverted_callback, Call(testing::_)).Times(0);
+
+  context.register_on_committed(on_committed_callback.AsStdFunction());
+  context.register_on_reverted(on_reverted_callback.AsStdFunction());
+
   EXPECT_EQ(context.get_commands_size(), (uint64_t)0);
-
-  bool response_callback_invoked = false;
-  akit::failover::foros::CommandCommitResponseCallback response_callback =
-      [&](akit::failover::foros::CommandCommitResponseSharedFuture future) {
-        auto response = future.get();
-        RCLCPP_ERROR(logger_, "commit result: %d", response->result());
-      };
-
   auto future =
       context.commit_command(akit::failover::foros::Command::make_shared(
-                                 std::initializer_list<uint8_t>{'a'}),
-                             response_callback);
+                                 std::initializer_list<uint8_t>{kTestData}),
+                             on_commit_response.AsStdFunction());
+
   EXPECT_EQ(context.get_commands_size(), (uint64_t)1);
 
-  context.register_on_committed(
-      [&](uint64_t id, akit::failover::foros::Command::SharedPtr command) {});
-  context.register_on_reverted([&](uint64_t id) {});
+  auto command = context.get_command(next_id);
+  EXPECT_NE(command, nullptr);
+  EXPECT_EQ(command->data()[0], kTestData);
+}
+
+TEST_F(TestRaft, TestContextNonLeaderCommandCommit) {
+  try {
+    std::filesystem::remove_all(kStorePath);
+  } catch (const std::filesystem::filesystem_error& err) {
+    RCLCPP_ERROR(logger_, "failed to remove file %s", err.what());
+  }
+
+  auto context = TestContext(
+      kClusterName, kNodeId,
+      rclcpp::Node::make_shared(kClusterName + std::to_string(kNodeId)),
+      kElectionTimeoutMin, kElectionTimeoutMax, kTempPath, logger_);
+
+  MockStateMachineInterface state_machine;
+  ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(false));
+  context.initialize(kClusterIds, &state_machine);
+
+  testing::MockFunction<void(const uint64_t,
+                             akit::failover::foros::Command::SharedPtr)>
+      on_committed_callback;
+  testing::MockFunction<void(const uint64_t)> on_reverted_callback;
+  testing::MockFunction<void(
+      akit::failover::foros::CommandCommitResponseSharedFuture)>
+      on_commit_response;
+
+  auto next_id = context.get_commands_size();
+  EXPECT_EQ(next_id, uint64_t(0));
+
+  EXPECT_CALL(on_commit_response, Call(testing::_)).WillOnce(testing::Return());
+  EXPECT_CALL(on_committed_callback, Call(next_id, testing::_)).Times(0);
+  EXPECT_CALL(on_reverted_callback, Call(testing::_)).Times(0);
+
+  context.register_on_committed(on_committed_callback.AsStdFunction());
+  context.register_on_reverted(on_reverted_callback.AsStdFunction());
+
+  EXPECT_EQ(context.get_commands_size(), (uint64_t)0);
+  auto future =
+      context.commit_command(akit::failover::foros::Command::make_shared(
+                                 std::initializer_list<uint8_t>{kTestData}),
+                             on_commit_response.AsStdFunction());
+
+  EXPECT_EQ(context.get_commands_size(), (uint64_t)0);
+}
+
+TEST_F(TestRaft, TestContextCommandCommitPending) {
+  try {
+    std::filesystem::remove_all(kStorePath);
+  } catch (const std::filesystem::filesystem_error& err) {
+    RCLCPP_ERROR(logger_, "failed to remove file %s", err.what());
+  }
+
+  auto context = TestContext(
+      kClusterName, kNodeId,
+      rclcpp::Node::make_shared(kClusterName + std::to_string(kNodeId)),
+      kElectionTimeoutMin, kElectionTimeoutMax, kTempPath, logger_);
+
+  MockStateMachineInterface state_machine;
+  ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(true));
+  context.initialize(kClusterIds2, &state_machine);
+
+  testing::MockFunction<void(const uint64_t,
+                             akit::failover::foros::Command::SharedPtr)>
+      on_committed_callback;
+  testing::MockFunction<void(const uint64_t)> on_reverted_callback;
+  testing::MockFunction<void(
+      akit::failover::foros::CommandCommitResponseSharedFuture)>
+      on_commit_response;
+
+  auto next_id = context.get_commands_size();
+  EXPECT_EQ(next_id, uint64_t(0));
+
+  EXPECT_CALL(on_commit_response, Call(testing::_)).Times(0);
+  EXPECT_CALL(on_committed_callback, Call(next_id, testing::_)).Times(0);
+  EXPECT_CALL(on_reverted_callback, Call(testing::_)).Times(0);
+
+  context.register_on_committed(on_committed_callback.AsStdFunction());
+  context.register_on_reverted(on_reverted_callback.AsStdFunction());
+
+  EXPECT_EQ(context.get_commands_size(), (uint64_t)0);
+  auto future =
+      context.commit_command(akit::failover::foros::Command::make_shared(
+                                 std::initializer_list<uint8_t>{kTestData}),
+                             on_commit_response.AsStdFunction());
+
+  EXPECT_EQ(context.get_commands_size(), (uint64_t)0);
+}
+
+TEST_F(TestRaft, TestContextValidAppendEntriesReceived) {
+  try {
+    std::filesystem::remove_all(kStorePath);
+  } catch (const std::filesystem::filesystem_error& err) {
+    RCLCPP_ERROR(logger_, "failed to remove file %s", err.what());
+  }
+
+  auto node = rclcpp::Node::make_shared(kClusterName + std::to_string(kNodeId));
+
+  auto context = TestContext(kClusterName, kNodeId, node, kElectionTimeoutMin,
+                             kElectionTimeoutMax, kTempPath, logger_);
+
+  MockStateMachineInterface state_machine;
+  ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(true));
+  context.initialize(kClusterIds2, &state_machine);
+
+  auto future = context.send_on_append_entries_requested(
+      context.get_term(), kOtherNodeId, 0, 0, 0,
+      std::initializer_list<uint8_t>{kTestData});
+
+  rclcpp::spin_until_future_complete(node, future, 1s);
+
+  EXPECT_EQ(context.get_commands_size(), (uint64_t)1);
+  auto command = context.get_command(0);
+  EXPECT_NE(command, nullptr);
+  EXPECT_EQ(command->data()[0], kTestData);
+}
+
+TEST_F(TestRaft, TestContextInvalidAppendEntriesReceived) {
+  try {
+    std::filesystem::remove_all(kStorePath);
+  } catch (const std::filesystem::filesystem_error& err) {
+    RCLCPP_ERROR(logger_, "failed to remove file %s", err.what());
+  }
+
+  auto node = rclcpp::Node::make_shared(kClusterName + std::to_string(kNodeId));
+
+  auto context = TestContext(kClusterName, kNodeId, node, kElectionTimeoutMin,
+                             kElectionTimeoutMax, kTempPath, logger_);
+
+  MockStateMachineInterface state_machine;
+  ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(true));
+  context.initialize(kClusterIds2, &state_machine);
+
+  auto future = context.send_on_append_entries_requested(
+      context.get_term(), kOtherNodeId, 1, 0, 0,
+      std::initializer_list<uint8_t>{kTestData});
+
+  rclcpp::spin_until_future_complete(node, future, 1s);
+
+  EXPECT_EQ(context.get_commands_size(), (uint64_t)0);
+  auto command = context.get_command(0);
+  EXPECT_EQ(command, nullptr);
 }
