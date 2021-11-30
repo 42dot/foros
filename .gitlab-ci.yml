@@ -1,0 +1,43 @@
+image: "registry.42dot.ai/engineering/ak/akitos/failover/foros:latest"
+
+stages:
+  - build
+  - test
+  - deploy
+
+build-job:
+  stage: build
+  script:
+    - echo "Compiling the code..."
+    - source /opt/ros/galactic/setup.bash
+    - colcon build --cmake-args -DCMAKE_CXX_FLAGS="--coverage -g"
+  artifacts:
+    name: "%CI_JOB_STAGE%-%CI_COMMIT_REF_NAME%"
+    paths:
+      - build/
+      - install/
+
+test-job:
+  stage: test
+  script:
+    - echo "Running tests..."
+    - source /opt/ros/galactic/setup.bash
+    - colcon test
+    - colcon test-result --all > test-result
+    - mkdir coverage
+    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage/report.xml --root . -e "foros/test" -e "foros_examples" -e "foros_msgs" -e "build" -e "install/foros_msgs" --html coverage/report.html --html-detail
+  coverage: /^\s*lines:\s*\d+.\d+\%/
+  artifacts:
+    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
+    expire_in: 2 days
+    paths:
+      - test-result
+      - coverage
+    reports:
+      cobertura: coverage/index.html
+
+deploy-job:      # TBD
+  stage: deploy
+  script:
+    - echo "Deploying application..."
+    - echo "Application successfully deployed."
