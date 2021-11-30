@@ -139,11 +139,11 @@ class Context {
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 
-  std::shared_ptr<rclcpp::Service<foros_msgs::srv::AppendEntries>>
+  rclcpp::Service<foros_msgs::srv::AppendEntries>::SharedPtr
       append_entries_service_;
   rclcpp::AnyServiceCallback<foros_msgs::srv::AppendEntries>
       append_entries_callback_;
-  std::shared_ptr<rclcpp::Service<foros_msgs::srv::RequestVote>>
+  rclcpp::Service<foros_msgs::srv::RequestVote>::SharedPtr
       request_vote_service_;
   rclcpp::AnyServiceCallback<foros_msgs::srv::RequestVote>
       request_vote_callback_;

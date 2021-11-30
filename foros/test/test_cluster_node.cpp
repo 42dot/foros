@@ -65,6 +65,21 @@ TEST_F(TestClusterNode, TestConstructor) {
   }
 }
 
+TEST_F(TestClusterNode, TestClusterNodeOptions) {
+  const unsigned int kTimeoutMax = 2000;
+  const unsigned int kTimeoutMin = 1000;
+  auto options = akit::failover::foros::ClusterNodeOptions();
+
+  options.election_timeout_max(kTimeoutMax);
+  EXPECT_EQ(kTimeoutMax, options.election_timeout_max());
+  options.election_timeout_min(kTimeoutMin);
+  EXPECT_EQ(kTimeoutMin, options.election_timeout_min());
+
+  std::string kTempDirectory = "/tmp";
+  options.temp_directory(kTempDirectory);
+  EXPECT_EQ(kTempDirectory, options.temp_directory());
+}
+
 TEST_F(TestClusterNode, TestGetNodeInfo) {
   auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
       kClusterName, kNodeId, kClusterIds2, kNamespace);
@@ -72,6 +87,9 @@ TEST_F(TestClusterNode, TestGetNodeInfo) {
             std::string(kClusterName + std::to_string(kNodeId)));
   EXPECT_EQ(std::string(cluster_node->get_namespace()),
             std::string(kNamespace));
+  EXPECT_EQ(std::string(cluster_node->get_fully_qualified_name()),
+            std::string(cluster_node->get_namespace()) + std::string("/") +
+                std::string(cluster_node->get_name()));
 }
 
 TEST_F(TestClusterNode, TestLifecycleCallbacks) {
@@ -100,7 +118,6 @@ TEST_F(TestClusterNode, TestLifecycleCallbacks) {
   rclcpp::WallRate loop_rate(100ms);
   while (running && rclcpp::ok()) {
     rclcpp::spin_some(cluster_node->get_node_base_interface());
-
     loop_rate.sleep();
   }
 
@@ -110,6 +127,8 @@ TEST_F(TestClusterNode, TestLifecycleCallbacks) {
 TEST_F(TestClusterNode, TestInterfaceGetters) {
   auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
       kClusterName, kNodeId, kClusterIds, kNamespace);
+
+  EXPECT_NE(cluster_node->get_clock(), nullptr);
 
   EXPECT_NE(cluster_node->get_node_base_interface(), nullptr);
   EXPECT_NE(cluster_node->get_node_clock_interface(), nullptr);
@@ -138,7 +157,18 @@ TEST_F(TestClusterNode, TestCommandCommit) {
   testing::MockFunction<void(
       akit::failover::foros::CommandCommitResponseSharedFuture)>
       on_commit_response;
+  testing::MockFunction<void(const uint64_t)> on_reverted_callback;
+  testing::MockFunction<void(const uint64_t,
+                             akit::failover::foros::Command::SharedPtr)>
+      on_committed_callback;
+
   EXPECT_CALL(on_commit_response, Call(testing::_)).WillOnce(testing::Return());
+  EXPECT_CALL(on_committed_callback, Call((uint64_t)0, testing::_))
+      .WillOnce(testing::Return());
+  EXPECT_CALL(on_reverted_callback, Call(testing::_)).Times(0);
+
+  cluster_node->register_on_committed(on_committed_callback.AsStdFunction());
+  cluster_node->register_on_reverted(on_reverted_callback.AsStdFunction());
 
   rclcpp::WallRate loop_rate(100ms);
   while (!cluster_node->is_activated() && rclcpp::ok()) {
@@ -153,5 +183,54 @@ TEST_F(TestClusterNode, TestCommandCommit) {
   rclcpp::spin_until_future_complete(cluster_node->get_node_base_interface(),
                                      future, 1s);
 
+  auto response = future.get();
+  EXPECT_EQ(response->id(), (uint64_t)0);
+  EXPECT_EQ(response->result(), true);
+  EXPECT_EQ(response->command()->data()[0], kTestData);
+
   EXPECT_NE(cluster_node->get_command(0), nullptr);
+  EXPECT_EQ(cluster_node->get_commands_size(), (uint64_t)1);
+}
+
+TEST_F(TestClusterNode, TestParameter) {
+  auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
+      kClusterName, kNodeId, kClusterIds, kNamespace);
+
+  const std::string kParamName = "param";
+  const int kParamValue = 1;
+
+  cluster_node->declare_parameter(kParamName, kParamValue);
+  EXPECT_EQ(cluster_node->has_parameter(kParamName), true);
+
+  auto parameter = cluster_node->get_parameter(kParamName);
+  EXPECT_EQ(parameter.get_name(), kParamName);
+}
+
+TEST_F(TestClusterNode, TestParametersWithoutDeclaration) {
+  auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
+      kClusterName, kNodeId, kClusterIds, kNamespace);
+
+  const std::string kParamNamePrefix = "param";
+  const unsigned int kParameterSize = 10;
+
+  std::vector<rclcpp::Parameter> parameters;
+
+  for (unsigned int i = 0; i < kParameterSize; i++) {
+    parameters.emplace_back(std::string(kParamNamePrefix + std::to_string(i)));
+  }
+
+  ASSERT_THROW({ auto result = cluster_node->set_parameters(parameters); },
+               rclcpp::exceptions::ParameterNotDeclaredException);
+}
+
+TEST_F(TestClusterNode, TestClusterNodeLogger) {
+  auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
+      kClusterName, kNodeId, kClusterIds, kNamespace);
+
+  const std::string kChildName = "child";
+  const std::string kNameSuffix = ".child";
+
+  auto logger = cluster_node->get_logger();
+  EXPECT_EQ(std::string(logger.get_name() + kNameSuffix),
+            std::string(logger.get_child(kChildName).get_name()));
 }
