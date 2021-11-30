@@ -35,6 +35,7 @@ test-job:
       - coverage
     reports:
       cobertura: coverage/report.html
+      junit: build/**/*.gtest.xml
 
 deploy-job:      # TBD
   stage: deploy
