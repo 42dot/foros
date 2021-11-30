@@ -4,6 +4,7 @@ LABEL maintainer="wonguk.jeong@42dot.ai"
 LABEL version="0.1"
 LABEL description="ROS2 build docker"
 
+WORKDIR /root
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
