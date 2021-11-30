@@ -23,20 +23,21 @@
 
 #include "akit/failover/foros/cluster_node.hpp"
 
-class TestNodeCluster : public ::testing::Test {
+class TestClusterNode : public ::testing::Test {
  protected:
   static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
   static void TearDownTestCase() { rclcpp::shutdown(); }
 };
 
-/*
-   Testing node constructor
- */
-TEST_F(TestNodeCluster, TestConstructor) {
+const char *kClusterName = "test_cluster";
+const char *kNamespace = "/ns_cluster";
+const char *kInvalidNodeName = "invalid_cluster?";
+
+TEST_F(TestClusterNode, TestConstructor) {
   {
     auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
-        "test_cluster", 1, std::initializer_list<uint32_t>{1, 2, 3, 4});
+        kClusterName, 1, std::initializer_list<uint32_t>{1, 2, 3, 4});
   }
 
   {
@@ -44,11 +45,20 @@ TEST_F(TestNodeCluster, TestConstructor) {
         {
           auto cluster_node =
               std::make_shared<akit::failover::foros::ClusterNode>(
-                  "invalid_cluster?", 1,
+                  kInvalidNodeName, 1,
                   std::initializer_list<uint32_t>{1, 2, 3, 4});
 
           (void)cluster_node;
         },
         rclcpp::exceptions::InvalidNodeNameError);
   }
+}
+
+TEST_F(TestClusterNode, TestGetNodeInfo) {
+  auto cluster_node = std::make_shared<akit::failover::foros::ClusterNode>(
+      kClusterName, 1, std::initializer_list<uint32_t>{1, 2, 3, 4}, kNamespace);
+  EXPECT_EQ(std::string(cluster_node->get_name()),
+            std::string(kClusterName + std::to_string(1)));
+  EXPECT_EQ(std::string(cluster_node->get_namespace()),
+            std::string(kNamespace));
 }

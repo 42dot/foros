@@ -9,3 +9,8 @@ ament_add_gtest(
   test_lifecycle_state_machine
   test_lifecycle_state_machine.cpp)
 target_link_libraries(test_lifecycle_state_machine ${PROJECT_NAME})
+
+ament_add_gtest(
+  test_raft
+  test_raft.cpp)
+target_link_libraries(test_raft ${PROJECT_NAME})
