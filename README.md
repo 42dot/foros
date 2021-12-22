@@ -1,11 +1,7 @@
 # FOROS
 
 **Failover ROS framework**
-
-[![pipeline status](https://gitlab.42dot.ai/engineering/ak/akitos/failover/foros/badges/main/pipeline.svg)](https://gitlab.42dot.ai/engineering/ak/akitos/failover/foros/-/commits/main) [![coverage report](https://gitlab.42dot.ai/engineering/ak/akitos/failover/foros/badges/main/coverage.svg)](https://gitlab.42dot.ai/engineering/ak/akitos/failover/foros/-/commits/main)
-
 ## Purpose
----
 [FOROS](https://gitlab.42dot.ai/engineering/ak/akitos/failover/foros) is a [ROS2](https://docs.ros.org/en/galactic/index.html) framework that provides the ability to construct a active-standby cluster  based on the [RAFT](https://raft.github.io/) consensus algorithm. 
 
 ### Key Features
@@ -25,7 +21,6 @@ This framework can tolerate fail-stop failures equal to the cluster size minus t
 |        5         |           3            |                 **2**                  |
 
 ## Prerequisites (Ubuntu 20.04)
----
 ### Install ROS2 galactic
 Please refer to the [official site](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html) to install.
 
@@ -35,7 +30,6 @@ sudo apt install libleveldb-dev
 ```
 
 ## Build
----
 > If you want to install to existing ROS2 workspace, please clone this source in the workspace in advance.
 
 ```bash
@@ -44,9 +38,177 @@ colcon build
 ```
 
 ## Getting Started
----
-TBD (Hello World guide)
 
-## Technical Articles
+In this section, we will create a cluster of 3 nodes that publishes a node ID every second.
+Lets' assume that,
+|  Cluster Name   | Cluster Size | Node IDs in the Cluster |   Topic Name    |
+| :-------------: | :----------: | :---------------------: | :-------------: |
+| "hello_cluster" |      3       |         0, 1, 2         | "hello_cluster" |
+
+### 1) Setup Environment
+```bash
+. /opt/ros/galactic/setup.bash
+# If foros is installed in your custom workspace,
+. {Your workspace}/install/setup.bash
+```
+
+### 2) Create ROS2 package
+Let's create the hello_cluster package that depends on foros, rclcpp, and std_msgs.
+
+```bash
+ros2 pkg create hello_cluster --description "Hello Cluster" --build-type ament_cmake --dependencies foros rclcpp std_msgs
+```
+
+### 3) Create "src/hello_cluster.cpp"
+Most of the code is the same as the general ros2 code, except that the `akit::failover::foros::ClusterNode` class is used instead of `rclcpp::Node` when creating a node.
+Unlike `rclcpp::Node` that receives a node name as an argument, `akit::failover::foros::ClusterNode` receives a cluster name, node ID, and IDs of all nodes in the cluster as arguments. In fact, the node name of a cluster node is internally created by combining the cluster name and node ID. 
+> For instance, if cluster name is "hello_cluster" and node id is 0, node name is created as "hello_cluster0"
+
+```cpp
+// hello-cluster.cpp
+#include <chrono>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <string>
+#include <vector>
+
+#include "akit/failover/foros/cluster_node.hpp"
+
+using namespace std::chrono_literals;
+
+int main(int argc, char **argv) {
+  const std::string kClusterName = "hello_cluster";
+  const std::string kTopicName = "hello_cluster";
+  const std::vector<uint32_t> kClusterNodeIds = {0, 1, 2};
+
+  rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
+  logger.set_level(rclcpp::Logger::Level::Info);
+
+  if (argc < 2) {
+    RCLCPP_ERROR(logger, "Usage : %s {node ID} {size of cluster}", argv[0]);
+    return -1;
+  }
+
+  uint32_t id = std::stoul(argv[1]);
+  if (find(kClusterNodeIds.begin(), kClusterNodeIds.end(), id) ==
+      kClusterNodeIds.end()) {
+    RCLCPP_ERROR(logger, "Node ID must be among 0, 1, 2");
+    return -1;
+  }
+
+  rclcpp::init(argc, argv);
+
+  // Create cluster node not rclcpp::Node
+  auto node = akit::failover::foros::ClusterNode::make_shared(kClusterName, id,
+                                                              kClusterNodeIds);
+
+  auto publisher = node->create_publisher<std_msgs::msg::String>(kTopicName, 1);
+  auto timer_ =
+      rclcpp::create_timer(node, rclcpp::Clock::make_shared(), 1s, [&]() {
+        auto msg = std_msgs::msg::String();
+        msg.data = std::to_string(id);
+        publisher->publish(msg);
+      });
+  rclcpp::spin(node->get_node_base_interface());
+  rclcpp::shutdown();
+
+  return 0;
+}
+```
+
+### 4) Update "CMakeLists.txt"
+Add below code to CMakeLists.txt
+```cmake
+# Add "hello_cluster" exectuable target
+add_executable(${PROJECT_NAME} src/hello_cluster.cpp)
+# Add dependencies
+ament_target_dependencies(${PROJECT_NAME}
+  foros
+  rclcpp
+  std_msgs
+)
+# Install
+install(
+  TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+```
+
+### 5) Build
+```bash
+# in the your workspace,
+colcon build --symlink-install
+```
+
+### 6) Test
+Prior to run the nodes, let's subscribe to "hello_cluster" topic using ros2 command.
+```bash
+# Subscriber
+ros2 topic echo "hello_cluster" std_msgs/String
+```
+
+If you run node 0, node 1, and node 2,
+```bash
+# Node 0
+./install/hello_cluster/bin/hello_cluster 0
+```
+```bash
+# Node 1
+./install/hello_cluster/bin/hello_cluster 1
+```
+```bash
+# Node 2
+./install/hello_cluster/bin/hello_cluster 2
+```
+
+One node became the leader, and it starts to publish mesage to topic,
+```bash
+# Subscriber
+## Current leader is node 0
 ---
-TBD (include API reference documents)
+data: '0'
+---
+data: '0'
+---
+...
+```
+
+If you terminate node 0, another node became the leader, and it starts to publish message to topic,
+```bash
+# Subscriber
+## Current leader is node 2
+---
+data: '2'
+---
+data: '2'
+---
+...
+```
+
+If you terminate node 2, remained node 0 failed to be the leader since the number of terminated nodes exceeds fault tolerance.
+```bash
+# Subscriber
+## No leader and no output
+```
+
+If you start node 2 again, one node became the leader, and it starts to publish message to topic,
+```bash
+# Subscriber
+## Current leader is node 1
+---
+data: '1'
+---
+data: '1'
+---
+...
+```
+
+
+![Test Result](docs/images/hello-cluster.gif)
+
+
+## Reference
+---
+TBD (Links of architecture, API reference documents, and etc)
