@@ -72,9 +72,15 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
   request->term = current_term;
   request->leader_id = node_id;
 
+  uint64_t next_index;
+  {
+    std::lock_guard<std::mutex> lock(index_mutex_);
+    next_index = next_index_;
+  }
+
   if (get_log_entry_callback_ != nullptr) {
-    if (log != nullptr && log->id_ >= next_index_) {
-      auto entry = get_log_entry_callback_(next_index_);
+    if (log != nullptr && log->id_ >= next_index) {
+      auto entry = get_log_entry_callback_(next_index);
       if (entry != nullptr) {
         request->entries = entry->command_->data();
         request->leader_commit = entry->id_;
@@ -82,8 +88,8 @@ bool OtherNode::broadcast(const uint64_t current_term, const uint32_t node_id,
       }
     }
 
-    if (next_index_ > 0) {
-      auto entry = get_log_entry_callback_(next_index_ - 1);
+    if (next_index > 0) {
+      auto entry = get_log_entry_callback_(next_index - 1);
       if (entry != nullptr) {
         request->prev_log_index = entry->id_;
         request->prev_log_term = entry->term_;
@@ -108,16 +114,17 @@ void OtherNode::send_append_entries(
         auto ret = future.get();
         auto request = ret.first;
         auto response = ret.second;
-
-        if (response->success) {
-          this->match_index_ = request->leader_commit;
-          this->next_index_ = this->match_index_ + 1;
-        } else {
-          if (this->next_index_ > 0) {
-            this->next_index_--;
+        {
+          std::lock_guard<std::mutex> lock(index_mutex_);
+          if (response->success) {
+            this->match_index_ = request->leader_commit;
+            this->next_index_ = this->match_index_ + 1;
+          } else {
+            if (this->next_index_ > 0) {
+              this->next_index_--;
+            }
           }
         }
-
         callback(node_id_, request->leader_commit, response->term,
                  response->success);
       });
@@ -149,6 +156,7 @@ bool OtherNode::request_vote(
 }
 
 void OtherNode::set_match_index(const uint64_t match_index) {
+  std::lock_guard<std::mutex> lock(index_mutex_);
   match_index_ = match_index;
   next_index_ = match_index_ + 1;
 }

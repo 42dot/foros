@@ -75,6 +75,8 @@ class OtherNode {
   rclcpp::Client<foros_msgs::srv::RequestVote>::SharedPtr request_vote_;
   std::function<const std::shared_ptr<LogEntry>(uint64_t)>
       get_log_entry_callback_;
+
+  std::mutex index_mutex_;
 };
 
 }  // namespace raft

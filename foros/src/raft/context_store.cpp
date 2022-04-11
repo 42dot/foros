@@ -32,6 +32,7 @@ ContextStore::ContextStore(const std::string &path, rclcpp::Logger &logger)
     : current_term_(0),
       voted_for_(0),
       voted_(false),
+      vote_received_(0),
       logger_(logger.get_child("raft")) {
   leveldb::Options options;
   options.create_if_missing = true;
@@ -56,6 +57,7 @@ ContextStore::~ContextStore() {
 }
 
 bool ContextStore::current_term(const uint64_t term) {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   current_term_ = term;
 
   if (db_ == nullptr) {
@@ -74,7 +76,10 @@ bool ContextStore::current_term(const uint64_t term) {
   return true;
 }
 
-uint64_t ContextStore::current_term() const { return current_term_; }
+uint64_t ContextStore::current_term() const {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  return current_term_;
+}
 
 void ContextStore::init_current_term() {
   std::string value;
@@ -98,6 +103,7 @@ void ContextStore::init_current_term() {
 }
 
 bool ContextStore::voted_for(const uint32_t id) {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   voted_for_ = id;
 
   if (db_ == nullptr) {
@@ -115,7 +121,10 @@ bool ContextStore::voted_for(const uint32_t id) {
   return true;
 }
 
-uint32_t ContextStore::voted_for() const { return voted_for_; }
+uint32_t ContextStore::voted_for() const {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  return voted_for_;
+}
 
 void ContextStore::init_voted_for() {
   std::string value;
@@ -139,6 +148,7 @@ void ContextStore::init_voted_for() {
 }
 
 bool ContextStore::voted(const bool voted) {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   voted_ = voted;
 
   if (db_ == nullptr) {
@@ -154,7 +164,10 @@ bool ContextStore::voted(const bool voted) {
   return true;
 }
 
-bool ContextStore::voted() const { return voted_; }
+bool ContextStore::voted() const {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  return voted_;
+}
 
 void ContextStore::init_voted() {
   std::string value;
@@ -176,7 +189,25 @@ void ContextStore::init_voted() {
   voted_ = *(reinterpret_cast<const bool *>(slice.data()));
 }
 
+uint32_t ContextStore::vote_received() {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  return vote_received_;
+}
+
+bool ContextStore::increase_vote_received() {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  vote_received_++;
+  return true;
+}
+
+bool ContextStore::reset_vote_received() {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  vote_received_ = 0;
+  return true;
+}
+
 const LogEntry::SharedPtr ContextStore::log(const uint64_t id) {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   if (logs_.size() <= id) {
     return nullptr;
   }
@@ -185,6 +216,7 @@ const LogEntry::SharedPtr ContextStore::log(const uint64_t id) {
 }
 
 const LogEntry::SharedPtr ContextStore::log() {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   if (logs_.empty() == true) {
     return nullptr;
   }
@@ -192,9 +224,12 @@ const LogEntry::SharedPtr ContextStore::log() {
   return logs_.back();
 }
 
-uint64_t ContextStore::logs_size() const { return logs_.size(); }
+uint64_t ContextStore::logs_size() const {
+  std::lock_guard<std::mutex> lock(store_mutex_);
+  return logs_.size();
+}
 
-uint64_t ContextStore::get_logs_size() {
+uint64_t ContextStore::load_logs_size() {
   if (db_ == nullptr) {
     RCLCPP_ERROR(logger_, "db is nullptr");
     return 0;
@@ -218,7 +253,7 @@ uint64_t ContextStore::get_logs_size() {
   return *(reinterpret_cast<const uint64_t *>(slice.data()));
 }
 
-bool ContextStore::set_logs_size(const uint64_t size) {
+bool ContextStore::store_logs_size(const uint64_t size) {
   if (db_ == nullptr) {
     RCLCPP_ERROR(logger_, "db is nullptr");
     return false;
@@ -239,17 +274,17 @@ void ContextStore::init_logs() {
 
   logs_.clear();
 
-  for (uint64_t i = 0; i < get_logs_size(); i++) {
-    auto log = get_log(i);
+  for (uint64_t i = 0; i < load_logs_size(); i++) {
+    auto log = load_log(i);
     if (log == nullptr) {
-      set_logs_size(i);
+      store_logs_size(i);
       break;
     }
     logs_.push_back(log);
   }
 }
 
-LogEntry::SharedPtr ContextStore::get_log(const uint64_t id) {
+LogEntry::SharedPtr ContextStore::load_log(const uint64_t id) {
   if (db_ == nullptr) {
     RCLCPP_ERROR(logger_, "db is nullptr");
     return nullptr;
@@ -279,7 +314,7 @@ LogEntry::SharedPtr ContextStore::get_log(const uint64_t id) {
   return LogEntry::make_shared(id, term, command);
 }
 
-bool ContextStore::set_log_term(const uint64_t id, const uint64_t term) {
+bool ContextStore::store_log_term(const uint64_t id, const uint64_t term) {
   if (db_ == nullptr) {
     RCLCPP_ERROR(logger_, "db is nullptr");
     return false;
@@ -296,7 +331,8 @@ bool ContextStore::set_log_term(const uint64_t id, const uint64_t term) {
   return true;
 }
 
-bool ContextStore::set_log_data(const uint64_t id, std::vector<uint8_t> data) {
+bool ContextStore::store_log_data(const uint64_t id,
+                                  std::vector<uint8_t> data) {
   if (db_ == nullptr) {
     RCLCPP_ERROR(logger_, "db is nullptr");
     return false;
@@ -323,6 +359,7 @@ std::string ContextStore::get_log_term_key(uint64_t id) {
 }
 
 bool ContextStore::push_log(LogEntry::SharedPtr log) {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   if (log == nullptr) {
     RCLCPP_ERROR(logger_, "log is nullptr");
     return false;
@@ -338,15 +375,15 @@ bool ContextStore::push_log(LogEntry::SharedPtr log) {
     return false;
   }
 
-  if (set_log_term(log->id_, log->term_) == false) {
+  if (store_log_term(log->id_, log->term_) == false) {
     return false;
   }
 
-  if (set_log_data(log->id_, log->command_->data()) == false) {
+  if (store_log_data(log->id_, log->command_->data()) == false) {
     return false;
   }
 
-  if (set_logs_size(logs_.size() + 1) == false) {
+  if (store_logs_size(logs_.size() + 1) == false) {
     return false;
   }
 
@@ -356,12 +393,13 @@ bool ContextStore::push_log(LogEntry::SharedPtr log) {
 }
 
 bool ContextStore::revert_log(const uint64_t id) {
+  std::lock_guard<std::mutex> lock(store_mutex_);
   if (id >= logs_.size()) {
     RCLCPP_ERROR(logger_, "invalid id to revert: %lu", id);
     return false;
   }
   logs_.resize(id);
-  set_logs_size(id);
+  store_logs_size(id);
   return true;
 }
 

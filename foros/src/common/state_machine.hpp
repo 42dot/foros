@@ -50,6 +50,7 @@ class StateMachine : public Observer<Event> {
   StateType get_current_state_type() { return current_state_; }
 
   void handle(const Event &event) override {
+    std::lock_guard<std::recursive_mutex> lock(state_mutex_);
     auto next_state = states_[current_state_]->handle(event);
     if (states_.count(next_state) < 1) {
       return;
@@ -69,14 +70,12 @@ class StateMachine : public Observer<Event> {
     current_state_notifier_.unsubscribe(observer);
   }
 
- protected:
-  std::shared_ptr<State> get_current_state() { return states_[current_state_]; }
-
  private:
   std::map<StateType, std::shared_ptr<State>> states_;
   StateType current_state_;
   Observable<StateType> current_state_notifier_;
   std::shared_ptr<Observable<Event>> event_notifier_;
+  std::recursive_mutex state_mutex_;
 };
 
 }  // namespace common

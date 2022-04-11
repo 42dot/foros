@@ -47,6 +47,10 @@ class ContextStore final {
   bool voted(const bool voted);
   bool voted() const;
 
+  uint32_t vote_received();
+  bool increase_vote_received();
+  bool reset_vote_received();
+
   const LogEntry::SharedPtr log(const uint64_t id);
   const LogEntry::SharedPtr log();
   bool push_log(LogEntry::SharedPtr log);
@@ -58,11 +62,11 @@ class ContextStore final {
   void init_voted_for();
   void init_voted();
   void init_logs();
-  bool set_logs_size(const uint64_t size);
-  uint64_t get_logs_size();
-  LogEntry::SharedPtr get_log(const uint64_t id);
-  bool set_log_term(const uint64_t id, const uint64_t term);
-  bool set_log_data(const uint64_t id, std::vector<uint8_t> data);
+  bool store_logs_size(const uint64_t size);
+  uint64_t load_logs_size();
+  LogEntry::SharedPtr load_log(const uint64_t id);
+  bool store_log_term(const uint64_t id, const uint64_t term);
+  bool store_log_data(const uint64_t id, std::vector<uint8_t> data);
   std::string get_log_data_key(const uint64_t id);
   std::string get_log_term_key(const uint64_t id);
 
@@ -79,11 +83,14 @@ class ContextStore final {
   uint64_t current_term_;
   uint32_t voted_for_;
   bool voted_;
+  uint32_t vote_received_;
 
   std::vector<LogEntry::SharedPtr> logs_;
   uint64_t log_size_;
 
   rclcpp::Logger logger_;
+
+  mutable std::mutex store_mutex_;
 };
 
 }  // namespace raft

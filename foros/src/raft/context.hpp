@@ -92,6 +92,9 @@ class Context {
   bool update_term(uint64_t term, bool self = false);
   bool is_valid_node(uint32_t id);
 
+  void invoke_commit_callback(LogEntry::SharedPtr log);
+  void invoke_revert_callback(uint64_t id);
+
   // Voting methods
   std::tuple<uint64_t, bool> vote(const uint64_t term, const uint32_t id,
                                   const uint64_t last_command_index,
@@ -150,14 +153,10 @@ class Context {
 
   std::map<uint32_t, std::shared_ptr<OtherNode>> other_nodes_;
 
-  // persistent data
-  std::unique_ptr<ContextStore> store_;  // Persistent data store
+  std::unique_ptr<ContextStore> store_;  // raft data store
 
-  // volatile data
-  unsigned int vote_received_;  // number of received votes in current term
-  uint32_t majority_;           // number of majority of the full cluster
-  uint32_t cluster_size_;       // number of nodes in the cluster
-
+  uint32_t majority_;                  // number of majority of the full cluster
+  uint32_t cluster_size_;              // number of nodes in the cluster
   unsigned int election_timeout_min_;  // minimum election timeout in msecs
   unsigned int election_timeout_max_;  // maximum election timeout in msecs
   std::random_device random_device_;   // random seed for election timeout
@@ -169,7 +168,7 @@ class Context {
   bool broadcast_received_;  // flag to check whether boradcast recevied
                              // before election timer expired
 
-  std::mutex pending_commit_lock_;
+  std::mutex pending_commit_mutex_;
   std::shared_ptr<PendingCommit> pending_commit_;
   std::function<void(uint64_t, Command::SharedPtr)> commit_callback_;
   std::function<void(uint64_t)> revert_callback_;
@@ -177,6 +176,8 @@ class Context {
   StateMachineInterface *state_machine_interface_;
 
   rclcpp::Logger logger_;
+
+  std::recursive_mutex callback_mutex_;
 };
 
 }  // namespace raft

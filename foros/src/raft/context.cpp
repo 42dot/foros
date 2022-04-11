@@ -52,7 +52,6 @@ Context::Context(
       node_services_(node_services),
       node_timers_(node_timers),
       node_clock_(node_clock),
-      vote_received_(0),
       election_timeout_min_(election_timeout_min),
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()),
@@ -150,7 +149,7 @@ void Context::on_append_entries_requested(
 
   response->term = store_->current_term();
 
-  if (request->term < store_->current_term()) {
+  if (request->term < response->term) {
     response->success = false;
   } else {
     update_term(request->term);
@@ -194,9 +193,7 @@ bool Context::request_local_commit(
 
     if (log->id_ >= request->leader_commit) {
       store_->revert_log(request->leader_commit);
-      if (revert_callback_ != nullptr) {
-        revert_callback_(request->leader_commit);
-      }
+      invoke_revert_callback(request->leader_commit);
     }
   }
 
@@ -207,9 +204,7 @@ bool Context::request_local_commit(
     return false;
   }
 
-  if (commit_callback_ != nullptr) {
-    commit_callback_(log->id_, log->command_);
-  }
+  invoke_commit_callback(log);
 
   return true;
 }
@@ -297,7 +292,7 @@ void Context::reset_broadcast_timer() {
 void Context::vote_for_me() {
   store_->voted_for(node_id_);
   store_->voted(true);
-  vote_received_ = 1;
+  store_->increase_vote_received();
 }
 
 std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
@@ -305,8 +300,9 @@ std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
                                          const uint64_t) {
   bool granted = false;
   auto log = store_->log();
+  auto current_term = store_->current_term();
 
-  if (term >= store_->current_term()) {
+  if (term >= current_term) {
     if (store_->voted() == false &&
         (log == nullptr || log->id_ <= last_data_index)) {
       store_->voted_for(id);
@@ -315,12 +311,12 @@ std::tuple<uint64_t, bool> Context::vote(const uint64_t term, const uint32_t id,
     }
   }
 
-  return std::make_tuple(store_->current_term(), granted);
+  return std::make_tuple(current_term, granted);
 }
 
 void Context::reset_vote() {
   store_->voted_for(0);
-  vote_received_ = 0;
+  store_->reset_vote_received();
   store_->voted(false);
 }
 
@@ -376,12 +372,12 @@ void Context::on_request_vote_response(const uint64_t term,
     return;
   }
 
-  vote_received_++;
+  store_->increase_vote_received();
   check_elected();
 }
 
 void Context::check_elected() {
-  if (vote_received_ < majority_) return;
+  if (store_->vote_received() < majority_) return;
 
   uint64_t id;
   auto log = store_->log();
@@ -404,10 +400,7 @@ CommandCommitResponseSharedFuture Context::complete_commit(
     bool result, CommandCommitResponseCallback callback) {
   if (result == true) {
     store_->push_log(log);
-
-    if (commit_callback_ != nullptr) {
-      commit_callback_(log->id_, log->command_);
-    }
+    invoke_commit_callback(log);
   }
 
   auto response =
@@ -459,7 +452,7 @@ CommandCommitResponseSharedFuture Context::commit_command(
 }
 
 std::shared_ptr<PendingCommit> Context::get_pending_commit() {
-  std::lock_guard<std::mutex> lock(pending_commit_lock_);
+  std::lock_guard<std::mutex> lock(pending_commit_mutex_);
   if (pending_commit_ == nullptr || pending_commit_->log_ == nullptr) {
     return nullptr;
   }
@@ -477,7 +470,7 @@ bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
     return false;
   }
 
-  std::lock_guard<std::mutex> lock(pending_commit_lock_);
+  std::lock_guard<std::mutex> lock(pending_commit_mutex_);
 
   if (pending_commit_ != nullptr && pending_commit_->log_ != nullptr) {
     if (pending_commit_->log_->id_ == store_->logs_size()) {
@@ -494,7 +487,7 @@ void Context::cancel_pending_commit() {
   RCLCPP_ERROR(logger_, "cancel pending commit");
   std::shared_ptr<PendingCommit> commit;
   {
-    std::lock_guard<std::mutex> lock(pending_commit_lock_);
+    std::lock_guard<std::mutex> lock(pending_commit_mutex_);
     commit = pending_commit_;
     pending_commit_ = nullptr;
   }
@@ -513,7 +506,7 @@ void Context::handle_pending_commit_response(const uint32_t id,
   bool result = false;
 
   {
-    std::lock_guard<std::mutex> lock(pending_commit_lock_);
+    std::lock_guard<std::mutex> lock(pending_commit_mutex_);
     commit = pending_commit_;
     if (commit == nullptr || commit->log_ == nullptr ||
         commit->log_->id_ != commit_index || commit->log_->term_ != term) {
@@ -578,11 +571,27 @@ Command::SharedPtr Context::get_command(uint64_t id) {
 
 void Context::register_on_committed(
     std::function<void(uint64_t, Command::SharedPtr)> callback) {
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
   commit_callback_ = callback;
 }
 
 void Context::register_on_reverted(std::function<void(uint64_t)> callback) {
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
   revert_callback_ = callback;
+}
+
+void Context::invoke_commit_callback(LogEntry::SharedPtr log) {
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+  if (log != nullptr && commit_callback_ != nullptr) {
+    commit_callback_(log->id_, log->command_);
+  }
+}
+
+void Context::invoke_revert_callback(uint64_t id) {
+  std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
+  if (revert_callback_ != nullptr) {
+    revert_callback_(id);
+  }
 }
 
 }  // namespace raft
