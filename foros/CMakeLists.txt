@@ -31,6 +31,7 @@ set(${PROJECT_NAME}_SRCS
   src/raft/state/follower.cpp
   src/raft/state/leader.cpp
   src/raft/state/standby.cpp
+  src/raft/inspector.cpp
   src/lifecycle/state.cpp
   src/lifecycle/state/active.cpp
   src/lifecycle/state/inactive.cpp

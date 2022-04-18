@@ -56,6 +56,7 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
+      rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
       const ClusterNodeOptions &options);

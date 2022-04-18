@@ -17,6 +17,8 @@
 #ifndef AKIT_FAILOVER_FOROS_RAFT_STATE_MACHINE_ITERFACE_HPP_
 #define AKIT_FAILOVER_FOROS_RAFT_STATE_MACHINE_ITERFACE_HPP_
 
+#include "raft/state_type.hpp"
+
 namespace akit {
 namespace failover {
 namespace foros {
@@ -30,6 +32,7 @@ class StateMachineInterface {
   virtual void on_broadcast_timedout() = 0;
   virtual void on_leader_discovered() = 0;
   virtual bool is_leader() = 0;
+  virtual StateType get_current_state() = 0;
 };
 
 }  // namespace raft

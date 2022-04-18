@@ -39,6 +39,7 @@
 #include "akit/failover/foros/command.hpp"
 #include "raft/commit_info.hpp"
 #include "raft/context_store.hpp"
+#include "raft/inspector.hpp"
 #include "raft/other_node.hpp"
 #include "raft/pending_commit.hpp"
 #include "raft/state_machine_interface.hpp"
@@ -55,6 +56,7 @@ class Context {
       rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
       rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
       rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
+      rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
       rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
       rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
       const unsigned int election_timeout_min,
@@ -132,6 +134,7 @@ class Context {
                                       const uint64_t commit_index,
                                       const uint64_t term, const bool success);
   const std::shared_ptr<LogEntry> on_log_get_request(uint64_t id);
+  void inspector_message_requested(foros_msgs::msg::Inspector::SharedPtr msg);
 
   const std::string cluster_name_;
   uint32_t node_id_;
@@ -178,6 +181,8 @@ class Context {
   rclcpp::Logger logger_;
 
   std::recursive_mutex callback_mutex_;
+
+  std::unique_ptr<Inspector> inspector_;
 };
 
 }  // namespace raft

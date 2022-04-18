@@ -57,6 +57,8 @@ bool StateMachine::is_leader() {
   return get_current_state_type() == StateType::kLeader;
 }
 
+StateType StateMachine::get_current_state() { return get_current_state_type(); }
+
 }  // namespace raft
 }  // namespace foros
 }  // namespace failover

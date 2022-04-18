@@ -68,6 +68,10 @@ class MockStateMachineInterface
   MOCK_METHOD(void, on_broadcast_timedout, (), (override));
   MOCK_METHOD(void, on_leader_discovered, (), (override));
   MOCK_METHOD(bool, is_leader, (), (override));
+
+  akit::failover::foros::raft::StateType get_current_state() override {
+    return akit::failover::foros::raft::StateType::kStandby;
+  }
 };
 
 class TestContext : public akit::failover::foros::raft::Context {
@@ -81,6 +85,7 @@ class TestContext : public akit::failover::foros::raft::Context {
             cluster_name, node_id, node->get_node_base_interface(),
             node->get_node_graph_interface(),
             node->get_node_services_interface(),
+            node->get_node_topics_interface(),
             node->get_node_timers_interface(), node->get_node_clock_interface(),
             election_timeout_min, election_timeout_max, temp_directory, logger),
         cluster_name_(cluster_name),
@@ -224,8 +229,9 @@ TEST_F(TestRaft, TestContextTermMethods) {
   auto context = akit::failover::foros::raft::Context(
       kClusterName, kNodeId, node.get_node_base_interface(),
       node.get_node_graph_interface(), node.get_node_services_interface(),
-      node.get_node_timers_interface(), node.get_node_clock_interface(),
-      kElectionTimeoutMin, kElectionTimeoutMax, kTempPath, logger_);
+      node.get_node_topics_interface(), node.get_node_timers_interface(),
+      node.get_node_clock_interface(), kElectionTimeoutMin, kElectionTimeoutMax,
+      kTempPath, logger_);
 
   MockStateMachineInterface state_machine;
   ON_CALL(state_machine, is_leader()).WillByDefault(testing::Return(true));

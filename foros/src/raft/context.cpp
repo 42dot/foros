@@ -18,6 +18,7 @@
 
 #include <foros_msgs/srv/request_vote.hpp>
 
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <random>
@@ -40,6 +41,7 @@ Context::Context(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const unsigned int election_timeout_min,
@@ -60,6 +62,10 @@ Context::Context(
       logger_(logger.get_child("raft")) {
   auto db_file = temp_directory + "/foros_" + node_base_->get_name();
   store_ = std::make_unique<ContextStore>(db_file, logger_);
+  inspector_ = std::make_unique<Inspector>(
+      cluster_name_, node_id, node_base, node_topics, node_timers, node_clock,
+      std::bind(&Context::inspector_message_requested, this,
+                std::placeholders::_1));
 }
 
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
@@ -591,6 +597,32 @@ void Context::invoke_revert_callback(uint64_t id) {
   std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
   if (revert_callback_ != nullptr) {
     revert_callback_(id);
+  }
+}
+
+void Context::inspector_message_requested(
+    foros_msgs::msg::Inspector::SharedPtr msg) {
+  msg->cluster_name = cluster_name_;
+  msg->id = node_id_;
+  msg->term = store_->current_term();
+  msg->data_size = store_->logs_size();
+  msg->voted_for = store_->voted_for();
+  switch (state_machine_interface_->get_current_state()) {
+    case StateType::kStandby:
+      msg->state = foros_msgs::msg::Inspector::STANDBY;
+      break;
+    case StateType::kFollower:
+      msg->state = foros_msgs::msg::Inspector::FOLLOWER;
+      break;
+    case StateType::kCandidate:
+      msg->state = foros_msgs::msg::Inspector::CANDIDATE;
+      break;
+    case StateType::kLeader:
+      msg->state = foros_msgs::msg::Inspector::LEADER;
+      break;
+    default:
+      msg->state = foros_msgs::msg::Inspector::UNKNOWN;
+      break;
   }
 }
 

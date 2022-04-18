@@ -36,13 +36,14 @@ ClusterNodeImpl::ClusterNodeImpl(
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const ClusterNodeOptions &options)
     : logger_(node_logging->get_logger().get_child("cluster_node")),
       raft_context_(std::make_shared<raft::Context>(
           cluster_name, node_id, node_base, node_graph, node_services,
-          node_timers, node_clock, options.election_timeout_min(),
+          node_topics, node_timers, node_clock, options.election_timeout_min(),
           options.election_timeout_max(), options.temp_directory(), logger_)),
       raft_fsm_(std::make_unique<raft::StateMachine>(cluster_node_ids,
                                                      raft_context_, logger_)),
