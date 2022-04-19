@@ -69,7 +69,7 @@ void Inspector::initialize_publisher(
   inspector_publisher_ = std::dynamic_pointer_cast<
       rclcpp::Publisher<foros_msgs::msg::Inspector>>(
       node_topics->create_publisher(
-          "foros/inspector",
+          foros_msgs::msg::Inspector::TOPIC_NAME,
           rclcpp::create_publisher_factory<
               foros_msgs::msg::Inspector, std::allocator<void>,
               rclcpp::Publisher<foros_msgs::msg::Inspector>>(

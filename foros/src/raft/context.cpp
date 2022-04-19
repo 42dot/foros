@@ -602,6 +602,7 @@ void Context::invoke_revert_callback(uint64_t id) {
 
 void Context::inspector_message_requested(
     foros_msgs::msg::Inspector::SharedPtr msg) {
+  msg->stamp = node_clock_->get_clock()->now();
   msg->cluster_name = cluster_name_;
   msg->cluster_size = cluster_size_;
   msg->id = node_id_;
