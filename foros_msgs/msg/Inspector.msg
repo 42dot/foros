@@ -1,4 +1,5 @@
 string cluster_name      # cluster name
+uint32 cluster_size      # cluster size
 uint32 id                # id
 uint8 state              # current state
 uint64 term              # current term
