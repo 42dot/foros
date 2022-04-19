@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef AKIT_FAILOVER_FOROS_INSPECTOR_TERMINAL_UTILS_HPP_
-#define AKIT_FAILOVER_FOROS_INSPECTOR_TERMINAL_UTILS_HPP_
+#ifndef AKIT_FAILOVER_FOROS_INSPECTOR_COLORS_HPP_
+#define AKIT_FAILOVER_FOROS_INSPECTOR_COLORS_HPP_
 
 namespace akit {
 namespace failover {
 namespace foros_inspector {
 
-enum class Colors : char { kRedOnBlack = 1, kWhiteOnRed };
+enum class Colors : char { kGreenOnBlack = 1, kRedOnBlack };
 
 }  // namespace foros_inspector
 }  // namespace failover
 }  // namespace akit
 
-#endif  // AKIT_FAILOVER_FOROS_INSPECTOR_TERMINAL_UTILS_HPP_
+#endif  // AKIT_FAILOVER_FOROS_INSPECTOR_COLORS_HPP_

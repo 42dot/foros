@@ -31,12 +31,13 @@ namespace foros_inspector {
 
 class ClusterInfo {
  public:
-  explicit ClusterInfo(std::string name, uint32_t size)
+  explicit ClusterInfo(std::string name)
       : name_(name),
-        size_(size),
+        size_(0),
         term_(0),
         leader_(0),
         leader_exist_(false),
+        size_mismatched_(false),
         last_updated_(0, 0, RCL_ROS_TIME) {}
 
   std::string name_;
@@ -44,6 +45,7 @@ class ClusterInfo {
   uint64_t term_;
   uint32_t leader_;
   bool leader_exist_;
+  bool size_mismatched_;
   std::map<uint32_t, std::shared_ptr<NodeInfo>> nodes_;
   rclcpp::Time last_updated_;
 };

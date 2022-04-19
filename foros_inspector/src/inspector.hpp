@@ -38,7 +38,7 @@ class Inspector : public rclcpp::Node {
   virtual ~Inspector();
 
  private:
-  static const std::string kNodeName;
+  static const char *kNodeName;
 
   void initialize_refresh_timer();
   void reset_refresh_timer();
@@ -48,32 +48,47 @@ class Inspector : public rclcpp::Node {
   void refresh_screen();
   void update_screen();
   void add_summary();
+  void add_cluster_item(std::shared_ptr<ClusterInfo> cluster);
   void add_details(std::shared_ptr<ClusterInfo> cluster);
-  void add_padding();
+  void add_node_item(std::shared_ptr<NodeInfo> node);
+  void add_newline();
   void add_title(const std::string &str);
   void add_subtitle(const std::string &str);
+  void add_string(const char *str, const uint32_t size);
+  void add_number(const uint32_t num, const uint32_t size);
+  void add_number(const uint64_t num, const uint32_t size);
+  void add_error(const char *str, const uint32_t size);
+  void add_separater();
   const char *get_state_name(const uint8_t state);
 
   bool is_outdated(rclcpp::Time time);
-  std::shared_ptr<ClusterInfo> get_cluster_info(const std::string &name,
-                                                const uint32_t size);
+  std::shared_ptr<ClusterInfo> get_cluster_info(const std::string &name);
   std::shared_ptr<NodeInfo> get_node_info(std::shared_ptr<ClusterInfo> cluster,
                                           const uint32_t id);
-  void remove_outdated_cluster_info();
+  void update_cluster_info();
   void inspector_message_received(
       const foros_msgs::msg::Inspector::SharedPtr msg);
 
-  const int32_t large_column_ = 15;
-  const int32_t medium_column_ = 12;
+  double get_period();
+
   const char *divider_ =
       "------------------------------------------------------------------------"
       "-----------------------------------------------------------------------";
+  const uint32_t xlarge_column_ = 20;
+  const uint32_t large_column_ = 15;
+  const uint32_t medium_column_ = 10;
+  const uint32_t small_column_ = 5;
+  uint32_t name_column_;
+
+  const char *env_var_period_ = "FOROS_INSPECTOR_PERIOD";
+  const double default_period_ = 1.0;
+  double period_;
 
   std::unordered_map<std::string, std::shared_ptr<ClusterInfo>> clusters_;
   rclcpp::Subscription<foros_msgs::msg::Inspector>::SharedPtr subscriber_;
   rclcpp::TimerBase::SharedPtr refresh_timer_;
 
-  WINDOW *pad;
+  WINDOW *window_;
 };
 
 }  // namespace foros_inspector

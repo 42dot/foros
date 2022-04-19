@@ -20,18 +20,19 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <functional>
+#include <memory>
 #include <sstream>
 #include <string>
 
-#include "terminal_utils.hpp"
+#include "colors.hpp"
 
 namespace akit {
 namespace failover {
 namespace foros_inspector {
 
-const std::string Inspector::kNodeName = "foros_inspector";
+const char *Inspector::kNodeName = "foros_inspector";
 
-Inspector::Inspector() : rclcpp::Node(kNodeName) {
+Inspector::Inspector() : rclcpp::Node(kNodeName), period_(get_period()) {
   subscriber_ = create_subscription<foros_msgs::msg::Inspector>(
       foros_msgs::msg::Inspector::TOPIC_NAME, 10,
       std::bind(&Inspector::inspector_message_received, this,
@@ -43,9 +44,9 @@ Inspector::Inspector() : rclcpp::Node(kNodeName) {
 Inspector::~Inspector() { terminate_screen(); }
 
 void Inspector::initialize_refresh_timer() {
-  refresh_timer_ =
-      rclcpp::create_timer(this, rclcpp::Clock::make_shared(),
-                           std::chrono::seconds(1), [&]() { update_screen(); });
+  refresh_timer_ = rclcpp::create_timer(this, rclcpp::Clock::make_shared(),
+                                        std::chrono::milliseconds(1000),
+                                        [&]() { update_screen(); });
 }
 
 void Inspector::reset_refresh_timer() {
@@ -57,29 +58,29 @@ void Inspector::intialize_screen() {
   initscr();
   curs_set(0);
   start_color();
-  init_pair(static_cast<uint8_t>(Colors::kRedOnBlack), COLOR_GREEN,
+  init_pair(static_cast<uint8_t>(Colors::kGreenOnBlack), COLOR_GREEN,
             COLOR_BLACK);
-  init_pair(static_cast<uint8_t>(Colors::kWhiteOnRed), COLOR_WHITE, COLOR_RED);
-  pad = newpad(1000u, 1000u);
-  keypad(pad, TRUE);
-  nodelay(pad, TRUE);
+  init_pair(static_cast<uint8_t>(Colors::kRedOnBlack), COLOR_RED, COLOR_BLACK);
+  window_ = newpad(1000u, 1000u);
+  keypad(window_, TRUE);
+  nodelay(window_, TRUE);
 }
 
 void Inspector::terminate_screen() { endwin(); }
 
 void Inspector::refresh_screen() {
-  wclrtobot(pad);
-  prefresh(pad, 0, 0, 0, 0, LINES - 1, COLS - 1);
-  wmove(pad, 0, 0);
+  wclrtobot(window_);
+  prefresh(window_, 0, 0, 0, 0, LINES - 1, COLS - 1);
+  wmove(window_, 0, 0);
 }
 
 void Inspector::update_screen() {
-  remove_outdated_cluster_info();
+  update_cluster_info();
   add_title("FOROS INSPECTOR");
   add_summary();
-  add_padding();
+  add_newline();
   for (auto iter : clusters_) {
-    add_padding();
+    add_newline();
     add_details(iter.second);
   }
   refresh_screen();
@@ -87,73 +88,106 @@ void Inspector::update_screen() {
 
 void Inspector::add_summary() {
   add_subtitle("Summary");
-
-  wprintw(pad, "%*s |", large_column_, "Name");
-  wprintw(pad, "%*s |", medium_column_, "Size");
-  wprintw(pad, "%*s |", medium_column_, "Term");
-  wprintw(pad, "%*s |", large_column_, "Active");
-  wprintw(pad, "%*s |", medium_column_, "Leader");
-  wprintw(pad, "%*s\n", large_column_, "Updated Time");
-
-  const int32_t total_column = large_column_ * 3 + medium_column_ * 3 + 10;
-  wprintw(pad, "%*.*s\n", total_column, total_column, divider_);
-
+  add_string("Name", name_column_);
+  add_separater();
+  add_string("Size", small_column_);
+  add_separater();
+  add_string("Term", small_column_);
+  add_separater();
+  add_string("Active", large_column_);
+  add_separater();
+  add_string("Leader", medium_column_);
+  add_separater();
+  add_string("Updated Time", large_column_);
+  add_newline();
+  add_string(divider_, name_column_ + large_column_ * 2 + medium_column_ +
+                           small_column_ * 2 + 10);
+  add_newline();
   for (auto cluster : clusters_) {
-    wprintw(pad, "%*.*s |", large_column_, large_column_,
-            cluster.second->name_.c_str());
-    wprintw(pad, "%*d |", medium_column_, cluster.second->size_);
-    wprintw(pad, "%*lu |", medium_column_, cluster.second->term_);
-
-    std::string active;
-    for (auto node : cluster.second->nodes_) {
-      if (!active.empty()) {
-        active += ", ";
-      }
-      active += std::to_string(node.second->id_);
-    }
-
-    wprintw(pad, "%*s |", large_column_, active.c_str());
-    if (cluster.second->leader_exist_) {
-      wprintw(pad, "%*d |", medium_column_, cluster.second->leader_);
-    } else {
-      wprintw(pad, "%*s |", medium_column_, "N/A");
-    }
-
-    std::stringstream updated_time;
-    updated_time << std::fixed << std::setprecision(2)
-                 << (now() - cluster.second->last_updated_).seconds()
-                 << "s ago";
-
-    wprintw(pad, "%*s\n", large_column_, updated_time.str().c_str());
+    add_cluster_item(cluster.second);
   }
+}
+
+void Inspector::add_cluster_item(std::shared_ptr<ClusterInfo> cluster) {
+  add_string(cluster->name_.c_str(), name_column_);
+  add_separater();
+  if (cluster->size_mismatched_) {
+    add_error("mis.", small_column_);
+  } else {
+    add_number(cluster->size_, small_column_);
+  }
+  add_separater();
+  add_number(cluster->term_, small_column_);
+  add_separater();
+
+  std::string active;
+  for (auto node : cluster->nodes_) {
+    if (!active.empty()) {
+      active += ", ";
+    }
+    active += std::to_string(node.second->id_);
+  }
+  add_string(active.c_str(), large_column_);
+  add_separater();
+
+  if (cluster->leader_exist_) {
+    add_number(cluster->leader_, medium_column_);
+  } else {
+    add_string("N/A", medium_column_);
+  }
+  add_separater();
+
+  std::stringstream updated_time;
+  updated_time << std::fixed << std::setprecision(2)
+               << (now() - cluster->last_updated_).seconds() << "s ago";
+  add_string(updated_time.str().c_str(), large_column_);
+  add_newline();
 }
 
 void Inspector::add_details(std::shared_ptr<ClusterInfo> cluster) {
   add_subtitle((std::string("Details: ") + cluster->name_).c_str());
 
-  wprintw(pad, "%*s |", medium_column_, "Node ID");
-  wprintw(pad, "%*s |", large_column_, "State");
-  wprintw(pad, "%*s |", medium_column_, "Term");
-  wprintw(pad, "%*s |", medium_column_, "Voted For");
-  wprintw(pad, "%*s |", medium_column_, "Data Size");
-  wprintw(pad, "%*s\n", large_column_, "Updated Time");
-
-  const int32_t total_column = large_column_ * 2 + medium_column_ * 4 + 10;
-  wprintw(pad, "%*.*s\n", total_column, total_column, divider_);
+  add_string("Node ID", medium_column_);
+  add_separater();
+  add_string("State", medium_column_);
+  add_separater();
+  add_string("Term", small_column_);
+  add_separater();
+  add_string("Voted For", medium_column_);
+  add_separater();
+  add_string("Data Size", medium_column_);
+  add_separater();
+  add_string("Size", small_column_);
+  add_separater();
+  add_string("Updated Time", large_column_);
+  add_newline();
+  add_string(divider_,
+             large_column_ * 1 + medium_column_ * 4 + small_column_ * 2 + 12);
+  add_newline();
 
   for (auto node : cluster->nodes_) {
-    wprintw(pad, "%*u |", medium_column_, node.second->id_);
-    wprintw(pad, "%*s |", large_column_, get_state_name(node.second->state_));
-    wprintw(pad, "%*lu |", medium_column_, node.second->term_);
-    wprintw(pad, "%*u |", medium_column_, node.second->voted_for_);
-    wprintw(pad, "%*lu |", medium_column_, node.second->data_size_);
-
-    std::stringstream updated_time;
-    updated_time << std::fixed << std::setprecision(2)
-                 << (now() - node.second->last_updated_).seconds() << "s ago";
-
-    wprintw(pad, "%*s\n", large_column_, updated_time.str().c_str());
+    add_node_item(node.second);
   }
+}
+
+void Inspector::add_node_item(std::shared_ptr<NodeInfo> node) {
+  add_number(node->id_, medium_column_);
+  add_separater();
+  add_string(get_state_name(node->state_), medium_column_);
+  add_separater();
+  add_number(node->term_, small_column_);
+  add_separater();
+  add_number(node->voted_for_, medium_column_);
+  add_separater();
+  add_number(node->data_size_, medium_column_);
+  add_separater();
+  add_number(node->size_, small_column_);
+  add_separater();
+  std::stringstream updated_time;
+  updated_time << std::fixed << std::setprecision(2)
+               << (now() - node->last_updated_).seconds() << "s ago";
+  add_string(updated_time.str().c_str(), large_column_);
+  add_newline();
 }
 
 const char *Inspector::get_state_name(const uint8_t state) {
@@ -171,41 +205,58 @@ const char *Inspector::get_state_name(const uint8_t state) {
 }
 
 void Inspector::add_title(const std::string &str) {
-  wattron(pad, A_BOLD | COLOR_PAIR(static_cast<uint8_t>(Colors::kRedOnBlack)));
-  wprintw(pad, "%s\n\n", str.c_str());
-  wattroff(pad, A_BOLD | COLOR_PAIR(static_cast<uint8_t>(Colors::kRedOnBlack)));
+  wattron(window_,
+          A_BOLD | COLOR_PAIR(static_cast<uint8_t>(Colors::kGreenOnBlack)));
+  wprintw(window_, "%s\n\n", str.c_str());
+  wattroff(window_,
+           A_BOLD | COLOR_PAIR(static_cast<uint8_t>(Colors::kGreenOnBlack)));
 }
 
 void Inspector::add_subtitle(const std::string &str) {
-  wattron(pad, A_BOLD | A_UNDERLINE);
-  wprintw(pad, "%s\n\n", str.c_str());
-  wattroff(pad, A_BOLD | A_UNDERLINE);
+  wattron(window_, A_BOLD | A_UNDERLINE);
+  wprintw(window_, "%s\n\n", str.c_str());
+  wattroff(window_, A_BOLD | A_UNDERLINE);
 }
 
-void Inspector::add_padding() { wprintw(pad, "\n"); }
+void Inspector::add_string(const char *str, const uint32_t size) {
+  wprintw(window_, "%*.*s", size, size, str);
+}
+
+void Inspector::add_number(const uint32_t num, const uint32_t size) {
+  wprintw(window_, "%*u", size, num);
+}
+void Inspector::add_number(const uint64_t num, const uint32_t size) {
+  wprintw(window_, "%*lu", size, num);
+}
+
+void Inspector::add_separater() { wprintw(window_, " |"); }
+
+void Inspector::add_error(const char *str, const uint32_t size) {
+  wattron(window_, COLOR_PAIR(static_cast<uint8_t>(Colors::kRedOnBlack)));
+  wprintw(window_, "%*.*s", size, size, str);
+  wattroff(window_, COLOR_PAIR(static_cast<uint8_t>(Colors::kRedOnBlack)));
+}
+
+void Inspector::add_newline() { wprintw(window_, "\n"); }
 
 bool Inspector::is_outdated(rclcpp::Time time) {
   auto diff = now() - time;
-  if (diff < std::chrono::milliseconds(1500)) {
+  if (diff < std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::duration<double>(period_ * 1.5))) {
     return false;
   }
   return true;
 }
 
 std::shared_ptr<ClusterInfo> Inspector::get_cluster_info(
-    const std::string &name, const uint32_t size) {
+    const std::string &name) {
   std::shared_ptr<ClusterInfo> cluster;
   auto iter = clusters_.find(name);
   if (iter == clusters_.end() || is_outdated(iter->second->last_updated_)) {
-    cluster = std::make_shared<ClusterInfo>(name, size);
+    cluster = std::make_shared<ClusterInfo>(name);
     clusters_[name] = cluster;
   } else {
     cluster = iter->second;
-    if (cluster->size_ != size) {
-      RCLCPP_ERROR(get_logger(), "cluster %s: size mismatched: %d %d",
-                   name.c_str(), cluster->size_, size);
-      cluster->size_ = size;
-    }
   }
 
   return cluster;
@@ -230,25 +281,37 @@ std::shared_ptr<NodeInfo> Inspector::get_node_info(
   return node;
 }
 
-void Inspector::remove_outdated_cluster_info() {
-  auto n = now();
+void Inspector::update_cluster_info() {
+  name_column_ = large_column_;
   for (auto cluster_iter = clusters_.begin();
        cluster_iter != clusters_.end();) {
     auto cluster = cluster_iter->second;
+    cluster->size_mismatched_ = false;
     if (is_outdated(cluster->last_updated_)) {
       cluster_iter = clusters_.erase(cluster_iter);
     } else {
+      uint32_t size = 0;
       for (auto node_iter = cluster->nodes_.begin();
            node_iter != cluster->nodes_.end();) {
-        if (is_outdated(node_iter->second->last_updated_)) {
-          if (cluster->leader_ == node_iter->second->id_) {
+        auto node = node_iter->second;
+        if (is_outdated(node->last_updated_)) {
+          if (cluster->leader_ == node->id_) {
             cluster->leader_exist_ = false;
           }
           node_iter = cluster->nodes_.erase(node_iter);
         } else {
+          if (size != 0 && cluster->size_ != node->size_) {
+            cluster->size_mismatched_ = true;
+          }
+
+          if (cluster->name_.length() > large_column_) {
+            name_column_ = xlarge_column_;
+          }
+          size = node->size_;
           node_iter = std::next(node_iter);
         }
       }
+      cluster->size_ = size;
       cluster_iter = std::next(cluster_iter);
     }
   }
@@ -260,7 +323,7 @@ void Inspector::inspector_message_received(
     return;
   }
 
-  auto cluster = get_cluster_info(msg->cluster_name, msg->cluster_size);
+  auto cluster = get_cluster_info(msg->cluster_name);
   if (cluster == nullptr) {
     RCLCPP_ERROR(get_logger(), "failed to get cluster info instance");
     return;
@@ -277,6 +340,7 @@ void Inspector::inspector_message_received(
     return;
   }
 
+  node->size_ = msg->cluster_size;
   node->term_ = msg->term;
   node->state_ = msg->state;
   node->data_size_ = msg->data_size;
@@ -297,6 +361,20 @@ void Inspector::inspector_message_received(
 
   reset_refresh_timer();
   update_screen();
+}
+
+double Inspector::get_period() {
+  char *value = std::getenv(env_var_period_);
+  if (value == nullptr) {
+    return default_period_;
+  }
+
+  double period = std::atof(value);
+  if (period <= 0) {
+    return default_period_;
+  }
+
+  return period;
 }
 
 }  // namespace foros_inspector

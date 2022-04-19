@@ -12,7 +12,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(foros_msgs REQUIRED)
-SET(CURSES_USE_NCURSES TRUE)
+set(CURSES_USE_NCURSES TRUE)
 find_package(Curses REQUIRED)
 
 include_directories(src)

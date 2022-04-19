@@ -28,6 +28,7 @@ class NodeInfo {
   explicit NodeInfo(uint32_t id) : id_(id), last_updated_(0, 0, RCL_ROS_TIME) {}
 
   uint32_t id_;
+  uint32_t size_;
 
   uint8_t state_;
   uint64_t term_;
