@@ -50,6 +50,7 @@ class Inspector {
 
   const char *env_var_period_ = "FOROS_INSPECTOR_PERIOD";
   const char *env_var_enable_ = "FOROS_INSPECTOR";
+  const double default_period_ = 1.0;
 
   rclcpp::Publisher<foros_msgs::msg::Inspector>::SharedPtr inspector_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;

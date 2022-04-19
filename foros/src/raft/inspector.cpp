@@ -39,7 +39,7 @@ Inspector::Inspector(
 
   auto period = get_period();
   if (period <= 0) {
-    return;
+    period = default_period_;
   }
 
   timer_ = rclcpp::GenericTimer<rclcpp::VoidCallbackType>::make_shared(
@@ -85,8 +85,6 @@ bool Inspector::is_enabled() {
     return false;
   }
 
-  std::cout << value << std::endl;
-
   return (strcmp(value, "1") == 0);
 }
 
@@ -96,7 +94,6 @@ double Inspector::get_period() {
     return 0;
   }
 
-  std::cout << value << std::endl;
   return std::atof(value);
 }
 
