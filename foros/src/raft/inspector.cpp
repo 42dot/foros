@@ -26,16 +26,13 @@ namespace foros {
 namespace raft {
 
 Inspector::Inspector(
-    const std::string &cluster_name, const uint32_t node_id,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     std::function<void(foros_msgs::msg::Inspector::SharedPtr msg)>
         message_request_callback)
-    : cluster_name_(cluster_name),
-      node_id_(node_id),
-      message_request_callback_(message_request_callback) {
+    : message_request_callback_(message_request_callback) {
   if (message_request_callback_ == nullptr || !is_enabled()) {
     return;
   }

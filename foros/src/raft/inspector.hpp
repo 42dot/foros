@@ -32,8 +32,7 @@ namespace raft {
 
 class Inspector {
  public:
-  Inspector(const std::string &cluster_name, const uint32_t node_id,
-            rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  Inspector(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
             rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
             rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers,
             rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
@@ -51,9 +50,6 @@ class Inspector {
 
   const char *env_var_period_ = "FOROS_INSPECTOR_PERIOD";
   const char *env_var_enable_ = "FOROS_INSPECTOR";
-
-  const std::string cluster_name_;
-  const uint32_t node_id_;
 
   rclcpp::Publisher<foros_msgs::msg::Inspector>::SharedPtr inspector_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;

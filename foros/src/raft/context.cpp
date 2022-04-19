@@ -63,7 +63,7 @@ Context::Context(
   auto db_file = temp_directory + "/foros_" + node_base_->get_name();
   store_ = std::make_unique<ContextStore>(db_file, logger_);
   inspector_ = std::make_unique<Inspector>(
-      cluster_name_, node_id, node_base, node_topics, node_timers, node_clock,
+      node_base, node_topics, node_timers, node_clock,
       std::bind(&Context::inspector_message_requested, this,
                 std::placeholders::_1));
 }
@@ -603,6 +603,7 @@ void Context::invoke_revert_callback(uint64_t id) {
 void Context::inspector_message_requested(
     foros_msgs::msg::Inspector::SharedPtr msg) {
   msg->cluster_name = cluster_name_;
+  msg->cluster_size = cluster_size_;
   msg->id = node_id_;
   msg->term = store_->current_term();
   msg->data_size = store_->logs_size();
