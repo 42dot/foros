@@ -28,7 +28,7 @@
 #include "akit/failover/foros/cluster_node_service.hpp"
 
 int main(int argc, char **argv) {
-  const std::string kClusterName = "test_cluster";
+  const std::string kClusterName = "test_cluster_service";
   const std::string kServiceName = "test_cluster_get_leader_name";
 
   rclcpp::Logger logger = rclcpp::get_logger(argv[0]);

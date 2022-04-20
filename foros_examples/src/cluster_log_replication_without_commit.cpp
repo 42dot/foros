@@ -28,7 +28,7 @@
 using namespace std::chrono_literals;
 
 int main(int argc, char **argv) {
-  const std::string kClusterName = "test_cluster";
+  const std::string kClusterName = "test_cluster_log";
 
   rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
   logger.set_level(rclcpp::Logger::Level::Info);

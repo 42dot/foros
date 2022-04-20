@@ -24,7 +24,7 @@
 #include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char **argv) {
-  const std::string kClusterName = "test_cluster";
+  const std::string kClusterName = "test_cluster_election";
 
   rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
   logger.set_level(rclcpp::Logger::Level::Info);
