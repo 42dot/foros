@@ -19,9 +19,7 @@ ament_target_dependencies(cluster_election
 
 install(
   TARGETS cluster_election EXPORT cluster_election
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 add_executable(cluster_service src/cluster_service.cpp)
@@ -33,9 +31,7 @@ ament_target_dependencies(cluster_service
 
 install(
   TARGETS cluster_service EXPORT cluster_service
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 add_executable(cluster_client src/cluster_client.cpp)
@@ -47,9 +43,7 @@ ament_target_dependencies(cluster_client
 
 install(
   TARGETS cluster_client EXPORT cluster_client
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 add_executable(cluster_publisher src/cluster_publisher.cpp)
@@ -61,9 +55,7 @@ ament_target_dependencies(cluster_publisher
 
 install(
   TARGETS cluster_publisher EXPORT cluster_publisher
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 add_executable(cluster_subscriber src/cluster_subscriber.cpp)
@@ -75,9 +67,7 @@ ament_target_dependencies(cluster_subscriber
 
 install(
   TARGETS cluster_subscriber EXPORT cluster_subscriber
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 add_executable(cluster_log_replication_with_commit src/cluster_log_replication_with_commit.cpp)
@@ -88,9 +78,7 @@ ament_target_dependencies(cluster_log_replication_with_commit
 
 install(
   TARGETS cluster_log_replication_with_commit EXPORT cluster_log_replication_with_commit
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 add_executable(cluster_log_replication_without_commit src/cluster_log_replication_without_commit.cpp)
 ament_target_dependencies(cluster_log_replication_without_commit
@@ -100,9 +88,7 @@ ament_target_dependencies(cluster_log_replication_without_commit
 
 install(
   TARGETS cluster_log_replication_without_commit EXPORT cluster_log_replication_without_commit
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
