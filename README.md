@@ -24,9 +24,9 @@ This framework can tolerate fail-stop failures equal to the cluster size minus t
 ### Install ROS2 galactic
 Please refer to the [official site](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html) to install.
 
-### Install leveldb
+### Install leveldb, ncurses
 ```bash
-sudo apt install libleveldb-dev
+sudo apt install libleveldb-dev libncurses-dev
 ```
 
 ## Build
@@ -48,8 +48,8 @@ Lets' assume that,
 ### 1) Setup Environment
 ```bash
 . /opt/ros/galactic/setup.bash
-# If foros is installed in your custom workspace,
-. {Your workspace}/install/setup.bash
+# If foros is installed in the custom workspace,
+. {custom workspace}/install/setup.bash
 ```
 
 ### 2) Create ROS2 package
@@ -130,15 +130,13 @@ ament_target_dependencies(${PROJECT_NAME}
 # Install
 install(
   TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
 )
 ```
 
 ### 5) Build
 ```bash
-# in the your workspace,
+# in the workspace,
 colcon build --symlink-install
 ```
 
@@ -152,21 +150,21 @@ ros2 topic echo "hello_cluster" std_msgs/String
 If you run node 0, node 1, and node 2,
 ```bash
 # Node 0
-./install/hello_cluster/bin/hello_cluster 0
+ros2 run hello_cluster hello_cluster 0
 ```
 ```bash
 # Node 1
-./install/hello_cluster/bin/hello_cluster 1
+ros2 run hello_cluster hello_cluster 1
 ```
 ```bash
 # Node 2
-./install/hello_cluster/bin/hello_cluster 2
+ros2 run hello_cluster hello_cluster 2
 ```
 
-One node became the leader, and it starts to publish mesage to topic,
+One node became the leader (0), and it starts to publish mesage to topic.
 ```bash
 # Subscriber
-## Current leader is node 0
+## Assume that new leader is node 0
 ---
 data: '0'
 ---
@@ -175,28 +173,10 @@ data: '0'
 ...
 ```
 
-If you terminate node 0, another node became the leader, and it starts to publish message to topic,
+A node (0) becomes the leader and starts publishing messages.
 ```bash
 # Subscriber
-## Current leader is node 2
----
-data: '2'
----
-data: '2'
----
-...
-```
-
-If you terminate node 2, remained node 0 failed to be the leader since the number of terminated nodes exceeds fault tolerance.
-```bash
-# Subscriber
-## No leader and no output
-```
-
-If you start node 2 again, one node became the leader, and it starts to publish message to topic,
-```bash
-# Subscriber
-## Current leader is node 1
+## Assume that new leader is node 1
 ---
 data: '1'
 ---
@@ -205,10 +185,24 @@ data: '1'
 ...
 ```
 
+If leader node (1) is terminated, the number of terminated nodes has exceeded fault tolerance and the remaining node (2) has failed to become leader.
+```bash
+# Subscriber
+## No output since there is no leader
+```
 
-![Test Result](docs/images/hello-cluster.gif)
-
-
-## Reference
+Restarting node (1) causes one node (2) to become the leader and start publishing messages.
+```bash
+# Subscriber
+## Assume that new leader is node 2
 ---
-TBD (Links of architecture, API reference documents, and etc)
+data: '2'
+---
+data: '2'
+---
+...
+```
+
+You can also check the cluster status with the [inspector tool](docs/inspector.md) as shown below.
+
+![](docs/images/hello-cluster.gif)
