@@ -364,17 +364,17 @@ void Context::request_vote() {
 void Context::on_request_vote_response(const uint64_t term,
                                        const bool vote_granted) {
   if (term < store_->current_term()) {
-    RCLCPP_INFO(logger_, "ignore vote response since term is outdated");
+    // ignore vote response since term is outdated
     return;
   }
 
   if (update_term(term) == true) {
-    RCLCPP_INFO(logger_, "ignore vote response since term is new one");
+    // ignore vote response since ther is new one
     return;
   }
 
   if (vote_granted == false) {
-    RCLCPP_INFO(logger_, "vote not granted");
+    // vote not granted
     return;
   }
 
@@ -437,7 +437,6 @@ CommandCommitResponseSharedFuture Context::commit_command(
   CommandCommitResponseSharedFuture commit_future =
       commit_promise->get_future();
   if (state_machine_interface_->is_leader() == false) {
-    RCLCPP_ERROR(logger_, "can not commit since this node is not leader");
     return cancel_commit(commit_promise, commit_future, store_->logs_size(),
                          callback);
   }
@@ -490,7 +489,6 @@ bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
 }
 
 void Context::cancel_pending_commit() {
-  RCLCPP_ERROR(logger_, "cancel pending commit");
   std::shared_ptr<PendingCommit> commit;
   {
     std::lock_guard<std::mutex> lock(pending_commit_mutex_);

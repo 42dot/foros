@@ -74,11 +74,7 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
   void publish(std::unique_ptr<MessageT, MessageDeleter> msg) override {
     if (node_lifecycle_interface_ != nullptr &&
         !node_lifecycle_interface_->is_activated()) {
-      RCLCPP_WARN(logger_,
-                  "Trying to publish message on the topic '%s', but the "
-                  "publisher is not activated",
-                  this->get_topic_name());
-
+      // ignore publish request when publisher is not activated
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(std::move(msg));
@@ -94,11 +90,7 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
   void publish(const MessageT& msg) override {
     if (node_lifecycle_interface_ != nullptr &&
         !node_lifecycle_interface_->is_activated()) {
-      RCLCPP_WARN(logger_,
-                  "Trying to publish message on the topic '%s', but the "
-                  "publisher is not activated",
-                  this->get_topic_name());
-
+      // ignore publish request when publisher is not activated
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);

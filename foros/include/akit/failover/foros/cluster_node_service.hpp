@@ -72,11 +72,7 @@ class ClusterNodeService : public rclcpp::Service<ServiceT> {
                       std::shared_ptr<void> request) override {
     if (node_lifecycle_interface_ != nullptr &&
         !node_lifecycle_interface_->is_activated()) {
-      RCLCPP_WARN(logger_,
-                  "Trying to handle request on the service '%s', but the "
-                  "service is not activated",
-                  this->get_service_name());
-
+      // ignore handle request when service is not activated
       return;
     }
     rclcpp::Service<ServiceT>::handle_request(request_header, request);

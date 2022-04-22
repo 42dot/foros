@@ -86,23 +86,15 @@ void ClusterNodeImpl::handle(const lifecycle::StateType &state) {
 void ClusterNodeImpl::handle(const raft::StateType &state) {
   switch (state) {
     case raft::StateType::kStandby:
-      RCLCPP_INFO(logger_, "raft state: Standby (%lu)",
-                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kDeactivate);
       break;
     case raft::StateType::kFollower:
-      RCLCPP_INFO(logger_, "raft state: Follower (%lu)",
-                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kStandby);
       break;
     case raft::StateType::kCandidate:
-      RCLCPP_INFO(logger_, "raft state: Candidate (%lu)",
-                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kStandby);
       break;
     case raft::StateType::kLeader:
-      RCLCPP_INFO(logger_, "raft state: Leader (%lu)",
-                  raft_context_->get_term());
       lifecycle_fsm_->handle(lifecycle::Event::kActivate);
       break;
     default:
