@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>foros_msgs</name>
-  <version>0.0.1</version>
+  <version>0.3.0</version>
   <description>Fail over ROS messages (raft RPCs)</description>
   <maintainer email="wonguk.jeong@42dot.ai">Wonguk Jeong</maintainer>
   <license>Apache License 2.0</license>
