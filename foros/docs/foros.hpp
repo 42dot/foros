@@ -129,9 +129,7 @@
  * # Install
  * install(
  *   TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
- *   ARCHIVE DESTINATION lib
- *   LIBRARY DESTINATION lib
- *   RUNTIME DESTINATION bin
+ *   DESTINATION lib/${PROJECT_NAME}
  * )
  * ```
  * 
@@ -151,21 +149,21 @@
  * If you run node 0, node 1, and node 2,
  * ```bash
  * # Node 0
- * ./install/hello_cluster/bin/hello_cluster 0
+ * ros2 run hello_cluster hello_cluster 0
  * ```
  * ```bash
  * # Node 1
- * ./install/hello_cluster/bin/hello_cluster 1
+ * ros2 run hello_cluster hello_cluster 1
  * ```
  * ```bash
  * # Node 2
- * ./install/hello_cluster/bin/hello_cluster 2
+ * ros2 run hello_cluster hello_cluster 2
  * ```
  * 
- * One node became the leader, and it starts to publish mesage to topic,
+ * One node (0) became the leader, and it starts to publish mesage to topic.
  * ```bash
  * # Subscriber
- * ## Current leader is node 0
+ * ## Assume that new leader is node 0
  * ---
  * data: '0'
  * ---
@@ -174,10 +172,28 @@
  * ...
  * ```
  * 
- * If you terminate node 0, another node became the leader, and it starts to publish message to topic,
+ * When leader node (0) is terminated, one node (1) becomes the leader and starts publishing messages.
  * ```bash
  * # Subscriber
- * ## Current leader is node 2
+ * ## Assume that new leader is node 1
+ * ---
+ * data: '1'
+ * ---
+ * data: '1'
+ * ---
+ * ...
+ * ```
+ * 
+ * When leader node (1) is terminated, the number of terminated nodes has exceeded fault tolerance and the remaining node (2) has failed to become leader.
+ * ```bash
+ * # Subscriber
+ * ## No output since there is no leader
+ * ```
+ * 
+ * Restarting node (1) causes one node (2) to become the leader and start publishing messages.
+ * ```bash
+ * # Subscriber
+ * ## Assume that new leader is node 2
  * ---
  * data: '2'
  * ---
@@ -186,23 +202,6 @@
  * ...
  * ```
  * 
- * If you terminate node 2, remained node 0 failed to be the leader since the number of terminated nodes exceeds fault tolerance.
- * ```bash
- * # Subscriber
- * ## No leader and no output
- * ```
- * 
- * If you start node 2 again, one node became the leader, and it starts to publish message to topic,
- * ```bash
- * # Subscriber
- * ## Current leader is node 1
- * ---
- * data: '1'
- * ---
- * data: '1'
- * ---
- * ...
- * ```
  * 
  * 
  * ![Test Result](images/hello-cluster.gif)

@@ -161,7 +161,7 @@ ros2 run hello_cluster hello_cluster 1
 ros2 run hello_cluster hello_cluster 2
 ```
 
-One node became the leader (0), and it starts to publish mesage to topic.
+One node (0) became the leader, and it starts to publish mesage to topic.
 ```bash
 # Subscriber
 ## Assume that new leader is node 0
@@ -173,7 +173,7 @@ data: '0'
 ...
 ```
 
-A node (0) becomes the leader and starts publishing messages.
+When leader node (0) is terminated, one node (1) becomes the leader and starts publishing messages.
 ```bash
 # Subscriber
 ## Assume that new leader is node 1
@@ -185,7 +185,7 @@ data: '1'
 ...
 ```
 
-If leader node (1) is terminated, the number of terminated nodes has exceeded fault tolerance and the remaining node (2) has failed to become leader.
+When leader node (1) is terminated, the number of terminated nodes has exceeded fault tolerance and the remaining node (2) has failed to become leader.
 ```bash
 # Subscriber
 ## No output since there is no leader
