@@ -16,3 +16,7 @@ ament_add_gmock(
   test_raft.cpp)
 target_link_libraries(test_raft ${PROJECT_NAME})
 
+ament_add_gmock(
+  test_raft_with_inspector
+  test_raft_with_inspector.cpp)
+target_link_libraries(test_raft_with_inspector ${PROJECT_NAME})

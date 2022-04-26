@@ -16,6 +16,9 @@
 
 #include "test_raft.hpp"
 
-void TestRaft::SetUpTestCase() { rclcpp::init(0, nullptr); }
+void TestRaft::SetUpTestCase() {
+  setenv("FOROS_INSPECTOR", "1", true);
+  rclcpp::init(0, nullptr);
+}
 
 void TestRaft::TearDownTestCase() { rclcpp::shutdown(); }
