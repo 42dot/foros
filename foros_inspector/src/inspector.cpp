@@ -61,6 +61,10 @@ void Inspector::intialize_screen() {
   init_pair(static_cast<uint8_t>(Colors::kGreenOnBlack), COLOR_GREEN,
             COLOR_BLACK);
   init_pair(static_cast<uint8_t>(Colors::kRedOnBlack), COLOR_RED, COLOR_BLACK);
+  init_pair(static_cast<uint8_t>(Colors::kCyanOnBlack), COLOR_CYAN,
+            COLOR_BLACK);
+  init_pair(static_cast<uint8_t>(Colors::kYellowOnBlack), COLOR_YELLOW,
+            COLOR_BLACK);
   window_ = newpad(1000u, 1000u);
   keypad(window_, TRUE);
   nodelay(window_, TRUE);
@@ -173,7 +177,7 @@ void Inspector::add_details(std::shared_ptr<ClusterInfo> cluster) {
 void Inspector::add_node_item(std::shared_ptr<NodeInfo> node) {
   add_number(node->id_, medium_column_);
   add_separater();
-  add_string(get_state_name(node->state_), medium_column_);
+  add_state_name(node->state_);
   add_separater();
   add_number(node->term_, small_column_);
   add_separater();
@@ -190,26 +194,30 @@ void Inspector::add_node_item(std::shared_ptr<NodeInfo> node) {
   add_newline();
 }
 
-const char *Inspector::get_state_name(const uint8_t state) {
+void Inspector::add_state_name(const uint8_t state) {
   switch (state) {
     case foros_msgs::msg::Inspector::STANDBY:
-      return "Standby";
+      add_string("Standby", medium_column_);
+      break;
     case foros_msgs::msg::Inspector::FOLLOWER:
-      return "Follower";
+      add_string("Follower", medium_column_);
+      break;
     case foros_msgs::msg::Inspector::CANDIDATE:
-      return "Candidate";
+      add_string("Candidate", medium_column_, Colors::kYellowOnBlack);
+      break;
     case foros_msgs::msg::Inspector::LEADER:
-      return "Leader";
+      add_bold_string("Leader", medium_column_, Colors::kGreenOnBlack);
+      break;
+    default:
+      add_string("Unknown", medium_column_, Colors::kRedOnBlack);
+      break;
   }
-  return "Unknown";
 }
 
 void Inspector::add_title(const std::string &str) {
-  wattron(window_,
-          A_BOLD | COLOR_PAIR(static_cast<uint8_t>(Colors::kGreenOnBlack)));
+  wattron(window_, A_BOLD | A_ITALIC);
   wprintw(window_, "%s\n\n", str.c_str());
-  wattroff(window_,
-           A_BOLD | COLOR_PAIR(static_cast<uint8_t>(Colors::kGreenOnBlack)));
+  wattroff(window_, A_BOLD | A_ITALIC);
 }
 
 void Inspector::add_subtitle(const std::string &str) {
@@ -220,6 +228,19 @@ void Inspector::add_subtitle(const std::string &str) {
 
 void Inspector::add_string(const char *str, const uint32_t size) {
   wprintw(window_, "%*.*s", size, size, str);
+}
+
+void Inspector::add_string(const char *str, const uint32_t size, Colors color) {
+  wattron(window_, COLOR_PAIR(static_cast<uint8_t>(color)));
+  wprintw(window_, "%*.*s", size, size, str);
+  wattroff(window_, COLOR_PAIR(static_cast<uint8_t>(color)));
+}
+
+void Inspector::add_bold_string(const char *str, const uint32_t size,
+                                Colors color) {
+  wattron(window_, A_BOLD | COLOR_PAIR(static_cast<uint8_t>(color)));
+  wprintw(window_, "%*.*s", size, size, str);
+  wattroff(window_, A_BOLD | COLOR_PAIR(static_cast<uint8_t>(color)));
 }
 
 void Inspector::add_number(const uint32_t num, const uint32_t size) {

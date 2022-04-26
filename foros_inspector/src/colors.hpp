@@ -21,7 +21,12 @@ namespace akit {
 namespace failover {
 namespace foros_inspector {
 
-enum class Colors : char { kGreenOnBlack = 1, kRedOnBlack };
+enum class Colors : char {
+  kGreenOnBlack = 1,
+  kRedOnBlack,
+  kCyanOnBlack,
+  kYellowOnBlack
+};
 
 }  // namespace foros_inspector
 }  // namespace failover

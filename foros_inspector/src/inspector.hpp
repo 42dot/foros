@@ -26,6 +26,7 @@
 #include <unordered_map>
 
 #include "cluster_info.hpp"
+#include "colors.hpp"
 #include "node_info.hpp"
 
 namespace akit {
@@ -55,11 +56,13 @@ class Inspector : public rclcpp::Node {
   void add_title(const std::string &str);
   void add_subtitle(const std::string &str);
   void add_string(const char *str, const uint32_t size);
+  void add_string(const char *str, const uint32_t size, Colors color);
+  void add_bold_string(const char *str, const uint32_t size, Colors color);
   void add_number(const uint32_t num, const uint32_t size);
   void add_number(const uint64_t num, const uint32_t size);
   void add_error(const char *str, const uint32_t size);
   void add_separater();
-  const char *get_state_name(const uint8_t state);
+  void add_state_name(const uint8_t state);
 
   bool is_outdated(rclcpp::Time time);
   std::shared_ptr<ClusterInfo> get_cluster_info(const std::string &name);
