@@ -1,8 +1,9 @@
-# FOROS
+# FOROS : Failover ROS framework
 
-**Failover ROS framework**
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/24937/badge.svg)](https://scan.coverity.com/projects/foros)
+
 ## Purpose
-[FOROS](https://gitlab.42dot.ai/engineering/ak/akitos/failover/foros) is a [ROS2](https://docs.ros.org/en/galactic/index.html) framework that provides the ability to construct a active-standby cluster  based on the [RAFT](https://raft.github.io/) consensus algorithm. 
+FOROS is a [ROS2](https://docs.ros.org/en/galactic/index.html) framework that provides the ability to construct a active-standby cluster  based on the [RAFT](https://raft.github.io/) consensus algorithm.
 
 ### Key Features
 | Feature           | Description                                                              |
