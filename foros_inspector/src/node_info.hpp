@@ -25,7 +25,14 @@ namespace foros_inspector {
 
 class NodeInfo {
  public:
-  explicit NodeInfo(uint32_t id) : id_(id), last_updated_(0, 0, RCL_ROS_TIME) {}
+  explicit NodeInfo(uint32_t id)
+      : id_(id),
+        size_(0),
+        state_(0),
+        term_(0),
+        data_size_(0),
+        voted_for_(0),
+        last_updated_(0, 0, RCL_ROS_TIME) {}
 
   uint32_t id_;
   uint32_t size_;
