@@ -54,11 +54,14 @@ Context::Context(
       node_services_(node_services),
       node_timers_(node_timers),
       node_clock_(node_clock),
+      majority_(0),
+      cluster_size_(0),
       election_timeout_min_(election_timeout_min),
       election_timeout_max_(election_timeout_max),
       random_generator_(random_device_()),
       broadcast_timeout_(election_timeout_min_ / 10),
       broadcast_received_(false),
+      state_machine_interface_(nullptr),
       logger_(logger.get_child("raft")) {
   auto db_file = temp_directory + "/foros_" + node_base_->get_name();
   store_ = std::make_unique<ContextStore>(db_file, logger_);

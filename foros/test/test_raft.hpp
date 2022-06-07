@@ -119,7 +119,6 @@ class TestContext : public akit::failover::foros::raft::Context {
   rclcpp::Client<foros_msgs::srv::AppendEntries>::SharedPtr append_entries_;
   std::string cluster_name_;
   uint64_t node_id_;
-  uint64_t other_node_id_;
 };
 
 TEST_F(TestRaft, TestContextStore) {

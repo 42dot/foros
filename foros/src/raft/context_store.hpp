@@ -86,7 +86,6 @@ class ContextStore final {
   uint32_t vote_received_;
 
   std::vector<LogEntry::SharedPtr> logs_;
-  uint64_t log_size_;
 
   rclcpp::Logger logger_;
 

@@ -60,6 +60,7 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
       const std::string& topic, const rclcpp::QoS& qos,
       const rclcpp::PublisherOptionsWithAllocator<Alloc>& options)
       : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options),
+        node_lifecycle_interface_(nullptr),
         logger_(rclcpp::get_logger("ClusterNodePublisher")) {}
 
   ~ClusterNodePublisher() {}
@@ -106,8 +107,8 @@ class ClusterNodePublisher : public rclcpp::Publisher<MessageT, Alloc> {
   }
 
  private:
-  rclcpp::Logger logger_;
   ClusterNodeLifecycleInterface* node_lifecycle_interface_;
+  rclcpp::Logger logger_;
 };
 
 }  // namespace foros
