@@ -74,10 +74,9 @@ Context::Context(
 void Context::initialize(const std::vector<uint32_t> &cluster_node_ids,
                          StateMachineInterface *state_machine_interface) {
   initialize_node();
-  cluster_size_ = cluster_node_ids.size();
-  majority_ = (cluster_size_ >> 1) + 1;
+  set_cluster_size(cluster_node_ids.size());
   initialize_other_nodes(cluster_node_ids);
-  state_machine_interface_ = state_machine_interface;
+  set_state_machine_interface(state_machine_interface);
 }
 
 void Context::initialize_node() {
@@ -130,6 +129,16 @@ void Context::initialize_other_nodes(
         node_base_, node_graph_, node_services_, cluster_name_, id, next_index,
         std::bind(&Context::on_log_get_request, this, std::placeholders::_1));
   }
+}
+
+void Context::set_cluster_size(uint32_t size) {
+  cluster_size_ = size;
+  majority_ = (size >> 1) + 1;
+}
+
+void Context::set_state_machine_interface(
+    StateMachineInterface *state_machine_interface) {
+  state_machine_interface_ = state_machine_interface;
 }
 
 bool Context::update_term(uint64_t term, bool self) {
@@ -397,7 +406,7 @@ void Context::check_elected() {
   }
 
   for (auto node : other_nodes_) {
-    node.second->set_match_index(id);
+    node.second->update_match_index(id);
   }
 
   state_machine_interface_->on_elected();
@@ -492,17 +501,21 @@ bool Context::set_pending_commit(std::shared_ptr<PendingCommit> commit) {
 }
 
 void Context::cancel_pending_commit() {
+  auto commit = clear_pending_commit();
+  if (commit != nullptr && commit->log_ != nullptr) {
+    complete_commit(commit->promise_, commit->future_, commit->log_, false,
+                    commit->callback_);
+  }
+}
+
+std::shared_ptr<PendingCommit> Context::clear_pending_commit() {
   std::shared_ptr<PendingCommit> commit;
   {
     std::lock_guard<std::mutex> lock(pending_commit_mutex_);
     commit = pending_commit_;
     pending_commit_ = nullptr;
   }
-
-  if (commit != nullptr && commit->log_ != nullptr) {
-    complete_commit(commit->promise_, commit->future_, commit->log_, false,
-                    commit->callback_);
-  }
+  return commit;
 }
 
 void Context::handle_pending_commit_response(const uint32_t id,
@@ -578,11 +591,20 @@ Command::SharedPtr Context::get_command(uint64_t id) {
 
 void Context::register_on_committed(
     std::function<void(uint64_t, Command::SharedPtr)> callback) {
+  set_commit_callback(callback);
+}
+
+void Context::set_commit_callback(
+    std::function<void(uint64_t, Command::SharedPtr)> callback) {
   std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
   commit_callback_ = callback;
 }
 
 void Context::register_on_reverted(std::function<void(uint64_t)> callback) {
+  set_revert_callback(callback);
+}
+
+void Context::set_revert_callback(std::function<void(uint64_t)> callback) {
   std::lock_guard<std::recursive_mutex> lock(callback_mutex_);
   revert_callback_ = callback;
 }

@@ -78,6 +78,10 @@ class ClusterNodeImpl final : Observer<lifecycle::StateType>,
   void register_on_reverted(std::function<void(const uint64_t)> callback);
 
  private:
+  void set_activated_callback(std::function<void()> callback);
+  void set_deactivated_callback(std::function<void()> callback);
+  void set_standby_callback(std::function<void()> callback);
+
   rclcpp::Logger logger_;
   std::shared_ptr<raft::Context> raft_context_;
   std::unique_ptr<raft::StateMachine> raft_fsm_;

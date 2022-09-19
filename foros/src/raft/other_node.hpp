@@ -57,7 +57,7 @@ class OtherNode {
                     const LogEntry::SharedPtr log,
                     std::function<void(const uint64_t, const bool)> callback);
 
-  void set_match_index(const uint64_t match_index);
+  void update_match_index(const uint64_t match_index);
 
  private:
   void send_append_entries(
@@ -65,6 +65,7 @@ class OtherNode {
       std::function<void(const uint32_t, const uint64_t, const uint64_t,
                          const bool)>
           callback);
+  void set_match_index(const uint64_t match_index);
 
   uint32_t node_id_;
   // index of the next log entry to send to this node

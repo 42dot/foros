@@ -155,6 +155,10 @@ bool OtherNode::request_vote(
   return true;
 }
 
+void OtherNode::update_match_index(const uint64_t match_index) {
+  set_match_index(match_index);
+}
+
 void OtherNode::set_match_index(const uint64_t match_index) {
   std::lock_guard<std::mutex> lock(index_mutex_);
   match_index_ = match_index;
