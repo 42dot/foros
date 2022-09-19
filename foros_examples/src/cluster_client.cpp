@@ -24,33 +24,37 @@
 using namespace std::chrono_literals;
 
 int main(int argc, char **argv) {
-  const std::string kNodeName = "test_cluster_client";
-  const std::string kServiceName = "test_cluster_get_leader_name";
+  try {
+    const std::string kNodeName = "test_cluster_client";
+    const std::string kServiceName = "test_cluster_get_leader_name";
 
-  rclcpp::init(argc, argv);
-  rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
-  logger.set_level(rclcpp::Logger::Level::Info);
+    rclcpp::init(argc, argv);
+    rclcpp::Logger logger = rclcpp::get_logger(argv[0]);
+    logger.set_level(rclcpp::Logger::Level::Info);
 
-  auto node = rclcpp::Node::make_shared(kNodeName);
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client =
-      node->create_client<std_srvs::srv::Trigger>(kServiceName);
+    auto node = rclcpp::Node::make_shared(kNodeName);
+    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client =
+        node->create_client<std_srvs::srv::Trigger>(kServiceName);
 
-  auto timer_ =
-      rclcpp::create_timer(node, rclcpp::Clock::make_shared(), 1s, [&]() {
-        auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-        auto ret = client->async_send_request(
-            request,
-            [&](rclcpp::Client<std_srvs::srv::Trigger>::SharedFutureWithRequest
-                    future) {
-              auto ret = future.get();
-              auto response = ret.second;
-              RCLCPP_INFO(logger, "response received from %s",
-                          response->message.c_str());
-            });
-      });
+    auto timer_ =
+        rclcpp::create_timer(node, rclcpp::Clock::make_shared(), 1s, [&]() {
+          auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+          auto ret = client->async_send_request(
+              request,
+              [&](rclcpp::Client<
+                  std_srvs::srv::Trigger>::SharedFutureWithRequest future) {
+                auto ret = future.get();
+                auto response = ret.second;
+                RCLCPP_INFO(logger, "response received from %s",
+                            response->message.c_str());
+              });
+        });
 
-  rclcpp::spin(node->get_node_base_interface());
-  rclcpp::shutdown();
+    rclcpp::spin(node->get_node_base_interface());
+    rclcpp::shutdown();
+  } catch (...) {
+    // Unknown exceptions
+  }
 
   return 0;
 }
