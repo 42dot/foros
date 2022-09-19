@@ -69,6 +69,10 @@ StateType State::handle(const Event &event) {
 
 void State::set_event_notifier(
     std::shared_ptr<Observable<Event>> event_source) {
+  set_event_source(event_source);
+}
+
+void State::set_event_source(std::shared_ptr<Observable<Event>> event_source) {
   event_notifier_ = event_source;
 }
 

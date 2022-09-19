@@ -52,6 +52,8 @@ class State {
   virtual void exit() = 0;
 
  private:
+  void set_event_source(std::shared_ptr<Observable<Event>> event_source);
+
   StateType type_;
   std::shared_ptr<Observable<Event>> event_source_;
   std::map<Event, StateType> transition_map_;

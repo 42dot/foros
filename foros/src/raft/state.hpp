@@ -61,6 +61,8 @@ class State {
   std::shared_ptr<Context> context_;
 
  private:
+  void set_event_source(std::shared_ptr<Observable<Event>> event_source);
+
   StateType type_;
   std::shared_ptr<Observable<Event>> event_notifier_;
   std::map<Event, StateType> transition_map_;

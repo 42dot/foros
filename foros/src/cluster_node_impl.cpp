@@ -115,14 +115,26 @@ CommandCommitResponseSharedFuture ClusterNodeImpl::commit_command(
 }
 
 void ClusterNodeImpl::register_on_activated(std::function<void()> callback) {
-  activated_callback_ = callback;
+  set_activated_callback(callback);
 }
 
 void ClusterNodeImpl::register_on_deactivated(std::function<void()> callback) {
-  deactivated_callback_ = callback;
+  set_deactivated_callback(callback);
 }
 
 void ClusterNodeImpl::register_on_standby(std::function<void()> callback) {
+  set_standby_callback(callback);
+}
+
+void ClusterNodeImpl::set_activated_callback(std::function<void()> callback) {
+  activated_callback_ = callback;
+}
+
+void ClusterNodeImpl::set_deactivated_callback(std::function<void()> callback) {
+  deactivated_callback_ = callback;
+}
+
+void ClusterNodeImpl::set_standby_callback(std::function<void()> callback) {
   standby_callback_ = callback;
 }
 

@@ -90,6 +90,9 @@ class Context {
  private:
   void initialize_node();
   void initialize_other_nodes(const std::vector<uint32_t> &cluster_node_ids);
+  void set_cluster_size(uint32_t size);
+  void set_state_machine_interface(
+      StateMachineInterface *state_machine_interface);
 
   bool update_term(uint64_t term, bool self = false);
   bool is_valid_node(uint32_t id);
@@ -135,6 +138,12 @@ class Context {
                                       const uint64_t term, const bool success);
   const std::shared_ptr<LogEntry> on_log_get_request(uint64_t id);
   void inspector_message_requested(foros_msgs::msg::Inspector::SharedPtr msg);
+
+  std::shared_ptr<PendingCommit> clear_pending_commit();
+
+  void set_commit_callback(
+      std::function<void(uint64_t, Command::SharedPtr)> callback);
+  void set_revert_callback(std::function<void(uint64_t)> callback);
 
   const std::string cluster_name_;
   uint32_t node_id_;
