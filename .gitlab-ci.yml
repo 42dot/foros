@@ -3,7 +3,7 @@ image: "registry.42dot.ai/engineering/ak/akitos/failover/foros:latest"
 stages:
   - build
   - test
-  - deploy
+  - docs
 
 build-job:
   stage: build
@@ -39,8 +39,14 @@ test-job:
         path: coverage/report.xml
       junit: build/**/*.gtest.xml
 
-deploy-job:      # TBD
-  stage: deploy
+pages:
+  stage: docs
   script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+    - apt install doxygen
+    - doxygen foros/Doxyfile
+    - mv html/ public/
+  artifacts:
+    paths:
+    - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "devel"'
