@@ -138,7 +138,9 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
   /// Return the list of callback groups in the node.
   /**
    * \return List of callback groups in the node.
+   * \deprecated
    */
+  [[deprecated("get_callback_groups(): Not included in humble")]]
   CLUSTER_NODE_PUBLIC
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &get_callback_groups()
       const;

@@ -119,11 +119,6 @@ rclcpp::CallbackGroup::SharedPtr ClusterNode::create_callback_group(
       group_type, automatically_add_to_executor_with_node);
 }
 
-const std::vector<rclcpp::CallbackGroup::WeakPtr>
-    &ClusterNode::get_callback_groups() const {
-  return node_base_->get_callback_groups();
-}
-
 const rclcpp::ParameterValue &ClusterNode::declare_parameter(
     const std::string &name, const rclcpp::ParameterValue &default_value,
     const rcl_interfaces::msg::ParameterDescriptor &parameter_descriptor,
