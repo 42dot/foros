@@ -112,7 +112,7 @@ class TestContext : public akit::failover::foros::raft::Context {
     request->prev_log_index = prev_log_index;
     request->prev_log_term = prev_log_term;
     request->entries = entries;
-    return append_entries_->async_send_request(request);
+    return append_entries_->async_send_request(request).future.share();
   }
 
  private:
