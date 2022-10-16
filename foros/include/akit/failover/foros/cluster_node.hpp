@@ -135,16 +135,6 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       rclcpp::CallbackGroupType group_type,
       bool automatically_add_to_executor_with_node = true);
 
-  /// Return the list of callback groups in the node.
-  /**
-   * \return List of callback groups in the node.
-   * \deprecated
-   */
-  [[deprecated("get_callback_groups(): Not included in humble")]]
-  CLUSTER_NODE_PUBLIC
-  const std::vector<rclcpp::CallbackGroup::WeakPtr> &get_callback_groups()
-      const;
-
   /// Create a Publisher.
   /**
    * The rclcpp::QoS has several convenient constructors, including a
