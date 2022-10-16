@@ -119,6 +119,11 @@ rclcpp::CallbackGroup::SharedPtr ClusterNode::create_callback_group(
       group_type, automatically_add_to_executor_with_node);
 }
 
+void ClusterNode::for_each_callback_group(
+    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func) {
+  node_base_->for_each_callback_group(func);
+}
+
 const rclcpp::ParameterValue &ClusterNode::declare_parameter(
     const std::string &name, const rclcpp::ParameterValue &default_value,
     const rcl_interfaces::msg::ParameterDescriptor &parameter_descriptor,
