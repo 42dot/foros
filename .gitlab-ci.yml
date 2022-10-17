@@ -1,31 +1,21 @@
-image: "registry.42dot.ai/engineering/ak/akitos/failover/foros:latest"
-
 stages:
   - build
-  - test
   - docs
 
-build-job:
+.build_script: &build_script
   stage: build
   script:
-    - echo "Compiling the code..."
-    - source /opt/ros/galactic/setup.bash
-    - colcon build --cmake-args -DCMAKE_CXX_FLAGS="--coverage -g"
-  artifacts:
-    name: "%CI_JOB_STAGE%-%CI_COMMIT_REF_NAME%"
-    paths:
-      - build/
-      - install/
+    - apt update
+    - apt install -y libncurses-dev libleveldb-dev lcov gcovr doxygen
 
-test-job:
-  stage: test
-  script:
+    - echo "Compiling the code..."
+    - colcon build --cmake-args -DCMAKE_CXX_FLAGS="--coverage -g"
+
     - echo "Running tests..."
-    - source /opt/ros/galactic/setup.bash
     - colcon test
     - colcon test-result --all > test-result
     - mkdir coverage
-    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage/report.xml --root . -e "foros/test" -e "foros_examples" -e "foros_msgs" -e "build" -e "install/foros_msgs" -e "foros_inspector" --xml coverage/report.xml --html coverage/report.html --html-detail
+    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage/report.xml --root . -e "foros/test" -e "foros_examples" -e "foros_msgs" -e "build" -e "install/foros_msgs" -e "foros_inspector" --xml coverage/report.xml --html coverage/report.html
   coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
@@ -39,10 +29,30 @@ test-job:
         path: coverage/report.xml
       junit: build/**/*.gtest.xml
 
+build-galactic:
+  image: "osrf/ros:galactic-desktop"
+  before_script:
+    - source /opt/ros/galactic/setup.bash
+  <<: *build_script
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "galactic" || $CI_COMMIT_BRANCH == "devel"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "devel"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "galactic"'
+
+build-humble:
+  image: "osrf/ros:humble-desktop"
+  before_script:
+    - source /opt/ros/humble/setup.bash
+  <<: *build_script
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "humble"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "humble"'
+
 pages:
   stage: docs
   script:
-    - apt install doxygen
+    - apt update
+    - apt install -y doxygen
     - doxygen foros/Doxyfile
     - mv html/ public/
   artifacts:
