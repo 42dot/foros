@@ -120,7 +120,8 @@ rclcpp::CallbackGroup::SharedPtr ClusterNode::create_callback_group(
 }
 
 void ClusterNode::for_each_callback_group(
-    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func) {
+    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction
+        &func) {
   node_base_->for_each_callback_group(func);
 }
 

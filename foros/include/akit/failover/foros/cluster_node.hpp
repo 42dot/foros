@@ -135,7 +135,8 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
       rclcpp::CallbackGroupType group_type,
       bool automatically_add_to_executor_with_node = true);
 
-  /// Iterate over the callback groups in the node, calling func on each valid one.
+  /// Iterate over the callback groups in the node, calling func on each valid
+  /// one.
   /**
    * From Humble, get_callback_groups() is replaced with this method.
    * https://github.com/ros2/rclcpp/pull/1723
@@ -144,7 +145,8 @@ class ClusterNode : public std::enable_shared_from_this<ClusterNode>,
    */
   CLUSTER_NODE_PUBLIC
   void for_each_callback_group(
-    const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction & func);
+      const rclcpp::node_interfaces::NodeBaseInterface::CallbackGroupFunction
+          &func);
 
   /// Create a Publisher.
   /**
