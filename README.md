@@ -21,9 +21,13 @@ This framework can tolerate fail-stop failures equal to the cluster size minus t
 |        4         |           3            |                 **1**                  |
 |        5         |           3            |                 **2**                  |
 
-## Prerequisites (Ubuntu 20.04)
-### Install ROS2 galactic
-Please refer to the [official site](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html) to install.
+## Prerequisites (Ubuntu)
+### Install ROS2
+Supported distributions
+| OS           | Distribution                                  | Foros branch |
+| ------------ | --------------------------------------------- | ------------ |
+| Ubuntu 20.04 | [galactic](https://docs.ros.org/en/galactic/) | galactic     |
+| Ubuntu 22.04 | [humble](https://docs.ros.org/en/humble/)     | humble       |
 
 ### Install leveldb, ncurses
 ```bash
