@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>foros_inspector</name>
-  <version>0.3.1</version>
+  <version>0.4.0</version>
   <description>Fail over ROS inspector</description>
   <maintainer email="wonguk.jeong@42dot.ai">Wonguk Jeong</maintainer>
   <license>Apache License 2.0</license>
