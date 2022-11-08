@@ -11,7 +11,7 @@
 
   <depend>rclcpp</depend>
   <depend>foros_msgs</depend>
-  <depend>ncurses</depend>
+  <depend>libncurses-dev</depend>
 
   <test_depend>ament_lint_common</test_depend>
 
