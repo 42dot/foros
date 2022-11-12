@@ -1,5 +1,9 @@
 name: lint
-on: [push]
+on:
+  push:
+    branches: [ galactic, humble ]
+  pull_request:
+    branches: [ galactic, humble ]
 jobs:
   clang-format-checker:
     name: clang-format checker
