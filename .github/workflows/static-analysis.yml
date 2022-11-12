@@ -1,0 +1,59 @@
+name: static analysis
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+env:
+  TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+jobs:
+  coverity-scan:
+    name: coverity scan
+    runs-on: ubuntu-latest
+    container:
+      image: osrf/ros:humble-desktop-full
+      options: --user root
+    steps:
+      - name: Checkout ${{ github.sha }}
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          apt update
+          apt install -y wget libleveldb-dev libncurses-dev
+
+      - name: Get tool checksum
+        id: get_tool_checksum
+        run: |
+          wget https://scan.coverity.com/download/linux64 --post-data "token=$TOKEN&project=foros&md5=1" -O /tmp/coverity-tool.md5
+          echo "checksum=$(cat /tmp/coverity-tool.md5)" >> $GITHUB_OUTPUT
+
+      - name: Check tool cache
+        uses: actions/cache@v3
+        id: check_tool_cache
+        with:
+          path: coverity-tool
+          key: ${{ steps.get_tool_checksum.outputs.checksum }}
+
+      - name: Download coverity tool
+        if: ${{ steps.check_tool_cache.outputs.cache-hit != 'true' }}
+        run: |
+          wget https://scan.coverity.com/download/linux64 --post-data "token=$TOKEN&project=foros" -O /tmp/coverity-tool.tgz
+          mkdir coverity-tool
+          tar xzf /tmp/coverity-tool.tgz --strip 1 -C coverity-tool
+          touch coverity-tool/COLCON_IGNORE
+
+      - name: Build
+        run: |
+          . /opt/ros/humble/setup.sh
+          export PATH=`pwd`/coverity-tool/bin:$PATH
+          cov-build --dir cov-int colcon build
+          tar czvf foros-coverity.tgz cov-int
+
+      - name: Submit
+        run: |
+          curl --form token=$TOKEN \
+            --form email=wonguk.jeong@42dot.ai \
+            --form file=@foros-coverity.tgz \
+            --form version="Version" \
+            --form description="Description" \
+            https://scan.coverity.com/builds?project=foros
