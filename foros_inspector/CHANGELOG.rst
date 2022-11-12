@@ -2,8 +2,8 @@
 Changelog for package foros_inspector
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2022-11-13)
+------------------
 * foros_inspector: update package.xml depend
   ncurses -> libncurses-dev
 * Contributors: Wonguk Jeong
