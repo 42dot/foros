@@ -2,8 +2,8 @@
 Changelog for package foros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2022-11-13)
+------------------
 * foros: update package.xml test_depend
   add ament_cmake_gtest, ament_cmake_gmock
 * foros: update package.xml depend
