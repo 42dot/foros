@@ -1,7 +1,7 @@
 name: static analysis
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
+    branches: [ humble ]
   workflow_dispatch:
 env:
   TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
