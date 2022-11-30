@@ -83,7 +83,7 @@ void Inspector::update_screen() {
   add_title("FOROS INSPECTOR");
   add_summary();
   add_newline();
-  for (auto iter : clusters_) {
+  for (auto &iter : clusters_) {
     add_newline();
     add_details(iter.second);
   }
@@ -107,7 +107,7 @@ void Inspector::add_summary() {
   add_string(divider_, name_column_ + large_column_ * 2 + medium_column_ +
                            small_column_ * 2 + 10);
   add_newline();
-  for (auto cluster : clusters_) {
+  for (auto &cluster : clusters_) {
     add_cluster_item(cluster.second);
   }
 }
@@ -125,7 +125,7 @@ void Inspector::add_cluster_item(std::shared_ptr<ClusterInfo> cluster) {
   add_separater();
 
   std::string active;
-  for (auto node : cluster->nodes_) {
+  for (auto &node : cluster->nodes_) {
     if (!active.empty()) {
       active += ", ";
     }
@@ -169,7 +169,7 @@ void Inspector::add_details(std::shared_ptr<ClusterInfo> cluster) {
              large_column_ * 1 + medium_column_ * 4 + small_column_ * 2 + 12);
   add_newline();
 
-  for (auto node : cluster->nodes_) {
+  for (auto &node : cluster->nodes_) {
     add_node_item(node.second);
   }
 }
