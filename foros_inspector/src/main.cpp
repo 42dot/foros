@@ -21,13 +21,17 @@
 #include "inspector.hpp"
 
 int main(int argc, char **argv) {
-  rclcpp::init(argc, argv);
+  try {
+    rclcpp::init(argc, argv);
 
-  auto inspector =
-      std::make_shared<akit::failover::foros_inspector::Inspector>();
+    auto inspector =
+        std::make_shared<akit::failover::foros_inspector::Inspector>();
 
-  rclcpp::spin(inspector);
-  rclcpp::shutdown();
+    rclcpp::spin(inspector);
+    rclcpp::shutdown();
+  } catch (...) {
+    // Unknown exceptions
+  }
 
   return 0;
 }

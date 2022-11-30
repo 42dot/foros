@@ -354,7 +354,7 @@ void Context::broadcast() {
     log = store_->log();
   }
 
-  for (auto node : other_nodes_) {
+  for (auto &node : other_nodes_) {
     node.second->broadcast(
         store_->current_term(), node_id_, log,
         std::bind(&Context::on_broadcast_response, this, std::placeholders::_1,
@@ -364,7 +364,7 @@ void Context::broadcast() {
 }
 
 void Context::request_vote() {
-  for (auto node : other_nodes_) {
+  for (auto &node : other_nodes_) {
     node.second->request_vote(
         store_->current_term(), node_id_, store_->log(),
         std::bind(&Context::on_request_vote_response, this,
@@ -405,7 +405,7 @@ void Context::check_elected() {
     id = log->id_;
   }
 
-  for (auto node : other_nodes_) {
+  for (auto &node : other_nodes_) {
     node.second->update_match_index(id);
   }
 
@@ -536,7 +536,7 @@ void Context::handle_pending_commit_response(const uint32_t id,
 
     unsigned int received_count = 1;
     unsigned int success_count = 1;
-    for (auto node : other_nodes_) {
+    for (auto &node : other_nodes_) {
       if (commit->result_map_.count(node.first) > 0) {
         received_count++;
         if (commit->result_map_[node.first] == success) {
