@@ -32,12 +32,28 @@ Supported distributions
 | Ubuntu 20.04 | [galactic](https://docs.ros.org/en/galactic/) | galactic     |
 | Ubuntu 22.04 | [humble](https://docs.ros.org/en/humble/)     | humble       |
 
-### Install leveldb, ncurses
+
+
+## Install Foros
+### Option 1. Install Official Packages
+for galactic
+```bash
+sudo apt install ros-galactic-foros ros-galactic-foros-examples ros-galactic-foros-inspector
+```
+
+for humble
+```bash
+sudo apt install ros-humble-foros ros-humble-foros-examples ros-humble-foros-inspector
+```
+
+### Option 2. Build From Source
+
+Install dependencies
+
 ```bash
 sudo apt install libleveldb-dev libncurses-dev
 ```
-
-## Build
+Build
 > If you want to install to existing ROS2 workspace, please clone this source in the workspace in advance.
 
 ```bash
