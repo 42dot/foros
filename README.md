@@ -1,8 +1,7 @@
 # FOROS : Failover ROS framework
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://build.ros2.org/job/Gdev__foros__ubuntu_focal_amd64/badge/icon?subject=build:galactic)](https://build.ros2.org/job/Gdev__foros__ubuntu_focal_amd64/)
-[![Build Status](https://build.ros2.org/job/Gdev__foros__ubuntu_focal_amd64/badge/icon?subject=build:humble)](https://build.ros2.org/job/Gdev__foros__ubuntu_focal_amd64/)
+[![Build Status](https://build.ros2.org/view/Hdev/job/Hdev__foros__ubuntu_jammy_amd64/badge/icon?subject=build:humble)](https://build.ros2.org/view/Hdev/job/Hdev__foros__ubuntu_jammy_amd64/)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/24937/badge.svg)](https://scan.coverity.com/projects/foros)
 
 ## Purpose
